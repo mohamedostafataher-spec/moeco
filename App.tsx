@@ -170,6 +170,11 @@ const CalculationRecords = React.lazy(
 const SmartLifeHub = React.lazy(() =>
   import("./pages/SmartLifeHub").then((m) => ({ default: m.SmartLifeHub })),
 );
+const LocalMonitor = React.lazy(() => import("./pages/LocalMonitor"));
+const SurplusFood = React.lazy(() => import("./pages/SurplusFood"));
+const WaterSaving = React.lazy(() => import("./pages/WaterSaving"));
+const HeatShadeMap = React.lazy(() => import("./pages/HeatShadeMap"));
+const WasteToIncome = React.lazy(() => import("./pages/WasteToIncome"));
 
 import { liveIntelEngine } from "./services/liveIntelEngine";
 import { newsService } from "./services/newsService";
@@ -451,6 +456,42 @@ const Navigation: React.FC = () => {
       ],
     },
     {
+      label: language === "ar" ? "العمل المجتمعي والمحلي" : "Civic Action Hub",
+      icon: ShieldAlert,
+      items: [
+        {
+          path: "/eco-watch",
+          label: language === "ar" ? "بلاغ بيئي" : "Environmental Report",
+          icon: ShieldAlert,
+        },
+        {
+          path: "/local-monitor",
+          label: language === "ar" ? "لوحة المتابعة المحلية" : "Local Monitor",
+          icon: BarChart3,
+        },
+        {
+          path: "/surplus-food",
+          label: language === "ar" ? "الفائض بدل الرمي" : "Surplus Food",
+          icon: Utensils,
+        },
+        {
+          path: "/water-saving",
+          label: language === "ar" ? "وفّر مياه منطقتك" : "Neighborhood Water",
+          icon: Droplets,
+        },
+        {
+          path: "/heat-shade-map",
+          label: language === "ar" ? "خريطة الحر والظل" : "Heat & Shade Map",
+          icon: Sun,
+        },
+        {
+          path: "/waste-to-income",
+          label: language === "ar" ? "المخلفات إلى دخل" : "Waste to Income",
+          icon: Trash2,
+        },
+      ],
+    },
+    {
       label: language === "ar" ? "توفيرك وأثرك" : "Savings & Impact",
       icon: Zap,
       items: [
@@ -463,6 +504,11 @@ const Navigation: React.FC = () => {
           path: "/calculator",
           label: language === "ar" ? "حاسبة الكربون" : "Carbon Calculator",
           icon: CalcIcon,
+        },
+        {
+          path: "/methodology",
+          label: language === "ar" ? "كيف نحسب الأثر؟" : "Methodology",
+          icon: BookOpen,
         },
         {
           path: "/sustain-hub",
@@ -1260,7 +1306,7 @@ const AppContent: React.FC = () => {
               <React.Suspense fallback={<PageSkeleton />}>
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={window.location.pathname}
+                    key={location.pathname}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -1268,6 +1314,8 @@ const AppContent: React.FC = () => {
                     className="h-full"
                   >
                     <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
                       <Route path="/" element={<Home />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route
@@ -1373,6 +1421,11 @@ const AppContent: React.FC = () => {
                         element={<Navigate to="/eco-watch" replace />}
                       />
                       <Route path="/eco-watch" element={<EcoWatch />} />
+                      <Route path="/local-monitor" element={<LocalMonitor />} />
+                      <Route path="/surplus-food" element={<SurplusFood />} />
+                      <Route path="/water-saving" element={<WaterSaving />} />
+                      <Route path="/heat-shade-map" element={<HeatShadeMap />} />
+                      <Route path="/waste-to-income" element={<WasteToIncome />} />
                       <Route
                         path="/calculation-records"
                         element={<CalculationRecords />}
@@ -1777,6 +1830,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem("moeco_lang", language);
+    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = language;
   }, [language]);
 
   useEffect(() => {

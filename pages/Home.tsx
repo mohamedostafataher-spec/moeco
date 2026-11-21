@@ -336,17 +336,32 @@ const Home: React.FC = () => {
           <div className="absolute inset-0 egyptian-pattern opacity-10 mix-blend-overlay pointer-events-none" />
 
           <div className="relative p-8 flex flex-col justify-between min-h-[250px]">
-             <div className="flex justify-between items-start">
+             <div className="flex justify-between items-start gap-4">
                <div>
-                 <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.4em] mb-3 leading-none opacity-80">
-                   {isRtl ? 'إجمالي توفير الكربون' : 'TOTAL CARBON SAVED'}
-                 </p>
+                 <div className="flex flex-wrap items-center gap-2 mb-3">
+                   <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] leading-none opacity-90">
+                     {isRtl ? 'البصمة الكربونية المسجلة' : 'LOGGED CARBON FOOTPRINT'}
+                   </p>
+                   <span className="px-2 py-0.5 rounded-md bg-white/15 text-[10px] font-bold text-amber-200 border border-white/20">
+                     {isRtl ? 'مدخل من المستخدم · تقديري' : 'User Input · Estimated'}
+                   </span>
+                 </div>
                  <div className="flex items-baseline gap-2">
-                   <h2 className="text-6xl font-black text-white tracking-tighter leading-none drop-shadow-md">
+                   <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none drop-shadow-md">
                      {metrics?.carbon?.toLocaleString() || '0'}
                    </h2>
-                   <span className="text-xl font-black text-egypt-gold tracking-tighter uppercase">KG CO₂</span>
+                   <span className="text-lg md:text-xl font-black text-egypt-gold tracking-tighter uppercase">kg CO₂e</span>
                  </div>
+                 <p className="text-[11px] text-white/80 mt-2">
+                   {isRtl ? 'مجموع الانبعاثات المحسوبة من سجلاتك حتى اليوم' : 'Cumulative calculated emissions from your logs'} ·{' '}
+                   <Link
+                     to="/methodology"
+                     onClick={(e) => e.stopPropagation()}
+                     className="underline text-amber-200 hover:text-white font-bold"
+                   >
+                     {isRtl ? 'كيف نحسب الأثر؟' : 'Methodology'}
+                   </Link>
+                 </p>
                </div>
                
                <div className="bg-white/10 backdrop-blur-2xl p-4 rounded-3xl border border-white/20 shadow-2xl transition-transform group-hover:rotate-12">
@@ -354,15 +369,15 @@ const Home: React.FC = () => {
                </div>
              </div>
 
-             <div className="mt-10 flex items-end justify-between gap-4">
+             <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
                 <div className="flex flex-wrap gap-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 group-hover:bg-white/30 transition-colors">
                        <Zap className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow-sm" />
                     </div>
                     <div>
-                       <p className="text-white/60 text-[9px] font-black uppercase tracking-widest leading-none mb-1.5">{isRtl ? 'الاستهلاك الحي' : 'Live Pulsing'}</p>
-                       <p className="text-white font-black text-xl tracking-tight leading-none">{metrics?.electricity?.toFixed(1) || 0} <span className="text-[10px] opacity-60">kWh</span></p>
+                       <p className="text-white/75 text-[10px] font-bold leading-none mb-1.5">{isRtl ? 'أثر الكهرباء (تقديري)' : 'Electricity Impact'}</p>
+                       <p className="text-white font-black text-xl tracking-tight leading-none">{metrics?.electricity?.toFixed(1) || 0} <span className="text-[10px] opacity-75">kg CO₂e</span></p>
                     </div>
                   </div>
                   
@@ -371,8 +386,8 @@ const Home: React.FC = () => {
                        <Droplets className="w-6 h-6 text-sky-300 drop-shadow-sm" />
                     </div>
                     <div>
-                       <p className="text-white/60 text-[9px] font-black uppercase tracking-widest leading-none mb-1.5">{isRtl ? 'وفر المياه' : 'Water Saved'}</p>
-                       <p className="text-white font-black text-xl tracking-tight leading-none">{metrics?.water?.toFixed(1) || 0} <span className="text-[10px] opacity-60">L</span></p>
+                       <p className="text-white/75 text-[10px] font-bold leading-none mb-1.5">{isRtl ? 'أثر المياه (تقديري)' : 'Water Impact'}</p>
+                       <p className="text-white font-black text-xl tracking-tight leading-none">{metrics?.water?.toFixed(1) || 0} <span className="text-[10px] opacity-75">kg CO₂e</span></p>
                     </div>
                   </div>
                 </div>
@@ -386,8 +401,8 @@ const Home: React.FC = () => {
                       <ChevronRight size={16} className={isRtl ? 'rotate-180' : ''} />
                     </div>
                 </motion.div>
-              </div>
-           </div>
+             </div>
+          </div>
         </motion.div>
       </section>
 
@@ -412,9 +427,9 @@ const Home: React.FC = () => {
             {[
               { id: 'track', icon: Activity, label: isRtl ? 'تتبع' : 'Track', path: '/calculator', color: 'bg-emerald-500 text-white shadow-emerald-500/30' },
               { id: 'gov', icon: Landmark, label: isRtl ? 'خدمات' : 'Portal', path: '/smart-gov', color: 'bg-nile-blue text-white shadow-nile-blue/30' },
-              { id: 'scan', icon: QrCode, label: isRtl ? 'مسح' : 'Audit', path: '/dashboard', color: 'bg-egypt-gold text-white shadow-egypt-gold/30' },
-              { id: 'shop', icon: ShoppingBag, label: isRtl ? 'متجر' : 'Shop', path: '/market', color: 'bg-purple-600 text-white shadow-purple-600/30' }
-            ].map((action, idx) => (
+              { id: 'scan', icon: QrCode, label: isRtl ? 'لوحة المراقبة' : 'Audit', path: '/dashboard', color: 'bg-egypt-gold text-white shadow-egypt-gold/30' },
+              { id: 'shop', icon: ShoppingBag, label: isRtl ? 'الاقتصاد الأخضر' : 'Market', path: '/green-economy', color: 'bg-purple-600 text-white shadow-purple-600/30' }
+            ].map((action) => (
               <motion.div
                 key={action.id}
                 whileHover={{ y: -8, scale: 1.05 }}
@@ -425,10 +440,61 @@ const Home: React.FC = () => {
                 <div className={`w-12 h-12 md:w-16 md:h-16 ${action.color} rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg transition-all ring-4 ring-white dark:ring-slate-800`}>
                   <action.icon className="w-5 h-5 md:w-7 md:h-7" />
                 </div>
-                <span className="text-[8px] md:text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center leading-none">
+                <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 text-center leading-tight">
                   {action.label}
                 </span>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3B. CIVIC ENVIRONMENTAL ACTION HUB */}
+      <section className="px-4 mt-8" aria-label="العمل البيئي والمجتمعي المحلي">
+        <div className="bg-slate-900/90 rounded-[2rem] p-6 md:p-8 border border-white/10 shadow-xl space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-emerald-400" />
+                <span>{isRtl ? 'العمل البيئي والمجتمعي في منطقتك' : 'Local Civic Environmental Action'}</span>
+              </h2>
+              <p className="text-xs text-slate-300 mt-1">
+                {isRtl
+                  ? 'ارصد المشكلات المحلية، تابع المبادرات، واطّلع على شفافية الحسابات.'
+                  : 'Report local issues, join initiatives, and inspect calculation methodology.'}
+              </p>
+            </div>
+            <Link
+              to="/methodology"
+              className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-emerald-300 hover:bg-emerald-500/15 transition"
+            >
+              <span>{isRtl ? 'كيف نحسب الأثر؟' : 'How we calculate'}</span>
+              <ChevronRight size={14} className={isRtl ? 'rotate-180' : ''} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { path: '/eco-watch', title: 'بلاغ بيئي', desc: 'إبلاغ تجريبي عن تسريب مياه، مخلفات، حرق، أو نقص ظل مع خيار إخفاء الاسم', badge: 'توثيق ومراجعة', color: 'border-emerald-500/30 hover:border-emerald-400' },
+              { path: '/local-monitor', title: 'لوحة المتابعة المحلية', desc: 'مؤشرات مجمّعة حسب النوع والمنطقة والمبادرات القابلة للانضمام', badge: 'بيانات تجريبية ومجمعة', color: 'border-sky-500/30 hover:border-sky-400' },
+              { path: '/surplus-food', title: 'الفائض بدل الرمي', desc: 'نموذج تجريبي لعروض فائض المخابز والمتاجر دون طلب أو دفع فعلي', badge: 'تجريبي', color: 'border-amber-500/30 hover:border-amber-400' },
+              { path: '/water-saving', title: 'وفّر مياه منطقتك', desc: 'إبلاغ عن تسريبات المياه ومُقدّر الترشيد المنزلي التقديري', badge: 'تقديري + بلاغات', color: 'border-cyan-500/30 hover:border-cyan-400' },
+              { path: '/heat-shade-map', title: 'خريطة الحر والظل', desc: 'رصد نقاط الحر الشديد واقتراح مظلات أو تشجير مشروط', badge: 'خريطة تفاعلية', color: 'border-orange-500/30 hover:border-orange-400' },
+              { path: '/waste-to-income', title: 'المخلفات إلى دخل', desc: 'دليل تجريبي لنقاط الفرز وتسجيل الأوزان المسلّمة بشفافية', badge: 'نقاط فرز تجريبية', color: 'border-teal-500/30 hover:border-teal-400' },
+            ].map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`min-h-[44px] bg-slate-950/70 border ${item.color} rounded-2xl p-4 flex flex-col justify-between gap-2 transition hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-black text-white">{item.title}</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                    {item.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+              </Link>
             ))}
           </div>
         </div>

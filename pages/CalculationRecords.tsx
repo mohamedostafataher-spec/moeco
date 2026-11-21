@@ -109,10 +109,16 @@ const CalculationRecords: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/methodology"
+              className="min-h-[44px] px-5 py-3 bg-slate-900 text-emerald-300 border border-emerald-500/30 rounded-2xl font-black text-xs flex items-center gap-2 hover:bg-slate-800 transition"
+            >
+              <span>{isRtl ? 'كيف نحسب الأثر؟' : 'Methodology'}</span>
+            </Link>
             <button 
               onClick={exportToExcel}
-              className="px-6 py-3 bg-egypt-gold text-egypt-black rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-egypt-gold/20"
+              className="min-h-[44px] px-6 py-3 bg-egypt-gold text-egypt-black rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg shadow-egypt-gold/20"
             >
               <Download className="w-4 h-4" />
               {isRtl ? 'تصدير Excel' : 'Export Excel'}
@@ -192,34 +198,38 @@ const CalculationRecords: React.FC = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
-                          <span className="text-[9px] md:text-[10px] font-black text-egypt-gold uppercase tracking-widest truncate">{record.sector}</span>
-                          <span className="text-[10px] text-zinc-300">•</span>
-                          <span className="text-[9px] md:text-[10px] font-bold text-zinc-400 shrink-0">{new Date(record.created_at || record.timestamp || record.record_date).toLocaleString()}</span>
+                          <span className="text-[10px] font-black text-egypt-gold uppercase tracking-widest truncate">{record.sector}</span>
+                          <span className="text-[10px] text-zinc-400">•</span>
+                          <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-bold">
+                            {record.metadata?.verified ? 'تم التحقق منه' : 'مدخل من المستخدم · تقديري'}
+                          </span>
+                          <span className="text-[10px] text-zinc-400">•</span>
+                          <span className="text-[10px] font-bold text-zinc-400 shrink-0">{new Date(record.created_at || record.timestamp || record.record_date).toLocaleString('ar-EG')}</span>
                         </div>
                         <h4 className="text-base md:text-lg font-black text-zinc-900 dark:text-white font-arabic truncate">
                           {record.value} {record.unit}
                         </h4>
-                        <p className="text-[10px] md:text-xs text-zinc-500 font-medium truncate">{record.description || (isRtl ? 'عملية مسجلة عبر الحاسبة الذكية' : 'Record from Smart Calculator')}</p>
+                        <p className="text-[11px] text-zinc-500 font-medium truncate">{record.description || (isRtl ? 'عملية مسجلة عبر الحاسبة (المصدر: معاملات مصر التقديرية)' : 'Record from Smart Calculator')}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between md:justify-end gap-2 md:gap-8 w-full md:w-auto border-t md:border-t-0 border-zinc-100 dark:border-white/5 pt-4 md:pt-0 mt-2 md:mt-0">
                       <div className="text-center md:text-right flex-1 md:flex-none">
-                        <p className="text-[8px] md:text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'الانبعاث' : 'Factor'}</p>
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'المعامل' : 'Factor'}</p>
                         <p className="text-xs md:text-sm font-black text-zinc-600 dark:text-zinc-400 truncate">
-                          {Number(record.metadata?.emission_factor || 0).toFixed(2)}
+                          {Number(record.metadata?.emission_factor || 0).toFixed(3)}
                         </p>
                       </div>
                       <div className="text-center md:text-right flex-1 md:flex-none border-l md:border-x px-2 md:px-6 border-zinc-100 dark:border-white/5 rtl:border-r rtl:border-l-0 md:rtl:border-x">
-                        <p className="text-[8px] md:text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'مكافئ الكربون' : 'Impact'}</p>
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'مكافئ الكربون' : 'Impact'}</p>
                         <p className="text-lg md:text-xl font-black text-emerald-500 truncate">
-                          {Number(record.carbon_impact || record.co2 || record.co2_impact || record.metadata?.co2_impact || 0).toFixed(1)} <span className="text-[8px] md:text-[10px]">kg</span>
+                          {Number(record.carbon_impact || record.co2 || record.co2_impact || record.metadata?.co2_impact || 0).toFixed(2)} <span className="text-[10px]">kg CO₂e</span>
                         </p>
                       </div>
                       <div className="text-center md:text-right flex-1 md:flex-none">
-                        <p className="text-[8px] md:text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'المبلغ الاجمالي' : 'Total Bill'}</p>
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5 md:mb-1">{isRtl ? 'التكلفة التقديرية' : 'Est. Bill'}</p>
                         <p className="text-sm md:text-xl font-black text-zinc-900 dark:text-white tabular-nums truncate">
-                          {Math.round(Number(record.cost || record.metadata?.bill_amount || 0))} <span className="text-[8px] md:text-[10px]">EGP</span>
+                          {Math.round(Number(record.cost || record.metadata?.bill_amount || 0))} <span className="text-[10px]">ج.م</span>
                         </p>
                       </div>
                     </div>

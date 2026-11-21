@@ -10,6 +10,7 @@ import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { supabase } from '../services/supabaseClient';
+import { Link } from 'react-router-dom';
 
 const GreenResources: React.FC = () => {
   const { language, theme, user, isRtl } = useApp();
@@ -126,11 +127,30 @@ const GreenResources: React.FC = () => {
         )}
 
         {activeTab === 'waste' && (
-           <motion.div key="waste" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-zinc-900 p-12 rounded-[4rem] border border-stone-100 dark:border-white/5 text-center">
-              <Trash2 size={80} className="mx-auto mb-6 text-stone-300" />
-              <h3 className="text-3xl font-black italic mb-4">Zero Waste Initiative</h3>
-              <p className="text-stone-500 font-bold max-w-lg mx-auto mb-10">Report waste collection points or track your recycling contributions to earn green points.</p>
-              <button className="px-12 py-5 bg-emerald-500 text-white rounded-[2rem] font-black italic shadow-xl shadow-emerald-500/20">Report Waste Point</button>
+           <motion.div key="waste" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-slate-900 p-8 md:p-12 rounded-[3rem] border border-white/10 text-center space-y-6">
+              <Trash2 size={64} className="mx-auto text-emerald-400" />
+              <h3 className="text-2xl md:text-3xl font-black text-white">
+                {isRtl ? 'المخلفات إلى دخل وإعادة التدوير' : 'Waste to Income & Zero Waste'}
+              </h3>
+              <p className="text-slate-300 font-bold max-w-lg mx-auto text-sm">
+                {isRtl
+                  ? 'استكشف دليل نقاط التجميع والفرز التجريبية، وسجّل الكميات المسلّمة أو بلّغ عن تراكم المخلفات في منطقتك.'
+                  : 'Explore demo collection & sorting points, log handover weights, or report waste accumulation.'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  to="/waste-to-income"
+                  className="min-h-[44px] inline-flex items-center px-8 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-black text-sm shadow-xl shadow-emerald-500/20 hover:bg-emerald-400 transition"
+                >
+                  {isRtl ? 'دليل نقاط التجميع والفرز' : 'Waste to Income Directory'}
+                </Link>
+                <Link
+                  to="/eco-watch"
+                  className="min-h-[44px] inline-flex items-center px-8 py-4 bg-white/10 text-white border border-white/15 rounded-2xl font-black text-sm hover:bg-white/20 transition"
+                >
+                  {isRtl ? 'الإبلاغ عن تراكم مخلفات' : 'Report Waste Point'}
+                </Link>
+              </div>
            </motion.div>
         )}
       </AnimatePresence>

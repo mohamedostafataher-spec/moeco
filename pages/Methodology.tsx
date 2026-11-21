@@ -1,182 +1,315 @@
-
-import React from 'react';
-import { useApp } from '../context/AppContext';
-import { motion } from 'framer-motion';
-import { 
-  BookOpen, 
-  Database, 
-  Globe, 
-  Zap, 
-  Droplets, 
-  Car, 
-  Trash2, 
-  Info, 
-  ShieldCheck, 
-  FileText,
-  ExternalLink,
-  Scale,
-  Activity,
-  Award,
-  Landmark
+import React, { useState } from 'react';
+import {
+  BookOpen,
+  Database,
+  Zap,
+  Droplets,
+  Car,
+  Trash2,
+  ShieldCheck,
+  Info,
+  Calculator,
+  RotateCcw,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+type TestSector = 'electricity' | 'water' | 'transport' | 'recycling';
+
+const SECTOR_DEFAULTS: Record<
+  TestSector,
+  {
+    label: string;
+    unit: string;
+    defaultAmount: number;
+    defaultFactor: number;
+    source: string;
+    assumptions: string;
+  }
+> = {
+  electricity: {
+    label: 'الكهرباء المنزلية',
+    unit: 'كيلوواط ساعة (kWh)',
+    defaultAmount: 250,
+    defaultFactor: 0.533,
+    source: 'الشركة القابضة لكهرباء مصر (EEHC) + IPCC',
+    assumptions: 'متوسط معامل الشبكة القومية المصرية لمزيج التوليد؛ يختلف حسب التحديث السنوي.',
+  },
+  water: {
+    label: 'المياه والصرف',
+    unit: 'متر مكعب (m³)',
+    defaultAmount: 15,
+    defaultFactor: 0.298,
+    source: 'الشركة القابضة لمياه الشرب والصرف الصحي (HCWW)',
+    assumptions: 'يمثل الطاقة التقديرية للضخ والتنقية والمعالجة لكل متر مكعب؛ لا يشمل فواقد الشبكة.',
+  },
+  transport: {
+    label: 'المواصلات (سيارة متوسطة)',
+    unit: 'كيلومتر (km)',
+    defaultAmount: 100,
+    defaultFactor: 0.185,
+    source: 'الجهاز المركزي للتعبئة العامة والإحصاء (CAPMAS) ومعاملات الوقود',
+    assumptions: 'متوسط استهلاك 8 لتر بنزين/100 كم؛ ينخفض المعامل كثيراً عند استخدام المترو أو القطار.',
+  },
+  recycling: {
+    label: 'تدوير البلاستيك (PET)',
+    unit: 'كيلوجرام (kg)',
+    defaultAmount: 5,
+    defaultFactor: 1.5,
+    source: 'معاملات تدوير استرشادية (EPA WARM / WMRA)',
+    assumptions: 'أثر تجنّب انبعاثات تقديري فقط، ولا يُعد موثقاً دون إيصال وزن من نقطة معتمدة.',
+  },
+};
 
 const Methodology: React.FC = () => {
-  const { language, theme } = useApp();
-  const isRtl = language === 'ar';
+  const [testSector, setTestSector] = useState<TestSector>('electricity');
+  const [amountInput, setAmountInput] = useState<string>(String(SECTOR_DEFAULTS.electricity.defaultAmount));
+  const [factorInput, setFactorInput] = useState<string>(String(SECTOR_DEFAULTS.electricity.defaultFactor));
+
+  const currentMeta = SECTOR_DEFAULTS[testSector];
+  const parsedAmount = Math.max(0, parseFloat(amountInput) || 0);
+  const parsedFactor = Math.max(0, parseFloat(factorInput) || 0);
+  const computedKg = parsedAmount * parsedFactor;
+  const computedTons = computedKg / 1000;
+
+  const handleSelectSector = (sec: TestSector) => {
+    setTestSector(sec);
+    setAmountInput(String(SECTOR_DEFAULTS[sec].defaultAmount));
+    setFactorInput(String(SECTOR_DEFAULTS[sec].defaultFactor));
+  };
 
   const sections = [
     {
       id: 'electricity',
-      icon: <Zap className="w-6 h-6 text-yellow-500" />,
-      title: isRtl ? 'الكهرباء والطاقة' : 'Electricity & Energy',
-      description: isRtl 
-        ? 'نعتمد في حساباتنا على معامل الانبعاثات الخاص بالشبكة القومية المصرية للكهرباء (EEHC).' 
-        : 'Our calculations are based on the emission factor of the Egyptian National Electricity Grid (EEHC).',
-      formula: 'CO2 = kWh × 0.533 kg/kWh',
-      source: 'IPCC & Egyptian Ministry of Electricity (2023/2024 Report)',
-      details: isRtl
-        ? 'يتم تحديث المعامل سنوياً بناءً على مزيج الطاقة المصري (غاز طبيعي، طاقة شمسية، رياح، كهرومائية).'
-        : 'The factor is updated annually based on the Egyptian energy mix (Natural Gas, Solar, Wind, Hydro).'
+      icon: Zap,
+      iconColor: 'text-amber-400',
+      title: 'الكهرباء والطاقة',
+      description: 'يُحسب أثر الكهرباء بضرب الاستهلاك الشهري (kWh) في معامل الانبعاث التقديري للشبكة القومية المصرية.',
+      formula: 'kg CO₂e = kWh × 0.533',
+      source: 'الشركة القابضة لكهرباء مصر (EEHC) وتقارير IPCC',
+      unit: 'kg CO₂e لكل 1 kWh',
     },
     {
       id: 'water',
-      icon: <Droplets className="w-6 h-6 text-blue-500" />,
-      title: isRtl ? 'المياه والصرف' : 'Water & Sanitation',
-      description: isRtl 
-        ? 'يتم احتساب البصمة الكربونية للمياه بناءً على الطاقة المستهلكة في محطات التحلية والمعالجة والضخ.' 
-        : 'The carbon footprint of water is calculated based on energy consumed in desalination, treatment, and pumping stations.',
-      formula: 'CO2 = m³ × 0.298 kg/m³',
-      source: 'Holding Company for Water and Wastewater (HCWW)',
-      details: isRtl
-        ? 'يشمل ذلك مراحل التنقية والتوزيع ومعالجة مياه الصرف الصحي.'
-        : 'This includes purification, distribution, and wastewater treatment stages.'
+      icon: Droplets,
+      iconColor: 'text-sky-400',
+      title: 'المياه والصرف',
+      description: 'يمثل البصمة الكربونية للطاقة اللازمة لتحلية وضخ ومعالجة كل متر مكعب (1000 لتر) من المياه.',
+      formula: 'kg CO₂e = m³ × 0.298',
+      source: 'الشركة القابضة لمياه الشرب والصرف الصحي (HCWW)',
+      unit: 'kg CO₂e لكل 1 m³',
     },
     {
       id: 'transport',
-      icon: <Car className="w-6 h-6 text-red-500" />,
-      title: isRtl ? 'النقل والمواصلات' : 'Transport & Mobility',
-      description: isRtl 
-        ? 'تختلف المعاملات بناءً على نوع الوقود (بنزين، ديزل، غاز طبيعي) وكفاءة المحرك.' 
-        : 'Factors vary based on fuel type (Petrol, Diesel, CNG) and engine efficiency.',
-      formula: 'CO2 = km × (Fuel Factor / Efficiency)',
-      source: 'CAPMAS & Ministry of Transport',
-      details: isRtl
-        ? 'نستخدم متوسط استهلاك 8 لتر/100 كم للسيارات المتوسطة في مصر.'
-        : 'We use an average consumption of 8L/100km for medium-sized cars in Egypt.'
+      icon: Car,
+      iconColor: 'text-emerald-400',
+      title: 'النقل والمواصلات',
+      description: 'تعتمد الحسابات على المسافة المقطوعة (km) ومتوسط كفاءة المركبة ونوع الوقود أو وسيلة النقل العام.',
+      formula: 'kg CO₂e = km × معامل الوسيلة',
+      source: 'الجهاز المركزي للتعبئة العامة والإحصاء (CAPMAS)',
+      unit: 'kg CO₂e لكل 1 km',
     },
     {
       id: 'waste',
-      icon: <Trash2 className="w-6 h-6 text-emerald-500" />,
-      title: isRtl ? 'إدارة النفايات' : 'Waste Management',
-      description: isRtl 
-        ? 'يتم احتساب انبعاثات الميثان الناتجة عن تحلل النفايات العضوية في المدافن الصحية.' 
-        : 'Methane emissions from organic waste decomposition in landfills are calculated.',
-      formula: 'CO2e = kg × 1.9 kg CO2e/kg',
-      source: 'Waste Management Regulatory Authority (WMRA)',
-      details: isRtl
-        ? 'يتم تحويل الميثان إلى مكافئ ثاني أكسيد الكربون (GWP = 28).'
-        : 'Methane is converted to CO2 equivalent (GWP = 28).'
-    }
+      icon: Trash2,
+      iconColor: 'text-teal-400',
+      title: 'المخلفات وإعادة التدوير',
+      description: 'تُحسب تقديرات المواد المفروزة بمعاملات استرشادية لكل مادة (بلاستيك، كرتون، ألومنيوم)، مع التمييز الصارم بين الموثق وغير الموثق.',
+      formula: 'kg CO₂e (تقديري) = kg × معامل المادة',
+      source: 'جهاز تنظيم إدارة المخلفات (WMRA) و EPA WARM',
+      unit: 'kg CO₂e لكل 1 kg مادة',
+    },
   ];
 
   return (
-    <div className="max-w-5xl mx-auto pb-20 px-4" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir="rtl">
       {/* Header */}
-      <div className="text-center space-y-4 mb-12">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="inline-flex p-4 bg-egypt-black text-egypt-gold rounded-3xl shadow-2xl mb-4"
-        >
-          <BookOpen className="w-10 h-10" />
-        </motion.div>
-        <h1 className="text-4xl font-black text-egypt-black font-arabic tracking-tight">
-          {isRtl ? 'المنهجية العلمية' : 'Scientific Methodology'}
-        </h1>
-        <p className="text-zinc-500 max-w-2xl mx-auto font-medium">
-          {isRtl 
-            ? 'تعرف على الأسس العلمية والمعايير الدولية التي نستخدمها في MoEco لحساب بصمتك الكربونية بدقة متناهية.' 
-            : 'Learn about the scientific foundations and international standards we use at MoEco to calculate your carbon footprint with extreme precision.'}
-        </p>
-      </div>
+      <header className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black text-white">كيف نحسب الأثر؟</h1>
+              <p className="text-sm text-slate-300 mt-1">
+                منهجية واضحة وبسيطة تشرح المعادلات والوحدات والفرق بين البيانات المدخلة والتقديرية والموثقة.
+              </p>
+            </div>
+          </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sections.map((section, idx) => (
-          <motion.div
-            key={section.id}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm hover:shadow-xl transition-all group"
+          <Link
+            to="/calculator"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition"
           >
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-4 bg-zinc-50 rounded-2xl group-hover:bg-egypt-black group-hover:text-white transition-colors">
-                {section.icon}
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                Verified
-              </div>
-            </div>
-            
-            <h3 className="text-xl font-black text-egypt-black mb-3 font-arabic">{section.title}</h3>
-            <p className="text-sm text-zinc-500 mb-6 leading-relaxed font-medium">{section.description}</p>
-            
-            <div className="space-y-4">
-              <div className="p-4 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Calculation Formula</p>
-                <code className="text-sm font-mono font-bold text-egypt-red">{section.formula}</code>
-              </div>
-              
-              <div className="flex items-center gap-3 text-xs text-zinc-400">
-                <Database className="w-4 h-4" />
-                <span>Source: <span className="text-egypt-black font-bold">{section.source}</span></span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            <Calculator className="w-4 h-4" />
+            <span>العودة إلى الحاسبة</span>
+          </Link>
+        </div>
 
-      {/* Academic Standards */}
-      <div className="mt-12 bg-egypt-black text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-egypt-gold/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-        <div className="relative z-10 space-y-8">
-          <div className="flex items-center gap-4">
-            <Landmark className="w-8 h-8 text-egypt-gold" />
-            <h2 className="text-2xl font-black font-arabic">{isRtl ? 'التوافق مع رؤية مصر 2030' : 'Alignment with Egypt Vision 2030'}</h2>
+        {/* 3 Status Meanings */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 space-y-1">
+            <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-sky-500/15 text-sky-300 border border-sky-400/30">
+              مدخل من المستخدم
+            </span>
+            <p className="text-xs text-slate-300 leading-relaxed pt-1">
+              قراءات عداد أو مسافات أو أوزان كتبها المستخدم بنفسه دون مراجعة مستندية بعد.
+            </p>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="space-y-2">
-              <p className="text-egypt-gold font-black text-xs uppercase tracking-widest">GHG Protocol</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                {isRtl ? 'نتبع بروتوكول الغازات الدفيئة (GHG Protocol) المعترف به دولياً لتصنيف الانبعاثات (Scope 1, 2, 3).' : 'We follow the internationally recognized GHG Protocol for emission classification (Scope 1, 2, 3).'}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-egypt-gold font-black text-xs uppercase tracking-widest">National Strategy</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                {isRtl ? 'تتوافق منهجيتنا مع الاستراتيجية الوطنية لتغير المناخ في مصر 2050 وأهداف التنمية المستدامة.' : 'Our methodology aligns with Egypt’s National Climate Change Strategy 2050 and Sustainable Development Goals.'}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-egypt-gold font-black text-xs uppercase tracking-widest">Academic Rigor</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                {isRtl ? 'تمت مراجعة معاملات الانبعاثات بناءً على أحدث الأبحاث العلمية المنشورة في المجلات البيئية المصرية.' : 'Emission factors have been reviewed based on the latest scientific research published in Egyptian environmental journals.'}
-              </p>
-            </div>
+          <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 space-y-1">
+            <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+              تقديري
+            </span>
+            <p className="text-xs text-slate-300 leading-relaxed pt-1">
+              ناتج حساب يعتمد على متوسطات وطنية أو معاملات استرشادية؛ مفيد للمقارنة والتوعية وليس قياساً مخبرياً.
+            </p>
+          </div>
+          <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 space-y-1">
+            <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
+              تم التحقق منه
+            </span>
+            <p className="text-xs text-slate-300 leading-relaxed pt-1">
+              لا يُمنح إلا عندما يرتبط الإدخال بوثيقة/إيصال أو مراجعة من شريك أو مسؤول مخول.
+            </p>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Verification Badge */}
-      <div className="mt-12 flex flex-col items-center space-y-6">
-        <div className="flex items-center gap-6">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/IPCC_logo.svg/1200px-IPCC_logo.svg.png" className="h-12 grayscale opacity-50" alt="IPCC" referrerPolicy="no-referrer" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/UNFCCC_Logo.svg/1200px-UNFCCC_Logo.svg.png" className="h-12 grayscale opacity-50" alt="UNFCCC" referrerPolicy="no-referrer" />
+      {/* Interactive Calculator Check / Override */}
+      <section className="bg-slate-900/80 border border-emerald-500/30 rounded-3xl p-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black text-white flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-emerald-400" />
+              اختبر الحساب بنفسك أو صحّح المعامل
+            </h2>
+            <p className="text-xs text-slate-300 mt-1">
+              جرّب تغيير الكمية أو معامل الانبعاث لتفهم كيف يخرج الرقم النهائي بوضوح (الوحدة الموحدة: kg CO₂e).
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleSelectSector(testSector)}
+            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:text-white transition"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>استعادة الافتراضي</span>
+          </button>
         </div>
-        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.3em]">Scientifically Audited & Verified</p>
+
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(SECTOR_DEFAULTS) as TestSector[]).map((sec) => (
+            <button
+              key={sec}
+              type="button"
+              onClick={() => handleSelectSector(sec)}
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold border transition ${
+                testSector === sec
+                  ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                  : 'bg-slate-950/60 text-slate-300 border-white/10 hover:text-white'
+              }`}
+            >
+              {SECTOR_DEFAULTS[sec].label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="space-y-1.5">
+            <label htmlFor="meth-amount" className="block text-xs font-bold text-slate-300">
+              الكمية ({currentMeta.unit})
+            </label>
+            <input
+              id="meth-amount"
+              type="number"
+              min="0"
+              step="any"
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              className="w-full min-h-[44px] bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm font-black text-white focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="meth-factor" className="block text-xs font-bold text-slate-300">
+              معامل التحويل (kg CO₂e / وحدة)
+            </label>
+            <input
+              id="meth-factor"
+              type="number"
+              min="0"
+              step="0.001"
+              value={factorInput}
+              onChange={(e) => setFactorInput(e.target.value)}
+              className="w-full min-h-[44px] bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm font-black text-white focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
+          <div className="bg-slate-950 border border-emerald-500/30 rounded-2xl p-4">
+            <p className="text-[11px] font-bold text-slate-400">النتيجة (تقديري)</p>
+            <p className="text-2xl font-black text-emerald-300 tabular-nums mt-0.5">
+              {computedKg.toFixed(2)} <span className="text-xs">kg CO₂e</span>
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              ويعادل: {computedTons.toFixed(4)} طن متري (1 طن = 1000 كجم)
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-slate-950/60 border border-white/10 rounded-xl p-3.5 text-xs text-slate-300 space-y-1">
+          <p>
+            <strong>المصدر:</strong> {currentMeta.source}
+          </p>
+          <p className="text-slate-400">
+            <strong>الافتراضات:</strong> {currentMeta.assumptions}
+          </p>
+        </div>
+      </section>
+
+      {/* Sector Cards */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <article
+              key={section.id}
+              className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-slate-950 border border-white/10 flex items-center justify-center">
+                    <Icon className={`w-5 h-5 ${section.iconColor}`} />
+                  </div>
+                  <h2 className="text-lg font-black text-white">{section.title}</h2>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                  معامل تقديري
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">{section.description}</p>
+
+              <div className="bg-slate-950/70 border border-dashed border-white/15 rounded-2xl p-3.5 space-y-1">
+                <p className="text-[11px] text-slate-400 font-bold">المعادلة والوحدة ({section.unit})</p>
+                <p className="text-sm font-mono font-bold text-emerald-300" dir="ltr">
+                  {section.formula}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Database className="w-4 h-4 text-sky-400 shrink-0" />
+                <span>المصدر: <strong className="text-slate-200">{section.source}</strong></span>
+              </div>
+            </article>
+          );
+        })}
+      </section>
+
+      <div className="bg-slate-900/75 border border-white/10 rounded-2xl p-4 flex items-start gap-3 text-xs text-slate-300">
+        <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          لا يخلط MoEco بين الكيلوجرام والطن؛ جميع الأرقام الأساسية تُعرض بالكيلوجرام مكافئ ثاني أكسيد الكربون (kg CO₂e) مع ذكر الفترة ومصدر المعامل بوضوح.
+        </p>
       </div>
     </div>
   );

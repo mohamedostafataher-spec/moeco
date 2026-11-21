@@ -3,9 +3,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 import { carbonDataService } from '../services/carbonDataService';
-import { User as UserIcon, Camera, MapPin, LogOut, Save, Smartphone, Moon, Sun as SunIcon, ShieldCheck, Check, Globe, Layout, Palette, Phone, Loader2 } from 'lucide-react';
+import { User as UserIcon, Camera, MapPin, LogOut, Save, Smartphone, Moon, Sun as SunIcon, ShieldCheck, Check, Globe, Layout, Palette, Phone, Loader2, Trash2, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notificationService } from '../services/notificationService';
+import { civicActionService } from '../services/civicActionService';
+import { Link } from 'react-router-dom';
 
 const Settings: React.FC = () => {
   const { 
@@ -24,6 +26,7 @@ const Settings: React.FC = () => {
   const [socialBracket, setSocialBracket] = useState(user?.socialBracket || "middle");
   const [saved, setSaved] = useState(false);
   const [detecting, setDetecting] = useState(false);
+  const [confirmClearLocal, setConfirmClearLocal] = useState(false);
 
   const handleDetectCountry = async () => {
     setDetecting(true);
@@ -247,6 +250,64 @@ const Settings: React.FC = () => {
                <button onClick={handleDetectCountry} disabled={detecting} className="w-full py-4 bg-eco-green/10 text-eco-green rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-eco-green hover:text-white transition-all">
                   {detecting ? <Loader2 className="animate-spin mx-auto" /> : (isRtl ? 'تحديث الموقع' : 'Geosync Now')}
                </button>
+            </div>
+
+            {/* Privacy & Local Civic Data Management */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 border border-white/10 text-white space-y-4">
+              <div className="flex items-center gap-2 text-emerald-400">
+                <EyeOff size={20} />
+                <h4 className="text-sm font-black">
+                  {isRtl ? 'الخصوصية وإدارة البلاغات والبيانات' : 'Privacy & Civic Data Controls'}
+                </h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {isRtl
+                  ? 'مشاركة الموقع والصورة اختيارية وتُقرب الإحداثيات تلقائياً في العرض العام. يمكنك إخفاء اسمك أو حذف أي بلاغ من صفحة «بلاغاتي» أو مسح بياناتك المحلية هنا.'
+                  : 'Location and photos are opt-in and rounded publicly. You can anonymize or delete any report in My Reports, or clear local civic entries here.'}
+              </p>
+              <Link
+                to="/eco-watch"
+                className="min-h-[44px] w-full flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-xs font-bold text-white hover:bg-white/20 transition"
+              >
+                {isRtl ? 'إدارة بلاغاتي (حذف / إخفاء الاسم)' : 'Manage My Reports'}
+              </Link>
+
+              {!confirmClearLocal ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmClearLocal(true)}
+                  className="min-h-[44px] w-full flex items-center justify-center gap-2 rounded-xl bg-rose-500/15 border border-rose-400/30 text-xs font-bold text-rose-200 hover:bg-rose-500/25 transition"
+                >
+                  <Trash2 size={15} />
+                  <span>{isRtl ? 'مسح سجلاتي المحلية (بلاغات / تدوير / تحديات)' : 'Clear My Local Civic Data'}</span>
+                </button>
+              ) : (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-400/40 space-y-2">
+                  <p className="text-[11px] font-bold text-rose-200">
+                    {isRtl ? 'هل تريد حذف جميع بلاغاتك وسجلات التدوير والتحديات المحفوظة على هذا الجهاز؟' : 'Confirm deleting all local civic records on this device?'}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        civicActionService.clearMyLocalCivicData(user?.id || 'guest-user-2026');
+                        setConfirmClearLocal(false);
+                        notificationService.success(isRtl ? 'تم مسح البيانات المجتمعية المحلية بنجاح.' : 'Local civic data cleared.');
+                      }}
+                      className="min-h-[44px] flex-1 rounded-xl bg-rose-500 text-white text-xs font-black hover:bg-rose-400 transition"
+                    >
+                      {isRtl ? 'تأكيد المسح' : 'Confirm Delete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmClearLocal(false)}
+                      className="min-h-[44px] flex-1 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition"
+                    >
+                      {isRtl ? 'إلغاء' : 'Cancel'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
          </aside>
       </div>

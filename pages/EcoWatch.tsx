@@ -1,602 +1,863 @@
-
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, MapPin, AlertTriangle, Trash2, Droplets, Zap, X, Plus, Clock, Shield, Info, Filter, Flame, Wind, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Camera,
+  MapPin,
+  AlertTriangle,
+  Trash2,
+  Droplets,
+  Flame,
+  Sun,
+  Lightbulb,
+  HelpCircle,
+  Plus,
+  Clock,
+  ShieldCheck,
+  Info,
+  EyeOff,
+  CheckCircle2,
+  Map as MapIcon,
+  FileEdit,
+  Send,
+  BarChart3,
+  Lock,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
-import { carbonDataService } from '../services/carbonDataService';
-import { smartAiService } from '../services/smartAiService';
-import { supabase } from '../services/supabaseClient';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import {
+  civicActionService,
+  CivicReport,
+  ReportCategory,
+  ReportStatus,
+  REPORT_CATEGORY_META,
+  REPORT_STATUS_META,
+} from '../services/civicActionService';
 
-const EnvironmentalReporting: React.FC = () => {
-  const { language, theme, user, isRtl } = useApp();
-  const [reports, setReports] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'reports' | 'water'>('reports');
-  const [waterIssues, setWaterIssues] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [newReport, setNewReport] = useState({
-    title: '',
-    description: '',
-    category: 'trash',
-    location_lat: 30.0444,
-    location_lng: 31.2357,
-    photo_url: '',
-    severity_level: 'medium'
-  });
+const EGYPT_GOVERNORATES = [
+  'القاهرة',
+  'الجيزة',
+  'الإسكندرية',
+  'القليوبية',
+  'الدقهلية',
+  'الشرقية',
+  'الغربية',
+  'أسوان',
+  'الأقصر',
+  'بورسعيد',
+  'السويس',
+  'الإسماعيلية',
+  'أسيوط',
+  'المنيا',
+];
 
-  useEffect(() => {
-    fetchReports();
+const CATEGORY_ICONS: Record<ReportCategory, React.FC<{ className?: string }>> = {
+  water_leak: Droplets,
+  waste_pile: Trash2,
+  waste_burning: Flame,
+  daytime_lighting: Lightbulb,
+  heat_no_shade: Sun,
+  other: HelpCircle,
+};
 
-    const channel = supabase
-      .channel('public:environmental_reports')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'environmental_reports' }, (payload) => {
-         setReports(prev => [payload.new, ...prev]);
-         notificationService.info(language === 'ar' ? 'تم إضافة بلاغ جديد' : 'New report submitted');
-      })
-      .subscribe();
+const EcoWatch: React.FC = () => {
+  const { user, isRtl } = useApp();
+  const [reports, setReports] = useState<CivicReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'submit' | 'my_reports' | 'public_map'>('submit');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | ReportCategory>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | ReportStatus>('all');
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [language]);
-
-  const fetchReports = async () => {
-    try {
-      const [reportsData, waterData] = await Promise.all([
-        storageService.getEnvironmentalReports(),
-        storageService.getWaterIssues()
-      ]);
-      setReports(reportsData || []);
-      setWaterIssues(waterData || []);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-    }
-  };
-
+  // Form states
+  const [category, setCategory] = useState<ReportCategory>('water_leak');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [governorate, setGovernorate] = useState('القاهرة');
+  const [area, setArea] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [shareLocationConsent, setShareLocationConsent] = useState(false);
+  const [lat, setLat] = useState<number>(30.0444);
+  const [lng, setLng] = useState<number>(31.2357);
+  const [sharePhotoConsent, setSharePhotoConsent] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [nearbyWarning, setNearbyWarning] = useState<CivicReport | null>(null);
+  const [distinctIssueConfirmed, setDistinctIssueConfirmed] = useState(false);
+  const [submitSuccessId, setSubmitSuccessId] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    setIsUploading(true);
-    try {
-      const publicUrl = await storageService.uploadImage(file, 'environmental-reports');
-      setNewReport({ ...newReport, photo_url: publicUrl });
-      notificationService.success(language === 'ar' ? "تم رفع الصورة بنجاح" : "Image uploaded successfully");
-    } catch (error) {
-      console.error("Upload error:", error);
-      notificationService.error(language === 'ar' ? "فشل رفع الصورة" : "Upload failed");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setNewReport({
-            ...newReport,
-            location_lat: position.coords.latitude,
-            location_lng: position.coords.longitude
-          });
-          notificationService.success(language === 'ar' ? "تم تحديد موقعك بنجاح" : "Location captured successfully");
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          notificationService.error(language === 'ar' ? "فشل تحديد الموقع" : "Failed to capture location");
-        }
-      );
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!newReport.photo_url) {
-      notificationService.error(language === 'ar' ? "يرجى إرفاق صورة كدليل" : "Please attach a photo as evidence");
-      return;
-    }
+  const loadReports = async () => {
     setLoading(true);
     try {
-      // Free AI replacement for expert reports:
-      const calculatedSeverity = await smartAiService.classifySeverity(newReport.description, language);
-
-      const finalReport = {
-        ...newReport,
-        severity_level: calculatedSeverity
-      };
-
-      await storageService.saveEnvironmentalReport(finalReport);
-      
-      if (user) {
-        await carbonDataService.logEnvironmentalAction(
-          user.id,
-          'community_report',
-          -5,
-          'Report submitted for ' + newReport.category
-        );
-      }
-
-      setIsModalOpen(false);
-      fetchReports();
-      setNewReport({
-        title: '',
-        description: '',
-        category: 'trash',
-        location_lat: 30.0444,
-        location_lng: 31.2357,
-        photo_url: '',
-        severity_level: 'medium'
-      });
-      notificationService.success(language === 'ar' ? "تم إرسال البلاغ بنجاح" : "Report submitted successfully");
-    } catch (error) {
-      console.error("Error saving report:", error);
-      notificationService.error(language === 'ar' ? "فشل إرسال البلاغ" : "Error submitting report");
+      const data = await civicActionService.getAllReports();
+      setReports(data);
+    } catch (e) {
+      console.error('Error loading reports:', e);
+      notificationService.error('تعذر تحميل قائمة البلاغات');
     } finally {
       setLoading(false);
     }
   };
 
-  const [filter, setFilter] = useState<'all' | 'verified' | 'pending'>('all');
+  useEffect(() => {
+    loadReports();
+  }, []);
 
-  const filteredReports = reports.filter(r => {
-    if (filter === 'all') return true;
-    return r.status === filter;
-  });
+  const handleGetCurrentLocation = () => {
+    if (!shareLocationConsent) {
+      setShareLocationConsent(true);
+    }
+    if (!('geolocation' in navigator)) {
+      notificationService.error('المتصفح لا يدعم تحديد الموقع الجغرافي');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude);
+        setLng(pos.coords.longitude);
+        notificationService.success('تم التقاط الإحداثيات (ستُعرض كنطاق عام فقط للخصوصية)');
+      },
+      () => {
+        notificationService.error('تعذر الوصول للموقع الجغرافي. يمكنك تحديد المنطقة نصياً.');
+      }
+    );
+  };
 
-  const categories = [
-    { id: 'garbage', icon: Trash2, label: language === 'ar' ? 'تراكم قمامة' : 'Garbage Accumulation', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { id: 'burning', icon: Flame, label: language === 'ar' ? 'حرق مخلفات' : 'Waste Burning', color: 'text-red-500', bg: 'bg-red-500/10' },
-    { id: 'water_pollution', icon: Droplets, label: language === 'ar' ? 'تلوث مياه' : 'Water Pollution', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { id: 'tree_cutting', icon: Zap, label: language === 'ar' ? 'قطع أشجار' : 'Tree Cutting', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { id: 'industrial_smell', icon: Wind, label: language === 'ar' ? 'روائح صناعية' : 'Industrial Smells', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { id: 'dangerous_pole', icon: AlertTriangle, label: language === 'ar' ? 'عمود خطر' : 'Dangerous Pole', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-  ];
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+    setIsUploading(true);
+    setFormError('');
+    try {
+      const uploaded = await storageService.uploadImage(file, 'environmental-reports');
+      setPhotoUrl(uploaded);
+      setSharePhotoConsent(true);
+      notificationService.success('تم إرفاق الصورة بنجاح');
+    } catch {
+      // Safe local preview fallback for demo/offline mode without breaking user flow
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setPhotoUrl(reader.result);
+          setSharePhotoConsent(true);
+          notificationService.info('تم حفظ معاينة الصورة محلياً ضمن البلاغ التجريبي');
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const LocationPicker = () => {
     useMapEvents({
       click(e) {
-        setNewReport(prev => ({
-          ...prev,
-          location_lat: e.latlng.lat,
-          location_lng: e.latlng.lng
-        }));
+        if (shareLocationConsent) {
+          setLat(e.latlng.lat);
+          setLng(e.latlng.lng);
+        }
       },
     });
-    return (
-      <Marker position={[newReport.location_lat, newReport.location_lng]} />
-    );
+    return shareLocationConsent ? <Marker position={[lat, lng]} /> : null;
   };
 
+  const handleSubmit = async (asDraft: boolean) => {
+    setFormError('');
+    setSubmitSuccessId(null);
+
+    if (!area.trim() || area.trim().length < 2) {
+      setFormError('يرجى إدخال اسم المنطقة أو الحي (مثال: المعادي، الدقي).');
+      return;
+    }
+    if (!description.trim() || description.trim().length < 8) {
+      setFormError('يرجى كتابة وصف مختصر واضح للمشكلة (8 أحرف على الأقل).');
+      return;
+    }
+
+    if (!asDraft && !distinctIssueConfirmed) {
+      const similar = await civicActionService.findNearbySimilarReport(
+        category,
+        area,
+        shareLocationConsent ? lat : undefined,
+        shareLocationConsent ? lng : undefined
+      );
+      if (similar) {
+        setNearbyWarning(similar);
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      const computedTitle =
+        title.trim() || `${REPORT_CATEGORY_META[category].labelAr} - ${area.trim()}`;
+      const created = await civicActionService.submitReport({
+        userId: user?.id || 'guest-user-2026',
+        userName: user?.name || 'مشارك',
+        category,
+        title: computedTitle,
+        description,
+        area,
+        governorate,
+        shareLocationConsent,
+        latitude: shareLocationConsent ? lat : undefined,
+        longitude: shareLocationConsent ? lng : undefined,
+        sharePhotoConsent,
+        photoUrl: sharePhotoConsent ? photoUrl : undefined,
+        isAnonymous,
+        asDraft,
+        distinctIssueConfirmed,
+      });
+
+      setSubmitSuccessId(created.id);
+      setTitle('');
+      setDescription('');
+      setArea('');
+      setPhotoUrl('');
+      setNearbyWarning(null);
+      setDistinctIssueConfirmed(false);
+      await loadReports();
+
+      notificationService.success(
+        asDraft
+          ? 'تم حفظ البلاغ كمسودة محلية'
+          : 'تم حفظ البلاغ تجريبياً بحالة «تم الاستلام»'
+      );
+      setActiveTab('my_reports');
+    } catch (e: any) {
+      setFormError(e?.message || 'حدث خطأ أثناء حفظ البلاغ');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePublishDraft = async (id: string) => {
+    await civicActionService.publishDraftReport(id);
+    await loadReports();
+    notificationService.success('تم إرسال المسودة وحفظها بحالة «تم الاستلام»');
+  };
+
+  const handleAnonymize = async (id: string) => {
+    await civicActionService.anonymizeReport(id);
+    await loadReports();
+    notificationService.success('تم إخفاء البيانات الشخصية والصورة والموقع الدقيق لهذا البلاغ');
+  };
+
+  const handleDelete = async (id: string) => {
+    await civicActionService.deleteReport(id);
+    await loadReports();
+    notificationService.info('تم حذف البلاغ من سجلك المحلي');
+  };
+
+  const currentUserId = user?.id || 'guest-user-2026';
+  const myReports = reports.filter((r) => r.userId === currentUserId);
+  const publicReports = reports.filter((r) => {
+    if (r.status === 'draft') return false;
+    const catOk = categoryFilter === 'all' || r.category === categoryFilter;
+    const statusOk = statusFilter === 'all' || r.status === statusFilter;
+    return catOk && statusOk;
+  });
+
   return (
-    <div className="section-container pb-32 pt-8" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* 1. CINEMATIC HERO */}
-      <section className="relative h-[50vh] rounded-[3.5rem] overflow-hidden group mb-16 border border-white/5 shadow-2xl">
-        <img 
-          src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop" 
-          alt="Environment" 
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-        
-        <div className="absolute bottom-12 left-12 right-12 flex flex-col md:flex-row justify-between items-end gap-10">
-          <div className="space-y-6 max-w-3xl">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-3 px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-full"
-            >
-              <Shield className="w-4 h-4 text-rose-500" />
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none">Global Sentinel Grid</span>
-            </motion.div>
-            
-            <h1 className="text-6xl md:text-8xl font-black text-white font-arabic italic leading-[0.8] tracking-tighter">
-              {language === 'ar' ? 'صوتك هو التغيير' : 'YOUR VOICE IS THE SHIELD'}
+    <div className="max-w-6xl mx-auto px-4 pb-32 pt-4 space-y-8" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Header */}
+      <header className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-emerald-400">
+              المشاركة المجتمعية المحلية · نسخة تجريبية داخل التطبيق
+            </p>
+            <h1 className="text-3xl md:text-4xl font-black text-white leading-tight">
+              بلاغ بيئي
             </h1>
-            
-            <div className="flex gap-4">
-              <button 
-                onClick={() => setActiveTab('reports')}
-                className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${activeTab === 'reports' ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
-              >
-                {language === 'ar' ? 'شبكة البلاغات' : 'INTEL NETWORK'}
-              </button>
-              <button 
-                onClick={() => setActiveTab('water')}
-                className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${activeTab === 'water' ? 'bg-cyan-500 border-cyan-500 text-white shadow-lg shadow-cyan-500/20' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
-              >
-                {language === 'ar' ? 'مراقب النقاء' : 'PURITY SCANNER'}
-              </button>
-            </div>
+            <p className="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
+              سجّل مشكلة بيئية في منطقتك وتابع حالتها خطوة بخطوة. يتم حماية خصوصيتك بعدم عرض موقعك الدقيق أو بياناتك الشخصية للعامة.
+            </p>
           </div>
 
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="group relative px-12 py-6 bg-white text-black rounded-[2rem] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl overflow-hidden"
-          >
-            <span className="relative z-10 flex items-center gap-3">
-              <Plus className="w-5 h-5" />
-              {language === 'ar' ? 'إرسال بلاغ طوارئ' : 'DEPLOY REPORT'}
-            </span>
-            <div className="absolute inset-0 bg-rose-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-          </button>
-        </div>
-      </section>
-
-      <AnimatePresence mode="wait">
-        {activeTab === 'reports' ? (
-          <motion.div 
-            key="reports" 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -30 }} 
-            className="grid grid-cols-1 lg:grid-cols-12 gap-12"
-          >
-            <div className="lg:col-span-4 space-y-8">
-              <div className="aeon-glass-panel p-10 border-white/5 space-y-10">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
-                      <TrendingUp className="w-6 h-6 text-emerald-500" />
-                   </div>
-                   <h2 className="text-xl font-black uppercase tracking-tighter italic">{language === 'ar' ? 'تحليل الأثر' : 'IMPACT ANALYTICS'}</h2>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/5">
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Reports Deployed</p>
-                    <div className="flex items-end gap-3">
-                      <span className="text-5xl font-black tabular-nums">{reports.length}</span>
-                      <span className="text-[10px] font-black text-rose-500 mb-2 uppercase tracking-widest">Active Cases</span>
-                    </div>
-                  </div>
-                  <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/5">
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Guardian Credits</p>
-                    <div className="flex items-end gap-3">
-                      <span className="text-5xl font-black tabular-nums text-emerald-500">{reports.length * 50}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-white/5">
-                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em]">Threat Categories</p>
-                  <div className="space-y-2">
-                    {categories.map(cat => (
-                      <div key={cat.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/20 transition-all group">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 ${cat.color}`}>
-                            <cat.icon className="w-5 h-5" />
-                          </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors">{cat.label}</span>
-                        </div>
-                        <span className="text-xs font-black tabular-nums text-zinc-500 transition-colors">
-                          {reports.filter(r => r.category === cat.id).length.toString().padStart(2, '0')}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-8 space-y-10">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-3xl font-black font-arabic italic tracking-tight">{language === 'ar' ? 'البلاغات النشطة' : 'ACTIVE INTEL'}</h2>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${filter === 'all' ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border-white/10 hover:bg-white/10'}`}
-                  >
-                    {language === 'ar' ? 'الكل' : 'All'}
-                  </button>
-                  <button 
-                    onClick={() => setFilter('verified')}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${filter === 'verified' ? 'bg-emerald-500 text-white' : 'bg-white/5 text-zinc-400 border-white/10 hover:bg-white/10'}`}
-                  >
-                    {language === 'ar' ? 'الموثقة' : 'Verified'}
-                  </button>
-                  <button 
-                    onClick={() => setFilter('pending')}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${filter === 'pending' ? 'bg-amber-500 text-white' : 'bg-white/5 text-zinc-400 border-white/10 hover:bg-white/10'}`}
-                  >
-                    {language === 'ar' ? 'قيد المراجعة' : 'Pending'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 md:gap-8">
-                {filteredReports.map((report, idx) => (
-                  <motion.div
-                    key={report.id}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="aeon-glass-panel p-2 border-white/5 group overflow-hidden"
-                  >
-                    <div className="flex flex-col md:flex-row h-full">
-                       <div className="w-full md:w-48 lg:w-64 h-48 md:h-auto rounded-2xl md:rounded-[2rem] overflow-hidden relative">
-                          <img 
-                            src={report.photo_url || `https://picsum.photos/seed/${report.id}/600/600`} 
-                            alt={report.title} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors" />
-                          <div className={`absolute top-3 left-3 md:top-4 md:left-4 px-2 md:px-3 py-1 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest ${categories.find(c => c.id === report.category)?.bg || 'bg-white/10'} ${categories.find(c => c.id === report.category)?.color || 'text-white'} backdrop-blur-md border border-white/10`}>
-                             {categories.find(c => c.id === report.category)?.label || report.category}
-                          </div>
-                          
-                          {report.status === 'verified' && (
-                            <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 bg-emerald-500 text-white px-2 md:px-3 py-1 rounded-full text-[7px] md:text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5 md:gap-2">
-                               <Shield className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                               {language === 'ar' ? 'بلاغ موثق من خبير' : 'EXPERT VERIFIED'}
-                            </div>
-                          )}
-                       </div>
-                       
-                       <div className="flex-1 p-5 md:p-8 flex flex-col justify-between">
-                          <div className="space-y-3 md:space-y-4">
-                             <div className="flex justify-between items-start">
-                                <h3 className="text-xl md:text-3xl font-black uppercase tracking-tighter group-hover:text-rose-500 transition-colors leading-none truncate md:whitespace-normal">{report.title}</h3>
-                                <span className="text-[8px] md:text-[10px] font-black text-zinc-600 uppercase tracking-widest bg-white/5 px-2 py-1 rounded shrink-0 ml-2">
-                                  ID: {report.id?.slice(0, 8)}
-                                </span>
-                             </div>
-                             <p className="text-xs md:text-sm text-zinc-500 font-bold leading-relaxed line-clamp-2 md:line-clamp-3">
-                                {report.description}
-                             </p>
-                          </div>
-
-                          <div className="pt-4 md:pt-6 mt-4 md:mt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                             <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto">
-                                <div className="flex items-center gap-2">
-                                   <MapPin className="w-3 h-3 md:w-4 md:h-4 text-rose-500" />
-                                   <span className="text-[9px] md:text-[10px] font-black text-zinc-500 tabular-nums uppercase">{report.location_lat?.toFixed(4)} / {report.location_lng?.toFixed(4)}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                   <Clock className="w-3 h-3 md:w-4 md:h-4 text-zinc-600" />
-                                   <span className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest">{new Date(report.created_at).toLocaleDateString()}</span>
-                                </div>
-                             </div>
-                             
-                             <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-end">
-                                <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${report.status === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'} animate-pulse shadow-[0_0_10px_currentColor]`} />
-                                <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${report.status === 'pending' ? 'text-amber-500' : 'text-emerald-500'}`}>
-                                  STATUS: {report.status}
-                                </span>
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-
-                {reports.length === 0 && (
-                  <div className="aeon-glass-panel border-dashed p-32 text-center opacity-40">
-                    <AlertTriangle className="w-16 h-16 text-zinc-500 mx-auto mb-6" />
-                    <p className="text-sm font-black uppercase tracking-[0.3em]">No Active Intelligence Nodes</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div 
-            key="water" 
-            initial={{ opacity: 0, scale: 0.98 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            exit={{ opacity: 0, scale: 0.98 }} 
-            className="space-y-12"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-              <div className="md:col-span-4 space-y-8">
-                 <div className="aeon-glass-panel p-10 border-white/5 space-y-8">
-                    <div className="w-16 h-16 bg-cyan-500/10 rounded-[1.8rem] flex items-center justify-center border border-cyan-500/20 text-cyan-500">
-                      <Droplets className="w-8 h-8" />
-                    </div>
-                    <div>
-                       <h3 className="text-3xl font-black font-arabic tracking-tight mb-2 uppercase">{language === 'ar' ? 'مراقب النقاء' : 'PURITY NODE'}</h3>
-                       <p className="text-sm font-bold text-zinc-500 leading-relaxed uppercase tracking-tight">
-                         {language === 'ar' ? 'شبكة استشعار متموضعة لتتبع جودة الموارد المائية في الوقت الفعلي.' : 'Distributed sensor network tracking hydro-resource quality in real-time.'}
-                       </p>
-                    </div>
-                    
-                    <div className="pt-8 border-t border-white/5 space-y-6">
-                      <div>
-                        <div className="flex justify-between items-center mb-3 px-1">
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Network Health</span>
-                          <span className="text-sm font-black text-emerald-500">98.4%</span>
-                        </div>
-                        <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
-                          <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full" style={{ width: '98.4%' }} />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5">
-                            <p className="text-[8px] font-black text-zinc-500 uppercase">Detection Nodes</p>
-                            <p className="text-2xl font-black tabular-nums">{120 + waterIssues.length}</p>
-                         </div>
-                         <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5">
-                            <p className="text-[8px] font-black text-zinc-500 uppercase">Verified Leaks</p>
-                            <p className="text-2xl font-black tabular-nums text-rose-500">{(waterIssues.filter((i: any) => i.status === 'verified').length).toString().padStart(2, '0')}</p>
-                         </div>
-                      </div>
-                    </div>
-                 </div>
-              </div>
-
-              <div className="md:col-span-8 h-[300px] sm:h-[650px] aeon-glass-panel p-2 border-white/5 relative z-0">
-                <div className="w-full h-full rounded-[2.5rem] overflow-hidden border border-white/5">
-                   <MapContainer center={[30.0444, 31.2357]} zoom={11} style={{ height: '100%', width: '100%' }}>
-                     <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-                     {waterIssues.map(issue => (
-                       <Marker key={issue.id} position={[issue.location_lat, issue.location_lng]} />
-                     ))}
-                   </MapContainer>
-                </div>
-                <div className="absolute top-8 right-8 z-[1000] aeon-glass-panel border-white/20 p-6 shadow-2xl">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 px-1">Visual Legend</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                      <span className="text-[10px] font-black uppercase tracking-tight text-white">{language === 'ar' ? 'جودة مثالية' : 'PRISTINE'}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <span className="text-[10px] font-black uppercase tracking-tight text-white">{language === 'ar' ? 'فحص مطلوب' : 'SCAN REQ'}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                      <span className="text-[10px] font-black uppercase tracking-tight text-white">{language === 'ar' ? 'منطقة حرجة' : 'CRITICAL'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className={`relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-2xl md:rounded-[3rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/local-monitor"
+              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm border border-white/10 transition-colors flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
-              <div className="flex flex-col md:flex-row h-full overflow-y-auto">
-                <div className="flex-1 p-6 md:p-10 space-y-6 md:space-y-8">
-                  <div className="flex justify-between items-center text-white sticky top-0 bg-slate-900 z-10 pb-4">
-                    <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter italic">
-                      {language === 'ar' ? 'تقديم بلاغ جديد' : 'NEW INTEL DEPLOY'}
-                    </h2>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all">
-                      <X className="w-6 h-6" />
-                    </button>
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <span>لوحة المتابعة المحلية</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Clear Experimental / No-Government-Claim Banner */}
+        <div
+          role="note"
+          className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-start gap-3 text-amber-100"
+        >
+          <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-xs md:text-sm leading-relaxed space-y-1">
+            <p className="font-bold text-amber-300">
+              تنبيه الشفافية: البلاغات في هذه النسخة تجريبية
+            </p>
+            <p>
+              يُحفظ البلاغ داخل التطبيق لأغراض العرض والتوثيق المجتمعي، ولا يُرسل تلقائياً إلى الحي أو جهة حكومية رسمية إلا عند ربط شريك محلي مخوّل.
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div
+          role="tablist"
+          aria-label="أقسام البلاغات البيئية"
+          className="flex flex-wrap gap-2 bg-slate-950/60 p-2 rounded-2xl border border-white/10"
+        >
+          {[
+            { id: 'submit', label: 'تقديم بلاغ جديد', icon: Plus },
+            { id: 'my_reports', label: `بلاغاتي (${myReports.length})`, icon: Clock },
+            { id: 'public_map', label: `البلاغات العامة والخريطة (${publicReports.length})`, icon: MapIcon },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 min-w-[160px] flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+                activeTab === tab.id
+                  ? 'bg-emerald-500 text-slate-950 shadow-lg'
+                  : 'text-slate-300 hover:bg-white/5'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* TAB 1: SUBMIT REPORT */}
+      {activeTab === 'submit' && (
+        <section
+          aria-label="نموذج تقديم بلاغ بيئي"
+          className="bg-slate-900/80 border border-white/10 rounded-[2rem] p-6 md:p-10 space-y-8 shadow-xl"
+        >
+          <div className="space-y-3">
+            <label className="block text-sm font-bold text-white">
+              1. نوع المشكلة البيئية <span className="text-rose-400">*</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(Object.keys(REPORT_CATEGORY_META) as ReportCategory[]).map((catKey) => {
+                const meta = REPORT_CATEGORY_META[catKey];
+                const Icon = CATEGORY_ICONS[catKey];
+                const selected = category === catKey;
+                return (
+                  <button
+                    key={catKey}
+                    type="button"
+                    onClick={() => {
+                      setCategory(catKey);
+                      setNearbyWarning(null);
+                      setDistinctIssueConfirmed(false);
+                    }}
+                    className={`flex items-center gap-3 p-4 rounded-2xl border text-right transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+                      selected
+                        ? 'bg-emerald-500/15 border-emerald-400 text-white'
+                        : 'bg-slate-950/60 border-white/10 text-slate-300 hover:border-white/25'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${meta.bg} ${meta.color}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold leading-snug">{meta.labelAr}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="report-gov" className="block text-sm font-bold text-white">
+                2. المحافظة <span className="text-rose-400">*</span>
+              </label>
+              <select
+                id="report-gov"
+                value={governorate}
+                onChange={(e) => setGovernorate(e.target.value)}
+                className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none"
+              >
+                {EGYPT_GOVERNORATES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="report-area" className="block text-sm font-bold text-white">
+                3. المنطقة أو العنوان التقريبي <span className="text-rose-400">*</span>
+              </label>
+              <input
+                id="report-area"
+                type="text"
+                value={area}
+                onChange={(e) => {
+                  setArea(e.target.value);
+                  setNearbyWarning(null);
+                }}
+                placeholder="مثال: المعادي - قرب محطة مترو المعادي"
+                className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="report-title" className="block text-sm font-bold text-white">
+              عنوان مختصر (اختياري)
+            </label>
+            <input
+              id="report-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="مثال: تسريب مياه في ماسورة فرعية بالرصيف"
+              className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="report-desc" className="block text-sm font-bold text-white">
+              4. وصف مختصر للمشكلة <span className="text-rose-400">*</span>
+            </label>
+            <textarea
+              id="report-desc"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="صف المشكلة بوضوح (المدة التقريبية، تأثيرها على المارة أو السكان... دون ذكر بيانات شخصية)."
+              className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none resize-y"
+            />
+          </div>
+
+          {/* Optional Location & Photo with Explicit Consent */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2 border-t border-white/10">
+            {/* Location Consent */}
+            <div className="p-5 rounded-2xl bg-slate-950/60 border border-white/10 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={shareLocationConsent}
+                    onChange={(e) => setShareLocationConsent(e.target.checked)}
+                    className="mt-1 w-5 h-5 accent-emerald-500 rounded"
+                  />
+                  <div>
+                    <span className="block text-sm font-bold text-white">
+                      مشاركة الموقع الجغرافي (اختياري وبموافقتك)
+                    </span>
+                    <span className="block text-xs text-slate-400 mt-0.5">
+                      لن يُعرض موقعك الدقيق للعامة؛ يظهر النطاق العام فقط (~1 كم) لحماية الخصوصية.
+                    </span>
                   </div>
+                </label>
+              </div>
 
-                  <div className="space-y-6">
-                    <div className="space-y-2 text-white">
-                      <label className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Report Title</label>
-                      <input 
-                        type="text" 
-                        value={newReport.title}
-                        onChange={(e) => setNewReport({...newReport, title: e.target.value})}
-                        placeholder="e.g., Waste pile at Maadi"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl px-5 md:px-6 py-3 md:py-4 text-sm md:text-base font-bold focus:ring-2 focus:ring-rose-500 transition-all outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2 text-white">
-                      <label className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Detailed Log</label>
-                      <textarea 
-                        rows={3}
-                        value={newReport.description}
-                        onChange={(e) => setNewReport({...newReport, description: e.target.value})}
-                        placeholder="Describe the environmental threat..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl px-5 md:px-6 py-3 md:py-4 text-sm md:text-base font-bold focus:ring-2 focus:ring-rose-500 transition-all outline-none resize-none"
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Threat Classification</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
-                        {categories.map(cat => (
-                          <button
-                            key={cat.id}
-                            onClick={() => setNewReport({...newReport, category: cat.id})}
-                            className={`flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all ${
-                              newReport.category === cat.id 
-                                ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20' 
-                                : 'bg-white/5 border-white/10 text-zinc-500 hover:border-rose-500/50'
-                            }`}
-                          >
-                            <cat.icon className="w-4 h-4 md:w-5 md:h-5" />
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              {shareLocationConsent && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleGetCurrentLocation}
+                    className="w-full py-3 px-4 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/30 font-bold text-sm flex items-center justify-center gap-2"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>تحديد موقعي الحالي أو الضغط على الخريطة</span>
+                  </button>
+                  <div className="h-44 rounded-2xl overflow-hidden border border-white/10">
+                    <MapContainer center={[lat, lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
+                      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                      <LocationPicker />
+                    </MapContainer>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="w-full md:w-80 lg:w-96 bg-white/[0.02] p-6 lg:p-10 space-y-6 md:space-y-8 border-t md:border-t-0 md:border-l border-white/5">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Visual Evidence</label>
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="aspect-video md:aspect-square rounded-2xl md:rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-4 group cursor-pointer hover:border-rose-500 transition-all relative overflow-hidden"
-                      >
-                        {newReport.photo_url ? (
-                          <img src={newReport.photo_url} alt="Preview" className="w-full h-full object-cover" />
-                        ) : isUploading ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="w-6 h-6 md:w-8 md:h-8 border-2 md:border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
-                            <span className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest">Processing...</span>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="p-3 md:p-4 bg-white/5 rounded-full group-hover:scale-110 transition-all">
-                              <Camera className="w-6 h-6 md:w-8 md:h-8 text-zinc-500 group-hover:text-rose-500" />
-                            </div>
-                            <span className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest">Sync Media</span>
-                          </>
-                        )}
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                      </div>
-                    </div>
+            {/* Photo Consent */}
+            <div className="p-5 rounded-2xl bg-slate-950/60 border border-white/10 space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sharePhotoConsent}
+                  onChange={(e) => {
+                    setSharePhotoConsent(e.target.checked);
+                    if (!e.target.checked) setPhotoUrl('');
+                  }}
+                  className="mt-1 w-5 h-5 accent-emerald-500 rounded"
+                />
+                <div>
+                  <span className="block text-sm font-bold text-white">
+                    إرفاق صورة توضيحية (اختياري وبموافقتك)
+                  </span>
+                  <span className="block text-xs text-slate-400 mt-0.5">
+                    تجنّب تصوير وجوه الأشخاص أو لوحات السيارات أو أي معلومات شخصية.
+                  </span>
+                </div>
+              </label>
 
-                    <div className="space-y-2">
-                       <label className="text-[9px] md:text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Geographic Fix</label>
-                       <div className="h-32 md:h-48 rounded-2xl md:rounded-3xl overflow-hidden border border-white/10 relative z-0">
-                          <MapContainer 
-                            center={[newReport.location_lat, newReport.location_lng]} 
-                            zoom={13} 
-                            style={{ height: '100%', width: '100%' }}
-                          >
-                            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-                            <LocationPicker />
-                          </MapContainer>
-                          <button 
-                            onClick={getCurrentLocation}
-                            className="absolute bottom-2 left-2 right-2 z-[1000] bg-slate-900/90 backdrop-blur-md p-2 md:p-3 rounded-lg md:rounded-xl border border-white/10 hover:bg-rose-500 text-white transition-all flex items-center justify-center gap-2"
-                          >
-                            <MapPin className="w-3 h-3 md:w-4 md:h-4" />
-                            <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest">Pin Current Coord</p>
-                          </button>
-                       </div>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={handleSubmit}
-                    disabled={loading || !newReport.title}
-                    className="w-full py-4 md:py-5 bg-white text-black rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-2xl"
+              {sharePhotoConsent && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-emerald-400 text-slate-300 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                   >
-                    {loading ? "INITIALIZING..." : (language === 'ar' ? 'إرسال البلاغ' : 'DEPLOY INTEL')}
+                    <Camera className="w-5 h-5 text-emerald-400" />
+                    <span>{isUploading ? 'جاري التحميل...' : photoUrl ? 'تغيير الصورة المرفقة' : 'اختر صورة من جهازك'}</span>
                   </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  {photoUrl && (
+                    <div className="relative rounded-xl overflow-hidden border border-white/10 max-h-40">
+                      <img src={photoUrl} alt="معاينة الصورة المرفقة" className="w-full h-40 object-cover" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Privacy Toggle */}
+          <div className="p-5 rounded-2xl bg-slate-950/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="mt-1 w-5 h-5 accent-emerald-500 rounded"
+              />
+              <div>
+                <span className="flex items-center gap-2 text-sm font-bold text-white">
+                  <EyeOff className="w-4 h-4 text-emerald-400" />
+                  <span>إخفاء اسمي عن العرض العام (موصى به)</span>
+                </span>
+                <span className="block text-xs text-slate-400 mt-0.5">
+                  عند التفعيل، يظهر البلاغ للعامة باسم «مستخدم مجهول» ولا تظهر هويتك.
+                </span>
+              </div>
+            </label>
+          </div>
+
+          {/* Nearby Similar Report Warning (Non-blocking for distinct issues) */}
+          {nearbyWarning && (
+            <div
+              role="alert"
+              className="p-5 rounded-2xl bg-amber-500/15 border border-amber-400/40 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-sm">
+                  <p className="font-bold text-amber-200">
+                    يوجد بلاغ مفتوح مشابه قريب من نفس المنطقة
+                  </p>
+                  <p className="text-slate-200">
+                    «{nearbyWarning.title}» — الحالة: {REPORT_STATUS_META[nearbyWarning.status].labelAr}
+                  </p>
+                  <p className="text-xs text-slate-300">
+                    لتقليل التكرار، يمكنك متابعة البلاغ القائم أو تأكيد أن بلاغك يخص مشكلة مختلفة وإرساله بشكل طبيعي.
+                  </p>
                 </div>
               </div>
-            </motion.div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('public_map')}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold"
+                >
+                  عرض البلاغات القريبة
+                </button>
+                <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 cursor-pointer text-xs font-bold text-amber-100">
+                  <input
+                    type="checkbox"
+                    checked={distinctIssueConfirmed}
+                    onChange={(e) => setDistinctIssueConfirmed(e.target.checked)}
+                    className="w-4 h-4 accent-amber-400"
+                  />
+                  <span>أؤكد أنها مشكلة مختلفة عن البلاغ القائم</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {formError && (
+            <div role="alert" className="p-4 rounded-2xl bg-rose-500/15 border border-rose-400/40 text-rose-200 text-sm font-bold">
+              {formError}
+            </div>
+          )}
+
+          {/* Pre-submit Notice + Action Buttons */}
+          <div className="space-y-4 pt-2">
+            <p className="text-xs text-slate-400 flex items-center gap-2">
+              <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                قبل الإرسال: يُحفظ هذا البلاغ في التطبيق كـ «نموذج تجريبي» ولا يُرسل تلقائياً لأي جهة حكومية ما لم يتوفر ربط شريك فعلي.
+              </span>
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleSubmit(true)}
+                className="sm:w-56 py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm flex items-center justify-center gap-2 border border-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              >
+                <FileEdit className="w-4 h-4" />
+                <span>حفظ كمسودة</span>
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleSubmit(false)}
+                className="flex-1 py-4 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <Send className="w-4 h-4" />
+                <span>{isSubmitting ? 'جاري الحفظ...' : 'إرسال البلاغ التجريبي'}</span>
+              </button>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </section>
+      )}
+
+      {/* TAB 2: MY REPORTS */}
+      {activeTab === 'my_reports' && (
+        <section aria-label="قائمة بلاغاتي" className="space-y-6">
+          {submitSuccessId && (
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-sm font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span>تم حفظ البلاغ في قائمتك بنجاح. يمكنك متابعته أو إخفاء بياناته أو حذفه في أي وقت.</span>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="p-16 text-center text-slate-400 font-bold">جاري تحميل بلاغاتك...</div>
+          ) : myReports.length === 0 ? (
+            <div className="p-14 bg-slate-900/60 border border-dashed border-white/15 rounded-[2rem] text-center space-y-4">
+              <AlertTriangle className="w-12 h-12 text-slate-500 mx-auto" />
+              <h2 className="text-xl font-bold text-white">لا توجد بلاغات مسجلة بعد</h2>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                يمكنك البدء بتسجيل بلاغ بيئي تجريبي أو حفظ مسودة لمتابعتها لاحقاً.
+              </p>
+              <button
+                type="button"
+                onClick={() => setActiveTab('submit')}
+                className="px-6 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm"
+              >
+                تقديم أول بلاغ
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {myReports.map((rep) => {
+                const catMeta = REPORT_CATEGORY_META[rep.category];
+                const statusMeta = REPORT_STATUS_META[rep.status];
+                const Icon = CATEGORY_ICONS[rep.category];
+                return (
+                  <article
+                    key={rep.id}
+                    className="bg-slate-900/80 border border-white/10 rounded-[2rem] p-6 space-y-4 shadow-lg"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catMeta.bg} ${catMeta.color}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{rep.title}</h3>
+                          <p className="text-xs text-slate-400">
+                            {catMeta.labelAr} · {rep.governorate} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString('ar-EG')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusMeta.badgeClass}`}>
+                          {statusMeta.labelAr}
+                        </span>
+                        {rep.isDemo && (
+                          <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 text-slate-300 border border-white/10">
+                            نموذج تجريبي
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-slate-300 leading-relaxed">{rep.description}</p>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10 text-xs text-slate-400">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <span>العرض العام: {rep.isAnonymous ? 'مخفي (مستخدم مجهول)' : rep.reporterDisplayName}</span>
+                        <span>الموقع: {rep.shareLocationConsent ? `نطاق عام (${rep.publicLat}, ${rep.publicLng})` : 'غير مشارك'}</span>
+                        <span>الصورة: {rep.photoUrl ? 'مرفقة بموافقتك' : 'غير مرفقة'}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {rep.status === 'draft' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePublishDraft(rep.id)}
+                            className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+                          >
+                            إرسال المسودة الآن
+                          </button>
+                        )}
+                        {!rep.isAnonymous || rep.photoUrl || rep.shareLocationConsent ? (
+                          <button
+                            type="button"
+                            onClick={() => handleAnonymize(rep.id)}
+                            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 font-bold text-xs"
+                          >
+                            إخفاء البيانات الشخصية والصورة
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(rep.id)}
+                          className="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs border border-rose-500/30"
+                        >
+                          حذف البلاغ
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* TAB 3: PUBLIC REPORTS & SIMPLIFIED MAP */}
+      {activeTab === 'public_map' && (
+        <section aria-label="البلاغات العامة والخريطة المبسطة" className="space-y-6">
+          {/* Privacy notice */}
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs md:text-sm text-emerald-100 flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>
+              حماية الخصوصية مفعّلة: لا تُعرض أسماء المبلّغين المجهولين أو أي بيانات شخصية أو إحداثيات دقيقة على الخريطة العامة (تُقرّب للنطاق العام فقط).
+            </span>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-white/10">
+            <div className="flex flex-wrap gap-2">
+              <select
+                aria-label="تصفية حسب نوع المشكلة"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as any)}
+                className="bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+              >
+                <option value="all">كل أنواع المشكلات</option>
+                {(Object.keys(REPORT_CATEGORY_META) as ReportCategory[]).map((k) => (
+                  <option key={k} value={k}>
+                    {REPORT_CATEGORY_META[k].labelAr}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                aria-label="تصفية حسب حالة البلاغ"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+              >
+                <option value="all">كل الحالات</option>
+                {(Object.keys(REPORT_STATUS_META) as ReportStatus[])
+                  .filter((s) => s !== 'draft')
+                  .map((s) => (
+                    <option key={s} value={s}>
+                      {REPORT_STATUS_META[s].labelAr}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <span className="text-xs font-bold text-slate-400">
+              النتائج المعروضة: {publicReports.length}
+            </span>
+          </div>
+
+          {/* Simplified Map */}
+          <div className="h-72 md:h-96 rounded-[2rem] overflow-hidden border border-white/10 bg-slate-900">
+            <MapContainer center={[30.0444, 31.2357]} zoom={10} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+              {publicReports
+                .filter((r) => typeof r.publicLat === 'number' && typeof r.publicLng === 'number')
+                .map((r) => (
+                  <Marker key={r.id} position={[r.publicLat!, r.publicLng!]}>
+                    <Popup>
+                      <div className="text-right font-arabic space-y-1 p-1" dir="rtl">
+                        <p className="font-bold text-slate-900 text-sm">{r.title}</p>
+                        <p className="text-xs text-slate-600">
+                          {REPORT_CATEGORY_META[r.category].labelAr} · {r.governorate} - {r.area}
+                        </p>
+                        <p className="text-xs font-bold text-emerald-700">
+                          الحالة: {REPORT_STATUS_META[r.status].labelAr}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+            </MapContainer>
+          </div>
+
+          {/* Public Reports List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {publicReports.map((rep) => {
+              const catMeta = REPORT_CATEGORY_META[rep.category];
+              const statusMeta = REPORT_STATUS_META[rep.status];
+              const Icon = CATEGORY_ICONS[rep.category];
+              return (
+                <article
+                  key={rep.id}
+                  className="bg-slate-900/80 border border-white/10 rounded-[2rem] p-6 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catMeta.bg} ${catMeta.color}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white">{rep.title}</h3>
+                        <p className="text-xs text-slate-400">
+                          {rep.governorate} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString('ar-EG')}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-xl text-xs font-bold border shrink-0 ${statusMeta.badgeClass}`}>
+                      {statusMeta.labelAr}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed">{rep.description}</p>
+                  <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
+                    <span>
+                      المبلّغ: {rep.isAnonymous ? 'مستخدم مجهول' : rep.reporterDisplayName || 'مشارك'}
+                    </span>
+                    <span>{rep.isDemo ? 'بيانات تجريبية / نموذجية' : 'بلاغ مسجّل'}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
 
-export default EnvironmentalReporting;
+export default EcoWatch;

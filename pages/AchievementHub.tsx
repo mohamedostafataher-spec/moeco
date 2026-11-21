@@ -11,13 +11,32 @@ import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { supabase } from '../services/supabaseClient';
 import { smartAiService } from '../services/smartAiService';
+import {
+  civicActionService,
+  REAL_IMPACT_CHALLENGES,
+  CivicChallenge,
+  ChallengeSubmission,
+  VerificationStatus,
+} from '../services/civicActionService';
+import { Link } from 'react-router-dom';
 
-type HubTab = 'missions' | 'challenges' | 'leaderboard' | 'wars';
+type HubTab = 'real_impact' | 'missions' | 'challenges' | 'leaderboard' | 'wars';
+
+const VERIF_STATUS_BADGE: Record<VerificationStatus, { label: string; cls: string }> = {
+  logged: { label: 'مُسجّل', cls: 'bg-slate-700/60 text-slate-200 border-slate-500/40' },
+  needs_review: { label: 'بحاجة إلى مراجعة', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
+  verified: { label: 'تم التحقق', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
+};
 
 const AchievementHub: React.FC = () => {
-  const { language, theme, user, isRtl, isAdmin } = useApp();
-  const [activeTab, setActiveTab] = useState<HubTab>('missions');
+  const { language, theme, user, isRtl } = useApp();
+  const [activeTab, setActiveTab] = useState<HubTab>('real_impact');
   const [loading, setLoading] = useState(true);
+
+  // REAL-IMPACT CHALLENGES STATE
+  const [civicSubmissions, setCivicSubmissions] = useState<ChallengeSubmission[]>([]);
+  const [evidenceInputs, setEvidenceInputs] = useState<Record<string, string>>({});
+  const [submittingChallengeId, setSubmittingChallengeId] = useState<string | null>(null);
 
   // MISSIONS STATE
   const [missions, setMissions] = useState<any[]>([]);
@@ -52,6 +71,9 @@ const AchievementHub: React.FC = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
+      const uid = user?.id || 'guest-user-2026';
+      setCivicSubmissions(civicActionService.getChallengeSubmissions(uid));
+
       if (!user) return;
 
       // Fetching from the new requested tables
@@ -125,6 +147,35 @@ const AchievementHub: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
+  const handleSubmitCivicChallenge = async (challenge: CivicChallenge) => {
+    const uid = user?.id || 'guest-user-2026';
+    const evidence = (evidenceInputs[challenge.id] || '').trim();
+    if (evidence.length < 5) {
+      notificationService.error('يرجى كتابة وصف موجز أو رقم مرجعي يوضح الإجراء المنفذ (5 أحرف على الأقل).');
+      return;
+    }
+    setSubmittingChallengeId(challenge.id);
+    try {
+      const res = await civicActionService.submitChallengeClaim({
+        userId: uid,
+        challenge,
+        evidenceSummary: evidence,
+      });
+      if (!res.ok) {
+        notificationService.warning(res.message);
+      } else {
+        notificationService.success(res.message);
+        setEvidenceInputs((prev) => ({ ...prev, [challenge.id]: '' }));
+        setCivicSubmissions(civicActionService.getChallengeSubmissions(uid));
+      }
+    } finally {
+      setSubmittingChallengeId(null);
+    }
+  };
+
+  const totalSymbolicPoints = civicSubmissions.reduce((s, c) => s + c.symbolicPointsAwarded, 0);
+  const totalVerifiedPoints = civicSubmissions.reduce((s, c) => s + c.verifiedPointsAwarded, 0);
+
   const getText = (val: any): string => {
     if (!val) return '';
     if (typeof val === 'string') return val;
@@ -168,18 +219,26 @@ const AchievementHub: React.FC = () => {
               </p>
            </div>
            
-           <div className="flex bg-zinc-100 dark:bg-white/5 p-1 rounded-[2rem] border border-white/5">
-              {(['missions', 'challenges', 'leaderboard', 'wars'] as const).map(tab => (
+           <div className="flex flex-wrap bg-zinc-900/80 p-1.5 rounded-2xl border border-white/10 gap-1">
+              {(['real_impact', 'missions', 'challenges', 'leaderboard', 'wars'] as const).map(tab => (
                  <button
                    key={tab}
                    onClick={() => setActiveTab(tab)}
-                   className={`px-6 py-3 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
-                     activeTab === tab ? 'bg-eco-green text-white shadow-lg' : 'text-zinc-500 hover:text-white'
+                   className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                     activeTab === tab ? 'bg-eco-green text-slate-950 shadow-lg' : 'text-slate-300 hover:text-white'
                    }`}
                  >
-                    {tab === 'missions' ? <Target size={14} className="inline mr-2" /> : tab === 'challenges' ? <Award size={14} className="inline mr-2" /> : tab === 'leaderboard' ? <Trophy size={14} className="inline mr-2" /> : <Sword size={14} className="inline mr-2" />}
-                    <span className="hidden sm:inline">
-                      {tab === 'missions' ? (isRtl ? 'مهمات' : 'Missions') : tab === 'challenges' ? (isRtl ? 'تحديات' : 'Challenges') : tab === 'leaderboard' ? (isRtl ? 'الترتيب' : 'Rankings') : (isRtl ? 'الحرب' : 'Wars')}
+                    {tab === 'real_impact' ? <Shield size={14} /> : tab === 'missions' ? <Target size={14} /> : tab === 'challenges' ? <Award size={14} /> : tab === 'leaderboard' ? <Trophy size={14} /> : <Sword size={14} />}
+                    <span>
+                      {tab === 'real_impact'
+                        ? 'تحديات الأثر الحقيقي'
+                        : tab === 'missions'
+                          ? (isRtl ? 'مهمات' : 'Missions')
+                          : tab === 'challenges'
+                            ? (isRtl ? 'الشارات' : 'Badges')
+                            : tab === 'leaderboard'
+                              ? (isRtl ? 'الترتيب' : 'Rankings')
+                              : (isRtl ? 'المحافظات' : 'Wars')}
                     </span>
                  </button>
               ))}
@@ -187,6 +246,134 @@ const AchievementHub: React.FC = () => {
         </div>
 
         <AnimatePresence mode="wait">
+          {activeTab === 'real_impact' && (
+            <motion.div key="real_impact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6" dir="rtl">
+              {/* Separation of Verified vs Symbolic Points + No Cash Redemption Disclaimer */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-5">
+                  <p className="text-xs font-bold text-slate-400">نقاط الأثر المؤكدة (تم التحقق)</p>
+                  <p className="text-3xl font-black text-emerald-400 mt-1 tabular-nums">{totalVerifiedPoints} نقطة</p>
+                  <p className="text-[11px] text-slate-400 mt-1">لا تُحتسب إلا عند تحقق الشرط ومراجعته فعلياً.</p>
+                </div>
+                <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5">
+                  <p className="text-xs font-bold text-slate-400">نقاط مشاركة رمزية (قيد المراجعة)</p>
+                  <p className="text-3xl font-black text-amber-300 mt-1 tabular-nums">{totalSymbolicPoints} نقطة</p>
+                  <p className="text-[11px] text-slate-400 mt-1">تُمنح لتوثيق خطوة المشاركة دون ادعاء أثر مؤكد.</p>
+                </div>
+                <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-5 flex items-start gap-2.5">
+                  <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    <strong>ضوابط النقاط ومنع التلاعب:</strong> جميع النقاط للتقدير المجتمعي فقط ولا تُحوّل إلى أموال نقدية. توجد فترة انتظار بين المطالبات ويشترط وجود سجل فعلي داعم (بلاغ / تسليم تدوير / مبادرة).
+                  </p>
+                </div>
+              </div>
+
+              {/* Real Impact Challenges Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {REAL_IMPACT_CHALLENGES.map((chg) => {
+                  const relatedSubs = civicSubmissions.filter((s) => s.challengeId === chg.id);
+                  const latestSub = relatedSubs[0];
+                  const verifBadge = latestSub ? VERIF_STATUS_BADGE[latestSub.status] : null;
+                  const actionLink =
+                    chg.actionType === 'verified_report' || chg.actionType === 'initiative_followup'
+                      ? { to: '/eco-watch', label: 'افتح «بلاغ بيئي»' }
+                      : chg.actionType === 'recycling_delivery'
+                        ? { to: '/waste-to-income', label: 'افتح «المخلفات إلى دخل»' }
+                        : { to: '/local-monitor', label: 'افتح «لوحة المتابعة والمبادرات»' };
+
+                  return (
+                    <article key={chg.id} className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 space-y-4">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h2 className="text-lg font-black text-white">{chg.title}</h2>
+                        {verifBadge && (
+                          <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${verifBadge.cls}`}>
+                            {verifBadge.label}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed">{chg.description}</p>
+
+                      <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3.5 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">نقاط المشاركة الرمزية:</span>
+                          <span className="font-black text-amber-300">+{chg.symbolicPoints} نقطة رمزية</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">نقاط بعد التحقق:</span>
+                          <span className="font-black text-emerald-300">+{chg.verifiedPoints} نقطة مؤكدة</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 pt-1 border-t border-white/10">
+                          شرط التحقق: {chg.verificationRule} (فترة انتظار: {chg.cooldownHours} ساعة)
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label htmlFor={`ev-${chg.id}`} className="block text-xs font-bold text-slate-300">
+                          وصف التوثيق أو الإجراء المنفذ
+                        </label>
+                        <input
+                          id={`ev-${chg.id}`}
+                          type="text"
+                          value={evidenceInputs[chg.id] || ''}
+                          onChange={(e) => setEvidenceInputs((prev) => ({ ...prev, [chg.id]: e.target.value }))}
+                          placeholder="مثال: تم تقديم بلاغ تسريب بالمعادي أو تسليم 3 كجم بلاستيك"
+                          className="w-full min-h-[44px] bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <Link
+                          to={actionLink.to}
+                          className="min-h-[44px] inline-flex items-center px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-sky-300 hover:bg-white/10 transition"
+                        >
+                          {actionLink.label}
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={submittingChallengeId === chg.id}
+                          onClick={() => handleSubmitCivicChallenge(chg)}
+                          className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition disabled:opacity-50"
+                        >
+                          {submittingChallengeId === chg.id ? 'جاري الفحص...' : 'إرسال للمراجعة والتحقق'}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {/* Submission History */}
+              {civicSubmissions.length > 0 && (
+                <div className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-3">
+                  <h3 className="text-base font-black text-white">سجل مطالبات التحقق</h3>
+                  <div className="space-y-2.5">
+                    {civicSubmissions.map((sub) => {
+                      const badge = VERIF_STATUS_BADGE[sub.status];
+                      const chg = REAL_IMPACT_CHALLENGES.find((c) => c.id === sub.challengeId);
+                      return (
+                        <div key={sub.id} className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-black text-white">{chg?.title || sub.challengeId}</p>
+                            <p className="text-xs text-slate-300 mt-0.5">{sub.evidenceSummary}</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">{new Date(sub.submittedAt).toLocaleString('ar-EG')}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${badge.cls}`}>{badge.label}</span>
+                            <span className="text-xs font-bold text-amber-300">+{sub.symbolicPointsAwarded} رمزية</span>
+                            {sub.verifiedPointsAwarded > 0 && (
+                              <span className="text-xs font-black text-emerald-300">+{sub.verifiedPointsAwarded} مؤكدة</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {activeTab === 'missions' && (
             <motion.div key="missions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-10">
                {/* Streak Section */}

@@ -412,11 +412,11 @@ const SmartCalculator: React.FC = () => {
       {/* 2. STATS OVERVIEW - Comparison Logic */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
-          { label: isRtl ? 'إجمالي الشهر' : 'Monthly Total', value: `${stats.monthlyTotal.toFixed(1)} kg`, icon: Leaf, color: 'text-emerald-500', trend: stats.improvementPerc > 0 ? 'down' : 'up' },
+          { label: isRtl ? 'انبعاثات الشهر (تقديري)' : 'Monthly Total', value: `${stats.monthlyTotal.toFixed(1)} kg CO₂e`, icon: Leaf, color: 'text-emerald-500', trend: stats.improvementPerc > 0 ? 'down' : 'up' },
           { label: isRtl ? 'مقارنة بالشهر السابق' : 'vs Previous Month', value: `${Math.abs(stats.improvementPerc).toFixed(0)}%`, icon: TrendingUp, color: stats.improvementPerc > 0 ? 'text-eco-green' : 'text-rose-500', 
-            sub: stats.improvementPerc > 0 ? (isRtl ? 'تحسن' : 'Improvement') : (isRtl ? 'زيادة' : 'Increase') },
-          { label: isRtl ? 'توفير مالي' : 'Estimated Saving', value: `${stats.moneySaved.toFixed(0)} EGP`, icon: Wallet, color: 'text-amber-500' },
-          { label: isRtl ? 'معدل الذكاء البيئي' : 'Eco Intelligence', value: `${Math.min(100, 30 + stats.improvementPerc).toFixed(0)}/100`, icon: BrainCircuit, color: 'text-blue-500' }
+            sub: stats.improvementPerc > 0 ? (isRtl ? 'انخفاض مسجل' : 'Decrease') : (isRtl ? 'زيادة مسجلة' : 'Increase') },
+          { label: isRtl ? 'تقدير أثر التكلفة' : 'Estimated Cost Metric', value: `${stats.moneySaved.toFixed(0)} EGP`, icon: Wallet, color: 'text-amber-500' },
+          { label: isRtl ? 'مؤشر المتابعة (تقديري)' : 'Tracking Score', value: `${Math.min(100, 30 + stats.improvementPerc).toFixed(0)}/100`, icon: BrainCircuit, color: 'text-blue-500' }
         ].map((stat, idx) => (
           <motion.div 
             key={idx}
@@ -426,10 +426,10 @@ const SmartCalculator: React.FC = () => {
             className="bg-white p-3 md:p-5 rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between group hover:border-eco-green/30 transition-all cursor-default text-center sm:text-left rtl:sm:text-right"
           >
             <div className="space-y-0.5 md:space-y-1">
-              <p className="text-[7px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest">{stat.label}</p>
+              <p className="text-[9px] md:text-[10px] font-black text-slate-500">{stat.label}</p>
               <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-1 md:gap-2">
                  <h3 className={`text-sm md:text-xl font-black italic ${stat.color}`}>{stat.value}</h3>
-                 {stat.sub && <span className="text-[7px] md:text-[10px] font-bold text-slate-400 leading-none">{stat.sub}</span>}
+                 {stat.sub && <span className="text-[9px] md:text-[10px] font-bold text-slate-500 leading-none">{stat.sub}</span>}
               </div>
             </div>
             <div className={`mt-2 sm:mt-0 p-2 md:p-3 rounded-xl md:rounded-2xl ${stat.color.replace('text', 'bg')}/10 group-hover:scale-110 transition-transform hidden xs:flex`}>
@@ -437,6 +437,33 @@ const SmartCalculator: React.FC = () => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Transparency Metadata Bar */}
+      <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 text-xs text-slate-300 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-400/30 font-bold">
+              حالة البيانات: مدخل من المستخدم · محسوب تقديرياً
+            </span>
+            <span className="px-2.5 py-0.5 rounded bg-white/5 text-slate-200 border border-white/10 font-bold">
+              الوحدة الموحدة: kg CO₂e
+            </span>
+            <span className="text-slate-400">
+              الفترة: الشهر الجاري مقارنة بالشهر السابق · آخر تحديث: {new Date().toLocaleDateString('ar-EG')}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            المصدر والافتراضات: معاملات شبكة الكهرباء المصرية (EEHC) ومياه الشرب (HCWW) ومتوسطات النقل (CAPMAS)؛ لا تمثل فواتير موثقة من مقدم الخدمة ما لم تُراجع.
+          </p>
+        </div>
+        <Link
+          to="/methodology"
+          className="min-h-[44px] shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 font-bold hover:bg-emerald-500/25 transition"
+        >
+          <BookOpen size={15} />
+          <span>كيف نحسب الأثر؟</span>
+        </Link>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center bg-white/5 backdrop-blur-xl p-1.5 md:p-2 rounded-2xl md:rounded-3xl border border-white/10 shadow-2xl w-full">
@@ -613,8 +640,17 @@ const SmartCalculator: React.FC = () => {
                                  </div>
                               </div>
 
-                              <div className="flex gap-3 md:gap-4 mt-6">
-                                 <div className="flex-1 py-4 md:py-5 bg-white/5 text-eco-green rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center justify-center gap-2 border border-eco-green/20">
+                              <div className="space-y-3 mt-6">
+                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-xs text-slate-300 space-y-1">
+                                   <p>
+                                     <strong className="text-emerald-300">شفافية القياس:</strong> القيمة = {result.consumption} وحدة × {(result.appliedFactor || 0).toFixed(3)} = <strong>{result.co2.toFixed(2)} kg CO₂e</strong> (حالة الرقم: <strong>مدخل من المستخدم · تقديري</strong>).
+                                   </p>
+                                   <p className="text-[11px] text-slate-400">
+                                     تاريخ الاحتساب: {new Date(result.timestamp).toLocaleString('ar-EG')} · يمكنك مراجعة المعادلات في{' '}
+                                     <Link to="/methodology" className="underline text-emerald-300">صفحة المنهجية</Link>.
+                                   </p>
+                                 </div>
+                                 <div className="py-4 md:py-5 bg-white/5 text-eco-green rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center justify-center gap-2 border border-eco-green/20">
                                     <ShieldCheck size={18} />
                                     {isRtl ? 'تم الحفظ تلقائياً في السجل' : 'Automatically Saved to History'}
                                  </div>

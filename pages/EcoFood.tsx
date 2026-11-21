@@ -174,6 +174,32 @@ const EcoFood: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* Link to Surplus Instead of Waste */}
+        <div className="mt-4 bg-slate-900/90 border border-amber-400/30 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-black text-white">
+                {isRtl ? 'الفائض بدل الرمي (نموذج تجريبي)' : 'Surplus Instead of Waste (Demo)'}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                {isRtl ? 'عرض تجريبي بدون طلب فعلي' : 'Demo Showcase'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300">
+              {isRtl
+                ? 'تصفّح عروض الفائض من المخابز والمتاجر والمطاعم القريبة مع توضيح فترات الاستلام وتنبيهات سلامة الغذاء.'
+                : 'Browse demo surplus food offers from local bakeries, stores, and restaurants with clear pickup windows.'}
+            </p>
+          </div>
+          <Link
+            to="/surplus-food"
+            className="min-h-[44px] shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition"
+          >
+            <span>{isRtl ? 'تصفّح عروض الفائض' : 'Browse Surplus Offers'}</span>
+            <ChevronRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
+          </Link>
+        </div>
       </div>
 
       {/* Content Grid */}
