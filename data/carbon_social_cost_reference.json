@@ -1,0 +1,9 @@
+[
+  {
+    "year": 2026,
+    "social_cost_of_carbon_usd": 190,
+    "source": "US EPA / Interagency Working Group",
+    "direct_link": "https://www.epa.gov/environmental-economics/social-cost-carbon",
+    "notes": "The SCC is an estimate of the economic damages that result from emitting one additional ton of carbon dioxide into the atmosphere."
+  }
+]

@@ -1,0 +1,2 @@
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS total_carbon_saved REAL DEFAULT 0;
+ALTER TABLE consumption_records ADD COLUMN IF NOT EXISTS co2_impact REAL DEFAULT 0;

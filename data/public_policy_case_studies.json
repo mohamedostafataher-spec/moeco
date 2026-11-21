@@ -1,0 +1,18 @@
+[
+  {
+    "country": "Denmark",
+    "action": "Wind Energy Transition",
+    "reduction_percent": 50,
+    "duration_years": 20,
+    "source": "Danish Energy Agency",
+    "direct_link": "https://ens.dk/en"
+  },
+  {
+    "country": "Morocco",
+    "action": "Noor Ouarzazate Solar Complex",
+    "reduction_percent": 15,
+    "duration_years": 10,
+    "source": "MASEN",
+    "direct_link": "https://www.masen.ma/en"
+  }
+]

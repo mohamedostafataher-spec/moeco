@@ -1,0 +1,28 @@
+[
+  {
+    "year": 2026,
+    "effective_date": "2026-08-01",
+    "electricity_tiers": [
+      {"min": 0, "max": 50, "price": 0.68},
+      {"min": 51, "max": 100, "price": 0.78},
+      {"min": 101, "max": 200, "price": 0.95},
+      {"min": 201, "max": 350, "price": 1.55},
+      {"min": 351, "max": 650, "price": 1.88},
+      {"min": 651, "max": 1000, "price": 2.10},
+      {"min": 1001, "max": 999999, "price": 2.23}
+    ],
+    "gas_prices": [
+      {"min": 0, "max": 30, "price": 2.50},
+      {"min": 31, "max": 60, "price": 3.25},
+      {"min": 61, "max": 999999, "price": 3.75}
+    ],
+    "petrol_prices": {
+      "92": 12.50,
+      "95": 13.50,
+      "diesel": 10.00
+    },
+    "source": "Egyptian Ministry of Electricity / Ministry of Petroleum",
+    "direct_link": "http://www.moee.gov.eg/test_new/home.aspx",
+    "notes": "Official tariffs as per the latest government decree in August 2026."
+  }
+]

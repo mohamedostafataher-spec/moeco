@@ -1,0 +1,15 @@
+[
+  {
+    "region": "Global",
+    "renewable_share_percent": 30,
+    "source": "IEA",
+    "direct_link": "https://www.iea.org/reports/renewables-2023"
+  },
+  {
+    "region": "Egypt",
+    "renewable_share_percent": 20,
+    "source": "NREA Egypt",
+    "direct_link": "http://www.nrea.gov.eg/",
+    "notes": "Egypt aims for 42% renewable energy by 2035."
+  }
+]

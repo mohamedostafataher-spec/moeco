@@ -1,0 +1,20 @@
+[
+  {
+    "action_type": "LED Lighting",
+    "global_saving_percent": 80,
+    "egypt_saving_percent": 75,
+    "scientific_source": "Department of Energy (DOE)",
+    "direct_link": "https://www.energy.gov/energysaver/led-lighting",
+    "calculation_method": "(Incandescent Watts - LED Watts) / Incandescent Watts * 100",
+    "notes": "Switching from 60W incandescent to 10W LED."
+  },
+  {
+    "action_type": "Solar Water Heater",
+    "global_saving_percent": 70,
+    "egypt_saving_percent": 85,
+    "scientific_source": "IRENA",
+    "direct_link": "https://www.irena.org/publications/2021/Feb/Solar-Water-Heating",
+    "calculation_method": "Annual solar fraction of hot water load",
+    "notes": "Egypt has high solar irradiance, making solar heaters extremely efficient."
+  }
+]

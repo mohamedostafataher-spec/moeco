@@ -1,0 +1,18 @@
+[
+  {
+    "sdg_goal": 7,
+    "title": "Affordable and Clean Energy",
+    "description": "Ensure access to affordable, reliable, sustainable and modern energy for all.",
+    "alignment_method": "Tracking household energy efficiency and transition to renewables.",
+    "source": "United Nations SDGs",
+    "direct_link": "https://sdgs.un.org/goals/goal7"
+  },
+  {
+    "sdg_goal": 13,
+    "title": "Climate Action",
+    "description": "Take urgent action to combat climate change and its impacts.",
+    "alignment_method": "Measuring and reducing individual and community carbon footprints.",
+    "source": "United Nations SDGs",
+    "direct_link": "https://sdgs.un.org/goals/goal13"
+  }
+]

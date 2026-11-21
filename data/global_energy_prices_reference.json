@@ -1,0 +1,12 @@
+[
+  {
+    "year": 2026,
+    "avg_electricity_price_global": 0.18,
+    "avg_petrol_price_global": 1.30,
+    "avg_gas_price_global": 0.12,
+    "reference_countries": ["Germany", "USA", "Egypt", "UAE"],
+    "source": "GlobalPetrolPrices.com / IEA",
+    "direct_link": "https://www.globalpetrolprices.com/electricity_prices/",
+    "notes": "Prices in USD per kWh for electricity and USD per liter for petrol. Egypt prices are significantly lower due to subsidies."
+  }
+]

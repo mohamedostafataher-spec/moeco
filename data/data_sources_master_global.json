@@ -1,0 +1,26 @@
+[
+  {
+    "id": "IEA_DATA",
+    "agency": "International Energy Agency (IEA)",
+    "data_type": "Global Emissions & Energy",
+    "url": "https://www.iea.org/data-and-statistics",
+    "is_free": true,
+    "last_verified": "2025-02-25"
+  },
+  {
+    "id": "WB_DATA",
+    "agency": "World Bank Open Data",
+    "data_type": "Economic & Environmental Indicators",
+    "url": "https://data.worldbank.org/",
+    "is_free": true,
+    "last_verified": "2025-02-25"
+  },
+  {
+    "id": "MOEE_EGYPT",
+    "agency": "Ministry of Electricity and Renewable Energy - Egypt",
+    "data_type": "National Tariffs",
+    "url": "http://www.moee.gov.eg/",
+    "is_free": true,
+    "last_verified": "2025-02-25"
+  }
+]

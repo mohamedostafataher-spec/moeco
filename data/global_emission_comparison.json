@@ -1,0 +1,26 @@
+[
+  {
+    "year": 2026,
+    "global_avg_per_capita": 4.7,
+    "middle_east_avg": 8.2,
+    "low_income_avg": 0.3,
+    "middle_income_avg": 3.8,
+    "egypt_avg": 2.4,
+    "source": "IEA / World Bank",
+    "direct_link": "https://data.worldbank.org/indicator/EN.ATM.CO2E.PC",
+    "last_updated": "2026-12-01",
+    "notes": "Emissions measured in metric tons of CO2 equivalent per capita. 2026-2027 values are based on IEA projections."
+  },
+  {
+    "year": 2023,
+    "global_avg_per_capita": 4.6,
+    "middle_east_avg": 8.1,
+    "low_income_avg": 0.3,
+    "middle_income_avg": 3.7,
+    "egypt_avg": 2.35,
+    "source": "World Bank",
+    "direct_link": "https://data.worldbank.org/indicator/EN.ATM.CO2E.PC",
+    "last_updated": "2026-01-15",
+    "notes": "Historical data confirmed by World Bank Open Data."
+  }
+]

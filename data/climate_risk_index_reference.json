@@ -1,0 +1,10 @@
+[
+  {
+    "country": "Egypt",
+    "climate_risk_index": 22,
+    "exposure_level": "High",
+    "source": "Germanwatch / Global Climate Risk Index",
+    "direct_link": "https://www.germanwatch.org/en/cri",
+    "notes": "Egypt is particularly vulnerable to sea-level rise in the Nile Delta and heatwaves."
+  }
+]

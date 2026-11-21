@@ -1,0 +1,13 @@
+{
+  "name": "MoEco 2026 - Global Green Hub",
+  "description": "MoEco: The ultimate Digital Life Assistant for Egypt. A comprehensive hub for daily services, smart transportation, financial management, health services, and environmental tracking. Features AI-driven insights, real-time commodity prices, prayer times, smart bill prediction, and a national alert system. Professionally optimized for the daily needs of Egyptian citizens.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "notifications"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

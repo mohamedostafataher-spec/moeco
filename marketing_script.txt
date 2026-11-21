@@ -1,0 +1,23 @@
+# MoEco Marketing Script (Egyptian Arabic)
+# Target: Investors, Judges, and General Public
+# Format: 10-second scenes
+
+Scene 1 (10s):
+"عمرك فكرت كوكبنا بيحاول يقولنا إيه؟ مع MoEco، إحنا مش بس بنراقب البيئة، إحنا بنحمي مستقبلك ومستقبل ولادك."
+(Have you ever thought what our planet is trying to tell us? With MoEco, we don't just monitor the environment, we protect your future and your children's future.)
+
+Scene 2 (10s):
+"نظام إنذار مبكر ذكي، بينبهك فوراً لأي خطر بيئي أو خدمي في منطقتك.. من جودة الهوا لحد انقطاع المية والكهرباء."
+(Smart early warning system, alerts you immediately to any environmental or service danger in your area.. from air quality to water and electricity outages.)
+
+Scene 3 (10s):
+"خريطة تفاعلية لحظية، بتعرفك حالة الأمان في كل محافظة في مصر.. وعشان إحنا بنقدر مجهودك، كل خطوة خضراء بتاخدها ليها مكافأة."
+(Real-time interactive map, tells you the safety status in every governorate in Egypt.. and because we appreciate your effort, every green step you take has a reward.)
+
+Scene 4 (10s):
+"مركز شفافية كامل، عشان تعرف البيانات جاية منين وبكل مصداقية.. MoEco مش مجرد تطبيق، ده درعك الأخضر في عصر التغير المناخي."
+(Full transparency center, so you know where data comes from with full credibility.. MoEco is not just an app, it's your green shield in the era of climate change.)
+
+Scene 5 (10s):
+"انضم لينا دلوقتي، وكن جزء من الحل مش جزء من المشكلة. MoEco.. عشان بكرة يكون أحلى."
+(Join us now, and be part of the solution, not part of the problem. MoEco.. so tomorrow can be better.)

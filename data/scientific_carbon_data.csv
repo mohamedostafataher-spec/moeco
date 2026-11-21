@@ -1,0 +1,43 @@
+Level,Location,Year,Rate,Unit
+global,Global,1999,23.5,GtCO2
+global,Global,2005,28.2,GtCO2
+global,Global,2010,31.8,GtCO2
+global,Global,2015,34.5,GtCO2
+global,Global,2020,34.5,GtCO2
+global,Global,2023,37.2,GtCO2
+global,Global,2025,37.8,GtCO2
+country,Egypt,1990,85.2,MtCO2
+country,Egypt,2000,125.1,MtCO2
+country,Egypt,2010,190.4,MtCO2
+country,Egypt,2020,215.8,MtCO2
+country,Egypt,2025,250.6,MtCO2
+country,Saudi Arabia,1999,250,MtCO2
+country,Saudi Arabia,2010,500,MtCO2
+country,Saudi Arabia,2020,580,MtCO2
+country,Saudi Arabia,2025,630,MtCO2
+country,USA,1999,5800,MtCO2
+country,USA,2010,5700,MtCO2
+country,USA,2020,4700,MtCO2
+country,USA,2025,4900,MtCO2
+country,China,1999,3500,MtCO2
+country,China,2010,8500,MtCO2
+country,China,2020,10500,MtCO2
+country,China,2025,11200,MtCO2
+governorate,Cairo,1999,35,MtCO2
+governorate,Cairo,2010,55,MtCO2
+governorate,Cairo,2020,65,MtCO2
+governorate,Cairo,2025,72,MtCO2
+governorate,Alexandria,1999,20,MtCO2
+governorate,Alexandria,2010,32,MtCO2
+governorate,Alexandria,2020,38,MtCO2
+governorate,Alexandria,2025,42,MtCO2
+governorate,Giza,1999,25,MtCO2
+governorate,Giza,2010,40,MtCO2
+governorate,Giza,2020,48,MtCO2
+governorate,Giza,2025,55,MtCO2
+city,Maadi,2010,800,ktCO2
+city,Maadi,2020,1100,ktCO2
+city,Maadi,2025,1250,ktCO2
+city,Nasr City,2010,2500,ktCO2
+city,Nasr City,2020,3200,ktCO2
+city,Nasr City,2025,3500,ktCO2

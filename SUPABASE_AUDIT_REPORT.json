@@ -1,0 +1,181 @@
+{
+  "connected": true,
+  "url": "https://eiboutdvbjoipdpeqrci.supabase.co/rest/v1/",
+  "tables": {
+    "profiles": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "eco_actions": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "rewards": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "coupons": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "alerts": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "news": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "rss_sources": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "consumption_records": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "carbon_activities": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "user_scores": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "green_jobs": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "environmental_reports": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "water_issues": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "products": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "donations": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "governorates": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "cities": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "sectors": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "utility_meters": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "utility_readings": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "walking_activities": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "transport_logs": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "challenges": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "badges": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    },
+    "gov_services": {
+      "exists": true,
+      "rowCount": null,
+      "columns": [
+        "unknown"
+      ]
+    }
+  }
+}
