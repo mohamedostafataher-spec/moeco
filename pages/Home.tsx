@@ -481,6 +481,9 @@ const Home: React.FC = () => {
               { path: '/water-saving', title: 'وفّر مياه منطقتك', desc: 'إبلاغ عن تسريبات المياه ومُقدّر الترشيد المنزلي التقديري', badge: 'تقديري + بلاغات', color: 'border-cyan-500/30 hover:border-cyan-400' },
               { path: '/heat-shade-map', title: 'خريطة الحر والظل', desc: 'رصد نقاط الحر الشديد واقتراح مظلات أو تشجير مشروط', badge: 'خريطة تفاعلية', color: 'border-orange-500/30 hover:border-orange-400' },
               { path: '/waste-to-income', title: 'المخلفات إلى دخل', desc: 'دليل تجريبي لنقاط الفرز وتسجيل الأوزان المسلّمة بشفافية', badge: 'نقاط فرز تجريبية', color: 'border-teal-500/30 hover:border-teal-400' },
+              { path: '/my-home', title: 'ملف بيتي', desc: 'تنظيم قراءات وفواتير الكهرباء والمياه الخاصة بك محليًا بأمان', badge: 'بياناتك الخاصة', color: 'border-emerald-500/30 hover:border-emerald-400' },
+              { path: '/my-complaints', title: 'شكواي ما تضيعش', desc: 'تجهيز مسودات الشكاوى والانتقال للقنوات الرسمية الموثقة ومتابعة الأرقام', badge: 'تنظيم ومتابعة', color: 'border-sky-500/30 hover:border-sky-400' },
+              { path: '/local-projects', title: 'مشروعي في منطقتي', desc: 'متابعة المشروعات العامة الموثقة وملاحظاتك الخاصة عند توفر مصدر رسمي', badge: 'شفافية المصدر', color: 'border-amber-500/30 hover:border-amber-400' },
             ].map((item) => (
               <Link
                 key={item.path}

@@ -175,6 +175,9 @@ const SurplusFood = React.lazy(() => import("./pages/SurplusFood"));
 const WaterSaving = React.lazy(() => import("./pages/WaterSaving"));
 const HeatShadeMap = React.lazy(() => import("./pages/HeatShadeMap"));
 const WasteToIncome = React.lazy(() => import("./pages/WasteToIncome"));
+const MyHomeProfile = React.lazy(() => import("./pages/MyHomeProfile"));
+const ComplaintAssistant = React.lazy(() => import("./pages/ComplaintAssistant"));
+const LocalProjects = React.lazy(() => import("./pages/LocalProjects"));
 
 import { liveIntelEngine } from "./services/liveIntelEngine";
 import { newsService } from "./services/newsService";
@@ -488,6 +491,21 @@ const Navigation: React.FC = () => {
           path: "/waste-to-income",
           label: language === "ar" ? "المخلفات إلى دخل" : "Waste to Income",
           icon: Trash2,
+        },
+        {
+          path: "/my-home",
+          label: language === "ar" ? "ملف بيتي" : "My Home Utilities",
+          icon: HomeIcon,
+        },
+        {
+          path: "/my-complaints",
+          label: language === "ar" ? "شكواي ما تضيعش" : "Complaint Organizer",
+          icon: FileText,
+        },
+        {
+          path: "/local-projects",
+          label: language === "ar" ? "مشروعي في منطقتي" : "Local Projects",
+          icon: Building2,
         },
       ],
     },
@@ -1426,6 +1444,9 @@ const AppContent: React.FC = () => {
                       <Route path="/water-saving" element={<WaterSaving />} />
                       <Route path="/heat-shade-map" element={<HeatShadeMap />} />
                       <Route path="/waste-to-income" element={<WasteToIncome />} />
+                      <Route path="/my-home" element={<MyHomeProfile />} />
+                      <Route path="/my-complaints" element={<ComplaintAssistant />} />
+                      <Route path="/local-projects" element={<LocalProjects />} />
                       <Route
                         path="/calculation-records"
                         element={<CalculationRecords />}
