@@ -631,7 +631,7 @@ export const storageService = {
   },
 
   getCarbonPulse: async (userId?: string) => {
-    if (!userId) return "424.50";
+    if (!userId) return "0.00";
     try {
       const pulse = await storageService.getRecentCarbonPulse(userId);
       return pulse.total.toFixed(2);
@@ -714,10 +714,15 @@ export const storageService = {
     
     let data = null;
     
-    // 2. If session exists, try to insert to remote database
-    if (session?.user) {
-      try {
-        const { data: inserted, error } = await supabase.from('consumption_records').insert([{
+    // 2. Require authenticated Supabase session (anonymous or linked) — no silent localStorage fallback
+    if (!session?.user) {
+      throw new Error('يلزم الموافقة وتفعيل جلسة الحفظ السحابية في Supabase قبل حفظ القراءات.');
+    }
+
+    const { data: inserted, error } = await supabase
+      .from('consumption_records')
+      .insert([
+        {
           user_id: session.user.id,
           sector: record.sector,
           value: record.value,
@@ -726,46 +731,18 @@ export const storageService = {
           carbon_impact: record.co2 || record.co2_impact || 0,
           cost: record.cost,
           description: record.description,
-          metadata: record.metadata
-        }]).select().single();
-        
-        if (error) {
-          console.error("Consumption Record Insert Error in Supabase:", error);
-        } else {
-          data = inserted;
-        }
-      } catch (dbErr) {
-        console.error("Supabase insert exception:", dbErr);
-      }
-    } else {
-      console.log("[Offline/Guest] Saving consumption record locally instead of Supabase.");
+          metadata: record.metadata,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Consumption Record Insert Error in Supabase:', error);
+      throw error;
     }
 
-    // 3. Always save to local fallback cache so that it is instantly accessible
-    const localRecord = {
-      id: data?.id || `local_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
-      user_id: session?.user?.id || 'guest',
-      sector: record.sector,
-      value: record.value,
-      unit: record.unit,
-      co2: record.co2 || record.co2_impact || 0,
-      carbon_impact: record.co2 || record.co2_impact || 0,
-      cost: record.cost,
-      description: record.description,
-      metadata: record.metadata,
-      created_at: data?.created_at || new Date().toISOString()
-    };
-    
-    try {
-      const existing = JSON.parse(localStorage.getItem('moeco_local_consumption_records') || '[]');
-      existing.unshift(localRecord);
-      if (existing.length > 200) existing.pop(); // limit to latest 200 local files
-      localStorage.setItem('moeco_local_consumption_records', JSON.stringify(existing));
-    } catch (e) {
-      console.error("Error writing record to offline cache:", e);
-    }
-    
-    return data || localRecord;
+    return inserted;
   },
 
   insertCarbonLog: async (log: {
@@ -1392,23 +1369,14 @@ export const storageService = {
     const stored = localStorage.getItem('moeco_user');
     if (stored) {
       try {
-        currentUserCache = JSON.parse(stored);
-        return currentUserCache;
+        const parsed = JSON.parse(stored);
+        if (parsed?.id && parsed.id !== 'guest-user-2026') {
+          currentUserCache = parsed;
+          return currentUserCache;
+        }
       } catch (e) {}
     }
-    // Default guest user so anyone can enter and use the app immediately without an account
-    currentUserCache = {
-      id: 'guest-user-2026',
-      email: 'guest@moeco.gov.eg',
-      name: 'مستخدم زائر',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
-      points: 150,
-      level: 1,
-      role: 'user',
-      governorate: 'Cairo'
-    };
-    localStorage.setItem('moeco_user', JSON.stringify(currentUserCache));
-    return currentUserCache;
+    return null;
   },
 
   resetPassword: async (email: string) => {

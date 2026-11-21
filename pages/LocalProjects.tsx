@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Building2,
   Bookmark,
@@ -9,85 +9,143 @@ import {
   MessageSquare,
   Trash2,
   Info,
+  Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import {
-  VERIFIED_PUBLIC_PROJECTS,
-  SavedPublicProjectNote,
-  getSavedProjectNotes,
-  upsertSavedProjectNote,
-  removeSavedProjectNote,
-  isSafeExternalUrl,
-} from '../services/personalCivicService';
+import { usePrivacyConsent } from '../context/PrivacyConsentContext';
+import { ConsentRequiredNotice } from '../components/ConsentGateModal';
+import { SavedPublicProjectNote, isSafeExternalUrl } from '../services/personalCivicService';
+import { supabaseDataService, OfficialSourceRecord } from '../services/supabaseDataService';
 
 const LocalProjects: React.FC = () => {
-  const { user, isRtl } = useApp();
-  const userId = user?.id || 'guest-local';
+  const { isRtl } = useApp();
+  const { isConfigured, authUser, hasCoreConsent, analyticsEnabled, openConsentModal, trackUsageEvent } =
+    usePrivacyConsent();
+  const userId = authUser?.id || '';
 
+  const [officialSources, setOfficialSources] = useState<OfficialSourceRecord[]>([]);
   const [savedNotes, setSavedNotes] = useState<SavedPublicProjectNote[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
 
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [errorFlagDrafts, setErrorFlagDrafts] = useState<Record<string, string>>({});
 
-  const reloadSaved = () => setSavedNotes(getSavedProjectNotes(userId));
+  const loadSourcesAndNotes = useCallback(async () => {
+    if (!isConfigured) {
+      setOfficialSources([]);
+      setSavedNotes([]);
+      return;
+    }
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const [sources, notes] = await Promise.all([
+        supabaseDataService.listPublishedOfficialSources(),
+        userId && hasCoreConsent
+          ? supabaseDataService.listSavedProjectNotes(userId)
+          : Promise.resolve([]),
+      ]);
+      setOfficialSources(sources);
+      setSavedNotes(notes);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'تعذر تحميل المصادر الرسمية من Supabase.');
+    } finally {
+      setLoading(false);
+    }
+  }, [isConfigured, userId, hasCoreConsent]);
 
   useEffect(() => {
-    reloadSaved();
-  }, [userId]);
+    loadSourcesAndNotes();
+  }, [loadSourcesAndNotes]);
+
+  useEffect(() => {
+    if (analyticsEnabled) {
+      trackUsageEvent('feature_opened', { feature: 'local_projects' });
+    }
+  }, [analyticsEnabled, trackUsageEvent]);
 
   const filteredProjects = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return VERIFIED_PUBLIC_PROJECTS.filter((p) => {
+    return officialSources.filter((p) => {
       if (!q) return true;
       return (
         p.title.toLowerCase().includes(q) ||
-        p.governorate.toLowerCase().includes(q) ||
-        p.sector.toLowerCase().includes(q)
+        (p.governorate || '').toLowerCase().includes(q) ||
+        (p.sector || '').toLowerCase().includes(q) ||
+        p.sourceOwner.toLowerCase().includes(q)
       );
     });
-  }, [searchTerm]);
+  }, [officialSources, searchTerm]);
+
+  const handleSaveProjectNote = async (
+    project: OfficialSourceRecord,
+    personalNote: string,
+    reportedErrorNote?: string,
+  ) => {
+    if (!hasCoreConsent || !userId) {
+      openConsentModal('حفظ ملاحظات المشروعات الموثقة');
+      return;
+    }
+    try {
+      await supabaseDataService.upsertSavedProjectNote(userId, {
+        projectId: project.id,
+        projectTitle: project.title,
+        sourceName: project.sourceOwner,
+        sourceUrl: project.sourceUrl,
+        personalNote: personalNote.trim(),
+        reportedErrorNote: reportedErrorNote?.trim() || undefined,
+      });
+      await loadSourcesAndNotes();
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'تعذر حفظ الملاحظة.');
+    }
+  };
 
   return (
     <div
-      className="max-w-5xl mx-auto px-4 pb-24 space-y-6 text-slate-100"
+      className="max-w-4xl mx-auto pb-10 space-y-6 text-slate-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* Header */}
-      <header className="bg-slate-950/90 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
+      <header className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
               <Building2 className="w-4 h-4" />
-              <span>متابعة المشروعات العامة الموثقة</span>
+              <span>متابعة المصادر الرسمية المنشورة في Supabase</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white">مشروعي في منطقتي</h1>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              مساحة لمتابعة المشروعات العامة عند توفر مصدر رسمي موثق، مع حفظ المشروعات المهمة
-              لك وكتابة ملاحظاتك الشخصية الخاصة.
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
+              مشروعي في منطقتي
+            </h1>
+            <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
+              يعرض هذا القسم السجلات المستوردة من مصادر رسمية منشورة وموثقة فقط داخل قاعدة
+              البيانات (<code>official_sources</code>)، مع توضيح اسم الجهة المصدرية وتاريخ النشر
+              وحالة التحقق.
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab('all')}
-              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold border transition ${
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
                 activeTab === 'all'
-                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                  : 'bg-slate-900 border-white/10 text-slate-300'
+                  ? 'bg-emerald-700 border-emerald-700 text-white'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
               }`}
             >
-              مصادر المشروعات الموثقة
+              مصادر المشروعات الموثقة ({officialSources.length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('saved')}
-              className={`min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition ${
+              className={`min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
                 activeTab === 'saved'
-                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                  : 'bg-slate-900 border-white/10 text-slate-300'
+                  ? 'bg-emerald-700 border-emerald-700 text-white'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
               }`}
             >
               <Bookmark className="w-4 h-4" />
@@ -96,27 +154,36 @@ const LocalProjects: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-sky-500/25 rounded-2xl p-4 flex items-start gap-3 text-xs text-slate-300 leading-relaxed">
-          <ShieldAlert className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3 text-xs text-slate-700 leading-relaxed">
+          <ShieldAlert className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-white">سياسة التوثيق الصارمة:</p>
+            <p className="font-bold text-slate-900">سياسة التوثيق الصارمة:</p>
             <p>
-              لا ينشر MoEco أسماء مشروعات أو نسب تنفيذ أو ميزانيات أو إحداثيات غير مستمدة من مصدر
-              رسمي موثق ومرخّص داخل التطبيق.
+              لا يعرض MoEco مشروعات وهمية أو نسب تنفيذ مفترضة أو تحديثات لحظية غير موثقة. أي سجل
+              يظهر هنا يخضع لوسم حالة واضح (<code>موثق</code> أو <code>أرشيف</code>) مع رابط مصدره
+              الأصلي.
             </p>
           </div>
         </div>
       </header>
 
+      {errorMsg && (
+        <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-4 text-xs font-bold">
+          {errorMsg}
+        </div>
+      )}
+
       {activeTab === 'saved' ? (
-        <section className="bg-slate-950/90 border border-white/10 rounded-3xl p-6 space-y-4">
-          <h2 className="text-lg font-black text-white">مشروعاتي المحفوظة وملاحظاتي الخاصة</h2>
-          {savedNotes.length === 0 ? (
-            <div className="bg-slate-900/60 border border-dashed border-white/15 rounded-2xl p-8 text-center space-y-2">
-              <p className="text-base font-black text-white">لا توجد مشروعات محفوظة لديك حاليًا</p>
-              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                عند توفر بيانات مشروعات موثقة من مصدر رسمي معتمد، يمكنك حفظ أي مشروع هنا
-                وإضافة ملاحظاتك الشخصية أو الإشارة إلى أخطاء بيانات منسوبة للمصدر.
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">مشروعاتي المحفوظة وملاحظاتي الخاصة</h2>
+          {!hasCoreConsent ? (
+            <ConsentRequiredNotice featureTitle="حفظ ملاحظات المشروعات" />
+          ) : savedNotes.length === 0 ? (
+            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center space-y-2">
+              <p className="text-base font-bold text-slate-900">لا توجد مشروعات محفوظة لديك حاليًا</p>
+              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                عند توفر بيانات مشروعات موثقة من جدول المصادر الرسمية، يمكنك حفظ أي مشروع هنا
+                وإضافة ملاحظاتك الشخصية.
               </p>
             </div>
           ) : (
@@ -124,27 +191,27 @@ const LocalProjects: React.FC = () => {
               {savedNotes.map((item) => (
                 <article
                   key={item.id}
-                  className="bg-slate-900/80 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="space-y-1">
-                    <h3 className="text-sm font-black text-white">{item.projectTitle}</h3>
-                    <p className="text-xs text-slate-400">المصدر: {item.sourceName}</p>
+                    <h3 className="text-sm font-bold text-slate-900">{item.projectTitle}</h3>
+                    <p className="text-xs text-slate-600">المصدر: {item.sourceName}</p>
                     {item.personalNote && (
-                      <p className="text-xs text-slate-200">ملاحظتي الخاصة: {item.personalNote}</p>
+                      <p className="text-xs text-slate-800">ملاحظتي الخاصة: {item.personalNote}</p>
                     )}
                     {item.reportedErrorNote && (
-                      <p className="text-xs text-amber-300">
+                      <p className="text-xs text-amber-800">
                         {item.reportedErrorTag || 'ملاحظة مستخدم غير متحققة'}: {item.reportedErrorNote}
                       </p>
                     )}
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      removeSavedProjectNote(userId, item.projectId);
-                      reloadSaved();
+                    onClick={async () => {
+                      await supabaseDataService.deleteSavedProjectNote(userId, item.projectId);
+                      await loadSourcesAndNotes();
                     }}
-                    className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/15 text-rose-300 text-xs font-bold"
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>إزالة</span>
@@ -154,35 +221,29 @@ const LocalProjects: React.FC = () => {
             </div>
           )}
         </section>
-      ) : VERIFIED_PUBLIC_PROJECTS.length === 0 ? (
-        /* Honest Empty State Required When No Verified Project Source Exists in Codebase */
+      ) : loading ? (
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+          <span>جاري فحص المصادر الموثقة في Supabase...</span>
+        </div>
+      ) : officialSources.length === 0 ? (
         <section
           aria-label="حالة توفر بيانات المشروعات الموثقة"
-          className="bg-slate-950/90 border border-white/10 rounded-3xl p-8 text-center space-y-4"
+          className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 text-center space-y-4"
         >
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center">
-            <Info className="w-7 h-7 text-amber-400" />
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+            <Info className="w-6 h-6 text-amber-700" />
           </div>
-          <h2 className="text-xl font-black text-white">
-            لا توجد بيانات مشروعات موثقة متاحة داخل MoEco حاليًا
+          <h2 className="text-xl font-bold text-slate-900">
+            لا توجد بيانات موثقة متاحة حاليًا
           </h2>
-          <p className="text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            بعد فحص ملفات ومصادر التطبيق الحالية، لا يتصل MoEco بأي واجهة برمجة تطبيقات أو قاعدة
-            بيانات رسمية منشورة وموثقة لمشروعات المحافظات أو خطة المواطن، ولا يعرض أي مشروعات
-            نموذجية أو نسب إنجاز افتراضية.
+          <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            {!isConfigured
+              ? 'اتصال Supabase غير مضبوط حاليًا في هذه البيئة. عند تفعيله واستيراد مصادر رسمية موثقة إلى جدول official_sources ستظهر هنا مع روابطها وتواريخ تحققها.'
+              : 'لا توجد سجلات منشورة ومعتمدة في جدول official_sources حاليًا. لا يعرض التطبيق أي بيانات نموذجية أو أرقام غير موثقة.'}
           </p>
-
-          <div className="max-w-2xl mx-auto bg-slate-900/80 border border-white/10 rounded-2xl p-5 text-right space-y-2 text-xs text-slate-300">
-            <p className="font-bold text-white">ما الذي يلزم لتفعيل عرض المشروعات هنا بصورة موثقة؟</p>
-            <ul className="list-disc list-inside space-y-1.5">
-              <li>مصدر بيانات رسمي مفتوح ومعتمد أو واجهة ربط مصرح بها (مثل بيانات خطة المواطن / المحافظات).</li>
-              <li>تضمين اسم الجهة المصدرية، ورابط المصدر الرسمي الموثق لكل مشروع، وتاريخ آخر تحديث للبيانات.</li>
-              <li>عرض الحقول الرسمية فقط كما وردت في المصدر دون استنتاج أو تخمين للنسب أو الإحداثيات.</li>
-            </ul>
-          </div>
         </section>
       ) : (
-        /* Interactive Verified Projects Renderer (Activates automatically when real verified feed is wired) */
         <section className="space-y-4">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
@@ -191,8 +252,8 @@ const LocalProjects: React.FC = () => {
               aria-label="بحث في المشروعات الموثقة"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ابحث باسم المشروع أو المحافظة أو القطاع..."
-              className="w-full min-h-[44px] pr-10 pl-4 rounded-2xl bg-slate-950 border border-white/15 text-sm text-white"
+              placeholder="ابحث باسم المشروع أو المحافظة أو الجهة المصدرية..."
+              className="w-full min-h-[44px] pr-10 pl-4 rounded-xl bg-white border border-slate-300 text-sm text-slate-900"
             />
           </div>
 
@@ -205,17 +266,41 @@ const LocalProjects: React.FC = () => {
               return (
                 <article
                   key={project.id}
-                  className="bg-slate-950/90 border border-white/10 rounded-2xl p-5 space-y-3"
+                  className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-base font-black text-white">{project.title}</h3>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {project.governorate} · {project.sector} · الحالة: {project.statusText}
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-bold text-slate-900">{project.title}</h3>
+                        <span
+                          className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${
+                            project.dataStatus === 'verified'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-slate-100 text-slate-700 border-slate-300'
+                          }`}
+                        >
+                          {project.dataStatus === 'verified' ? 'مصدر موثق' : 'أرشيف تاريخي'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        {[project.governorate, project.sector, project.statusText]
+                          .filter(Boolean)
+                          .join(' · ') || 'بيانات رسمية منشورة'}
                       </p>
-                      <p className="text-xs text-emerald-300 mt-1">
-                        المصدر الرسمي: {project.sourceName}
-                        {project.lastUpdated ? ` (آخر تحديث: ${project.lastUpdated})` : ''}
+                      <p className="text-xs text-emerald-700 font-semibold">
+                        الجهة المصدرية: {project.sourceOwner} · تاريخ الاستيراد:{' '}
+                        <span className="num-ltr">
+                          {new Date(project.importedAt).toLocaleDateString('ar-EG')}
+                        </span>
+                        {project.verifiedAt && (
+                          <>
+                            {' '}
+                            · تاريخ التحقق:{' '}
+                            <span className="num-ltr">
+                              {new Date(project.verifiedAt).toLocaleDateString('ar-EG')}
+                            </span>
+                          </>
+                        )}
                       </p>
                     </div>
                     {isSafeExternalUrl(project.sourceUrl) && (
@@ -223,7 +308,7 @@ const LocalProjects: React.FC = () => {
                         href={project.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-emerald-300"
+                        className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-xs font-bold text-emerald-700"
                       >
                         <span>المصدر الرسمي</span>
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -231,11 +316,11 @@ const LocalProjects: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-white/10 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-200 text-xs">
                     <div className="space-y-1.5">
-                      <label className="font-bold text-slate-300 flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>ملاحظة شخصية خاصة (لا تُنشر)</span>
+                      <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>ملاحظة شخصية خاصة (تُحفظ لجلستك فقط)</span>
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -245,23 +330,12 @@ const LocalProjects: React.FC = () => {
                             setNoteDrafts((prev) => ({ ...prev, [project.id]: e.target.value }))
                           }
                           placeholder="احفظ ملاحظة متابعة لنفسك..."
-                          className="flex-1 min-h-[44px] px-3 rounded-xl bg-slate-900 border border-white/15 text-white"
+                          className="flex-1 min-h-[44px] px-3 rounded-xl bg-white border border-slate-300 text-slate-900"
                         />
                         <button
                           type="button"
-                          onClick={() => {
-                            upsertSavedProjectNote(userId, {
-                              projectId: project.id,
-                              projectTitle: project.title,
-                              sourceName: project.sourceName,
-                              sourceUrl: project.sourceUrl,
-                              personalNote: noteVal.trim(),
-                              reportedErrorNote: saved?.reportedErrorNote,
-                              reportedErrorTag: saved?.reportedErrorTag,
-                            });
-                            reloadSaved();
-                          }}
-                          className="min-h-[44px] px-4 rounded-xl bg-emerald-500 text-slate-950 font-black"
+                          onClick={() => handleSaveProjectNote(project, noteVal, saved?.reportedErrorNote)}
+                          className="min-h-[44px] px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold"
                         >
                           حفظ
                         </button>
@@ -269,9 +343,9 @@ const LocalProjects: React.FC = () => {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="font-bold text-slate-300 flex items-center gap-1.5">
-                        <Flag className="w-3.5 h-3.5 text-amber-400" />
-                        <span>إبلاغ عن خطأ في البيانات (تُسجّل كملاحظة مستخدم غير متحققة)</span>
+                      <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                        <Flag className="w-3.5 h-3.5 text-amber-700" />
+                        <span>إبلاغ عن خطأ في البيانات (ملاحظة غير متحققة)</span>
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -281,23 +355,12 @@ const LocalProjects: React.FC = () => {
                             setErrorFlagDrafts((prev) => ({ ...prev, [project.id]: e.target.value }))
                           }
                           placeholder="وصف الخطأ المنسوب للمصدر..."
-                          className="flex-1 min-h-[44px] px-3 rounded-xl bg-slate-900 border border-white/15 text-white"
+                          className="flex-1 min-h-[44px] px-3 rounded-xl bg-white border border-slate-300 text-slate-900"
                         />
                         <button
                           type="button"
-                          onClick={() => {
-                            upsertSavedProjectNote(userId, {
-                              projectId: project.id,
-                              projectTitle: project.title,
-                              sourceName: project.sourceName,
-                              sourceUrl: project.sourceUrl,
-                              personalNote: noteVal.trim(),
-                              reportedErrorNote: flagVal.trim(),
-                              reportedErrorTag: 'ملاحظة مستخدم غير متحققة',
-                            });
-                            reloadSaved();
-                          }}
-                          className="min-h-[44px] px-4 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 font-bold"
+                          onClick={() => handleSaveProjectNote(project, noteVal, flagVal)}
+                          className="min-h-[44px] px-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-bold"
                         >
                           تسجيل الملاحظة
                         </button>

@@ -266,6 +266,20 @@ const Settings: React.FC = () => {
                   : 'Location and photos are opt-in and rounded publicly. You can anonymize or delete any report in My Reports, or clear local civic entries here.'}
               </p>
               <Link
+                to="/privacy"
+                className="min-h-[44px] w-full flex items-center justify-center rounded-xl bg-emerald-600/20 border border-emerald-400/40 text-xs font-bold text-emerald-200 hover:bg-emerald-600/30 transition"
+              >
+                {isRtl ? 'الخصوصية وإدارة الموافقات' : 'Privacy & Consent Controls'}
+              </Link>
+
+              <Link
+                to="/my-data"
+                className="min-h-[44px] w-full flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-xs font-bold text-white hover:bg-white/20 transition"
+              >
+                {isRtl ? 'بياناتي وتصديرها وحذفها (Supabase)' : 'My Data & Export (Supabase)'}
+              </Link>
+
+              <Link
                 to="/eco-watch"
                 className="min-h-[44px] w-full flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-xs font-bold text-white hover:bg-white/20 transition"
               >
@@ -290,7 +304,9 @@ const Settings: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        civicActionService.clearMyLocalCivicData(user?.id || 'guest-user-2026');
+                        if (user?.id) {
+                          civicActionService.clearMyLocalCivicData(user.id);
+                        }
                         setConfirmClearLocal(false);
                         notificationService.success(isRtl ? 'تم مسح البيانات المجتمعية المحلية بنجاح.' : 'Local civic data cleared.');
                       }}

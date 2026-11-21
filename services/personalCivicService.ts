@@ -381,41 +381,7 @@ export async function validateAndReadAttachment(
   };
 }
 
-function safeUserScope(userId?: string): string {
-  const cleaned = (userId || '').trim();
-  return cleaned || 'guest-local';
-}
-
-function readScopedJson<T>(key: string): T[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeScopedJson<T>(key: string, items: T[]): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(items));
-  } catch (err: any) {
-    if (err?.name === 'QuotaExceededError') {
-      throw new Error('امتلأت مساحة التخزين المحلي في المتصفح. احذف مرفقات كبيرة أو صدّر السجلات القديمة أولًا.');
-    }
-    throw new Error('تعذر حفظ البيانات محليًا.');
-  }
-}
-
-// --- 1. MY HOME UTILITY STORAGE (Strictly Private per User ID, Zero Demo Data) ---
-const utilityKey = (userId?: string) => `moeco_home_utility_v1_${safeUserScope(userId)}`;
-
-export function getHomeUtilityRecords(userId?: string): HomeUtilityRecord[] {
-  const items = readScopedJson<HomeUtilityRecord>(utilityKey(userId));
-  return items.sort((a, b) => (b.readingDate || '').localeCompare(a.readingDate || ''));
-}
-
+// Pure client-side validation & export helpers (zero localStorage persistence of user records)
 export function checkUtilityWarnings(
   existing: HomeUtilityRecord[],
   candidate: {
@@ -466,58 +432,6 @@ export function checkUtilityWarnings(
   }
 
   return warnings;
-}
-
-export function saveHomeUtilityRecord(
-  userId: string,
-  payload: Omit<HomeUtilityRecord, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
-): HomeUtilityRecord {
-  const now = new Date().toISOString();
-  const record: HomeUtilityRecord = {
-    ...payload,
-    id: `util_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    userId: safeUserScope(userId),
-    createdAt: now,
-    updatedAt: now,
-  };
-  const current = getHomeUtilityRecords(userId);
-  writeScopedJson(utilityKey(userId), [record, ...current]);
-  return record;
-}
-
-export function updateHomeUtilityRecord(
-  userId: string,
-  id: string,
-  updates: Partial<Omit<HomeUtilityRecord, 'id' | 'userId' | 'createdAt'>>,
-): HomeUtilityRecord | null {
-  const current = getHomeUtilityRecords(userId);
-  const idx = current.findIndex((r) => r.id === id);
-  if (idx === -1) return null;
-  const updated: HomeUtilityRecord = {
-    ...current[idx],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-  const next = [...current];
-  next[idx] = updated;
-  writeScopedJson(utilityKey(userId), next);
-  return updated;
-}
-
-export function deleteHomeUtilityRecord(userId: string, id: string): void {
-  const current = getHomeUtilityRecords(userId);
-  writeScopedJson(
-    utilityKey(userId),
-    current.filter((r) => r.id !== id),
-  );
-}
-
-export function deleteHomeUtilityAttachment(userId: string, id: string): void {
-  updateHomeUtilityRecord(userId, id, { attachment: undefined });
-}
-
-export function clearAllHomeUtilityRecords(userId: string): void {
-  localStorage.removeItem(utilityKey(userId));
 }
 
 export interface ConsumptionTrendAnalysis {
@@ -593,7 +507,6 @@ export function analyzeUtilityTrend(
 
 function sanitizeExportCell(val: unknown): string {
   const s = val === undefined || val === null ? '' : String(val);
-  // Neutralize spreadsheet formula triggers (=, +, -, @, tab, CR)
   return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
 }
 
@@ -636,96 +549,3 @@ export function exportUtilityRecordsAsExcel(records: HomeUtilityRecord[]): void 
   XLSX.writeFile(wb, `moeco-my-home-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
-// --- 2. PERSONAL COMPLAINT ORGANIZER (Strictly Private per User ID) ---
-const complaintsKey = (userId?: string) => `moeco_personal_complaints_v1_${safeUserScope(userId)}`;
-
-export function getPersonalComplaints(userId?: string): PersonalComplaint[] {
-  const items = readScopedJson<PersonalComplaint>(complaintsKey(userId));
-  return items.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-}
-
-export function savePersonalComplaint(
-  userId: string,
-  payload: Omit<PersonalComplaint, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
-): PersonalComplaint {
-  const now = new Date().toISOString();
-  const item: PersonalComplaint = {
-    ...payload,
-    id: `cmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    userId: safeUserScope(userId),
-    createdAt: now,
-    updatedAt: now,
-  };
-  const current = getPersonalComplaints(userId);
-  writeScopedJson(complaintsKey(userId), [item, ...current]);
-  return item;
-}
-
-export function updatePersonalComplaint(
-  userId: string,
-  id: string,
-  updates: Partial<Omit<PersonalComplaint, 'id' | 'userId' | 'createdAt'>>,
-): PersonalComplaint | null {
-  const current = getPersonalComplaints(userId);
-  const idx = current.findIndex((c) => c.id === id);
-  if (idx === -1) return null;
-  const updated: PersonalComplaint = {
-    ...current[idx],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-  const next = [...current];
-  next[idx] = updated;
-  writeScopedJson(complaintsKey(userId), next);
-  return updated;
-}
-
-export function deletePersonalComplaint(userId: string, id: string): void {
-  const current = getPersonalComplaints(userId);
-  writeScopedJson(
-    complaintsKey(userId),
-    current.filter((c) => c.id !== id),
-  );
-}
-
-export function deleteComplaintAttachment(userId: string, id: string): void {
-  updatePersonalComplaint(userId, id, { attachment: undefined });
-}
-
-export function clearAllPersonalComplaints(userId: string): void {
-  localStorage.removeItem(complaintsKey(userId));
-}
-
-// --- 3. SAVED PUBLIC PROJECTS & NOTES ---
-const savedProjectsKey = (userId?: string) => `moeco_saved_projects_v1_${safeUserScope(userId)}`;
-
-export function getSavedProjectNotes(userId?: string): SavedPublicProjectNote[] {
-  return readScopedJson<SavedPublicProjectNote>(savedProjectsKey(userId));
-}
-
-export function upsertSavedProjectNote(
-  userId: string,
-  payload: Omit<SavedPublicProjectNote, 'id' | 'userId' | 'updatedAt'>,
-): SavedPublicProjectNote {
-  const current = getSavedProjectNotes(userId);
-  const idx = current.findIndex((p) => p.projectId === payload.projectId);
-  const record: SavedPublicProjectNote = {
-    ...payload,
-    id: idx >= 0 ? current[idx].id : `projnote_${Date.now()}`,
-    userId: safeUserScope(userId),
-    updatedAt: new Date().toISOString(),
-  };
-  const next = [...current];
-  if (idx >= 0) next[idx] = record;
-  else next.unshift(record);
-  writeScopedJson(savedProjectsKey(userId), next);
-  return record;
-}
-
-export function removeSavedProjectNote(userId: string, projectId: string): void {
-  const current = getSavedProjectNotes(userId);
-  writeScopedJson(
-    savedProjectsKey(userId),
-    current.filter((p) => p.projectId !== projectId),
-  );
-}

@@ -1,265 +1,251 @@
-
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { AlertTriangle, Droplets, Flame, Wind, Send, CheckCircle, MapPin, Phone, ShieldAlert, ArrowRight } from 'lucide-react';
+import {
+  AlertTriangle,
+  Droplets,
+  Flame,
+  Wind,
+  Save,
+  CheckCircle2,
+  MapPin,
+  Phone,
+  ShieldAlert,
+  Info,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 
-interface EmergencyServicesProps {
-  language: 'ar' | 'en';
-}
+const VERIFIED_HOTLINES = [
+  { id: 'elec', number: '121', labelAr: 'طوارئ الكهرباء', labelEn: 'Electricity Emergency' },
+  { id: 'water', number: '125', labelAr: 'طوارئ المياه والصرف', labelEn: 'Water Emergency' },
+  { id: 'gas', number: '129', labelAr: 'طوارئ الغاز الطبيعي', labelEn: 'Natural Gas Emergency' },
+  { id: 'env', number: '19808', labelAr: 'خط شكاوى وزارة البيئة', labelEn: 'Env Complaints' },
+];
 
 const EmergencyServices: React.FC = () => {
-  const { language, theme, user, isRtl } = useApp();
+  const { user, isRtl } = useApp();
   const [type, setType] = useState<'leak' | 'pollution' | 'fire' | 'other'>('leak');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [savedNotice, setSavedNotice] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
 
   const fetchReports = async () => {
     const data = await storageService.getEmergencyReports();
     setReports(data || []);
   };
 
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const report = {
-      user_id: user?.id,
+      user_id: user?.id || 'guest',
       type,
-      description,
-      location_lat: 30.0444, // Default Cairo
-      location_lng: 31.2357,
-      status: 'pending'
+      location: location.trim(),
+      description: description.trim(),
+      status: 'saved_locally',
+      created_at: new Date().toISOString(),
     };
     await storageService.saveEmergencyReport(report);
     await fetchReports();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 6000);
     setDescription('');
     setLocation('');
   };
 
   const t = {
-    title: isRtl ? 'مصفوفة السلامة والإنقاذ' : 'Aeon Safety Matrix',
-    subtitle: isRtl ? 'نظام الاستجابة الفورية للطوارئ والبلاغات البيئية' : 'Instant Environmental Emergency Response System',
-    type: isRtl ? 'بروتوكول البلاغ' : 'Report Protocol',
-    leak: isRtl ? 'تسرب مياه (بلاغ حي)' : 'Water Leak (Neighborhood)',
-    pollution: isRtl ? 'تلوث بيئي' : 'Env Pollution',
-    fire: isRtl ? 'حريق / دخان' : 'Fire / Smoke',
-    other: isRtl ? 'أخرى' : 'Other',
-    desc: isRtl ? 'وصف الحادث' : 'Incident Description',
-    loc: isRtl ? 'إحداثيات الموقع' : 'Location Coordinates',
-    submit: isRtl ? 'إرسال البلاغ' : 'Execute Alert',
-    success: isRtl ? 'تم إرسال البلاغ بنجاح. وحدات التدخل في طريقها الآن.' : 'Alert executed. Response units dispatched.',
-    history: isRtl ? 'سجل البلاغات' : 'Incident Log',
-    hotline: isRtl ? 'قنوات الاتصال المباشرة' : 'Direct Comms Channels',
-    gasHotline: isRtl ? 'طوارئ الغاز: 129' : 'Gas Emergency: 129',
-    waterHotline: isRtl ? 'طوارئ المياه: 125' : 'Water Emergency: 125',
-    elecHotline: isRtl ? 'طوارئ الكهرباء: 121' : 'Electricity Emergency: 121',
-    envHotline: isRtl ? 'شكاوى البيئة: 19808' : 'Env Complaints: 19808',
-    waterLeakTitle: isRtl ? 'مراقب تسريبات الحي' : 'Neighborhood Leak Reporter',
-    waterLeakDesc: isRtl ? 'ساعد في الحفاظ على ثروة مصر المائية. أبلغ عن أي كسر في مواسير المياه في منطقتك فوراً.' : 'Help preserve Egypt\'s water wealth. Report any water pipe breaks in your area immediately.'
+    title: isRtl ? 'أرقام الطوارئ وتوثيق الحوادث' : 'Emergency Hotlines & Incident Notes',
+    subtitle: isRtl
+      ? 'اتصل مباشرة بالأرقام الرسمية للطوارئ، واحتفظ بملاحظة شخصية للحوادث البيئية على جهازك.'
+      : 'Call official hotlines directly and save personal environmental incident notes.',
+    type: isRtl ? 'تصنيف الواقعة' : 'Incident Category',
+    leak: isRtl ? 'تسرب مياه' : 'Water Leak',
+    pollution: isRtl ? 'تلوث / دخان' : 'Pollution',
+    fire: isRtl ? 'حريق / طوارئ خطرة' : 'Fire Hazard',
+    other: isRtl ? 'ملاحظة أخرى' : 'Other',
+    desc: isRtl ? 'وصف الواقعة' : 'Incident Description',
+    loc: isRtl ? 'الموقع أو العنوان التقريبي' : 'Location / Address',
+    submit: isRtl ? 'حفظ الملاحظة في سجلي المحلي' : 'Save Note Locally',
+    success: isRtl
+      ? 'تم حفظ الملاحظة في سجل جهازك فقط (إدخال المستخدم). لا يقوم MoEco بإرسال بلاغات تلقائية للجهات أو تحريك وحدات تدخل؛ يُرجى الاتصال بالأرقام الرسمية أعلاه عند الحاجة.'
+      : 'Saved to your local device only. MoEco does not dispatch units or contact authorities automatically.',
+    history: isRtl ? 'سجل الملاحظات المحفوظة محليًا' : 'Local Incident Notes',
+    hotline: isRtl ? 'أرقام الطوارئ الرسمية في مصر' : 'Official Egyptian Emergency Hotlines',
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 pb-32" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Safety HUD Header */}
-      <section className="relative p-12 rounded-[3rem] bg-aeon-obsidian border border-aeon-plasma/20 overflow-hidden group">
-        <div className="absolute inset-0 cyber-grid opacity-10" />
-        <div className="absolute top-0 left-0 w-full h-1 bg-aeon-plasma animate-scanline opacity-30" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-aeon-plasma/10 text-aeon-plasma rounded-3xl border border-aeon-plasma/30 shadow-[0_0_20px_rgba(255,45,85,0.2)]">
-                <ShieldAlert className="w-10 h-10" />
-              </div>
+    <div className="max-w-5xl mx-auto space-y-6 pb-12" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Header & Honest Disclaimer */}
+      <header className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900">{t.title}</h1>
+            <p className="text-sm text-slate-600 mt-1">{t.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900 leading-relaxed">
+          <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+          <p>
+            <strong>{isRtl ? 'تنبيه مهم:' : 'Important Notice:'}</strong>{' '}
+            {isRtl
+              ? 'في حالات الطوارئ الحقيقية (تسرب غاز، حريق، كسر خط مياه رئيسي، خطر كهرباء)، اتصل فورًا بالرقم الرسمي المختص عبر الأزرار أدناه. حفظ ملاحظة هنا يتم على جهازك الشخصي للمتابعة فقط ولا يرسل إخطارًا لأي جهة.'
+              : 'For real emergencies, call the official hotlines directly. Saving a note here is local only.'}
+          </p>
+        </div>
+      </header>
+
+      {/* Official Hotlines First */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <Phone className="w-5 h-5 text-emerald-700" />
+          <span>{t.hotline}</span>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {VERIFIED_HOTLINES.map((h) => (
+            <a
+              key={h.id}
+              href={`tel:${h.number}`}
+              className="min-h-[56px] p-4 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl flex items-center justify-between gap-3 transition-colors"
+            >
               <div>
-                <span className="text-[10px] font-mono font-bold text-aeon-plasma uppercase tracking-[0.4em]">Safety Protocol</span>
-                <h1 className="text-5xl font-black tracking-tighter text-white uppercase">{t.title}</h1>
+                <p className="text-xs font-bold text-slate-700">{isRtl ? h.labelAr : h.labelEn}</p>
+                <p className="text-lg font-extrabold text-emerald-700 num-ltr mt-0.5">{h.number}</p>
               </div>
-            </div>
-            <p className="text-white/40 font-mono text-xs uppercase tracking-widest max-w-md">
-              {t.subtitle}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4 p-6 bg-aeon-plasma/5 rounded-[2rem] border border-aeon-plasma/20">
-            <div className="w-3 h-3 bg-aeon-plasma rounded-full animate-pulse shadow-[0_0_10px_#FF2D55]" />
-            <span className="text-[10px] font-mono font-bold text-aeon-plasma uppercase tracking-widest">Active Monitoring</span>
-          </div>
+              <Phone className="w-4 h-4 text-emerald-700 shrink-0" />
+            </a>
+          ))}
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Report Form HUD */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="aeon-card p-10 space-y-8 relative overflow-hidden"
-        >
-          <div className="absolute inset-0 cyber-grid opacity-5" />
-          
-          {submitted ? (
-            <div className="text-center py-20 space-y-6 relative z-10">
-              <div className="p-8 bg-green-500/10 rounded-full border border-green-500/30 w-fit mx-auto">
-                <CheckCircle className="w-20 h-20 text-green-500 animate-pulse" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Transmission Successful</h3>
-                <p className="text-white/40 font-mono text-sm uppercase tracking-widest leading-relaxed">{t.success}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Local Note Form */}
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+          <h2 className="text-base font-extrabold text-slate-900">
+            {isRtl ? 'تسجيل ملاحظة حادث في سجلي' : 'Record Incident Note'}
+          </h2>
+
+          {savedNotice && (
+            <div
+              role="status"
+              className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3 text-xs text-emerald-900 leading-relaxed"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <p>{t.success}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <span className="block text-xs font-bold text-slate-700">{t.type}</span>
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { id: 'leak', label: t.leak, icon: Droplets },
+                  { id: 'pollution', label: t.pollution, icon: Wind },
+                  { id: 'fire', label: t.fire, icon: Flame },
+                  { id: 'other', label: t.other, icon: AlertTriangle },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setType(item.id as any)}
+                    className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-2.5 text-xs font-bold transition-colors ${
+                      type === item.id
+                        ? 'bg-emerald-50 border-emerald-700 text-emerald-900'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 shrink-0 ${type === item.id ? 'text-emerald-700' : 'text-slate-500'}`} />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-              <div className="space-y-4">
-                <label className="block text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.3em]">{t.type}</label>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { id: 'leak', label: t.leak, icon: Droplets },
-                    { id: 'pollution', label: t.pollution, icon: Wind },
-                    { id: 'fire', label: t.fire, icon: Flame },
-                    { id: 'other', label: t.other, icon: AlertTriangle }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setType(item.id as any)}
-                      className={`p-6 rounded-3xl border flex flex-col items-center gap-3 transition-all ${
-                        type === item.id 
-                          ? 'bg-aeon-plasma/20 border-aeon-plasma text-white shadow-[0_0_20px_rgba(255,45,85,0.2)]' 
-                          : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
-                      }`}
-                    >
-                      <item.icon className={`w-8 h-8 ${type === item.id ? 'text-aeon-plasma' : 'text-white/20'}`} />
-                      <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <label className="block text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.3em]">{t.loc}</label>
-                <div className="relative group">
-                  <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-focus-within:text-aeon-plasma transition-colors" />
-                  <input 
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                    placeholder={isRtl ? 'اسم الشارع، المحافظة...' : 'Enter coordinates or address...'}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 pl-16 text-white font-mono text-sm uppercase tracking-widest outline-none focus:border-aeon-plasma/50 focus:bg-aeon-plasma/5 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="block text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.3em]">{t.desc}</label>
-                <textarea 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+            <div className="space-y-1.5">
+              <label htmlFor="em-loc" className="block text-xs font-bold text-slate-700">
+                {t.loc}
+              </label>
+              <div className="relative">
+                <MapPin className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 start-3.5" />
+                <input
+                  id="em-loc"
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                   required
-                  rows={4}
-                  placeholder={isRtl ? 'صف ما تراه...' : 'Describe the incident...'}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-white font-mono text-sm uppercase tracking-widest outline-none focus:border-aeon-plasma/50 focus:bg-aeon-plasma/5 transition-all resize-none"
+                  placeholder={isRtl ? 'اسم الشارع، المنطقة، المحافظة...' : 'Street, district, governorate...'}
+                  className="w-full min-h-[44px] bg-white border border-slate-300 rounded-xl ps-10 pe-4 py-2 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none"
                 />
               </div>
+            </div>
 
-              <button 
-                type="submit"
-                className="w-full py-6 bg-aeon-plasma text-white rounded-2xl font-black text-xs uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(255,45,85,0.3)]"
-              >
-                <Send className="w-6 h-6" />
-                {t.submit}
-              </button>
-            </form>
-          )}
-        </motion.div>
+            <div className="space-y-1.5">
+              <label htmlFor="em-desc" className="block text-xs font-bold text-slate-700">
+                {t.desc}
+              </label>
+              <textarea
+                id="em-desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                rows={4}
+                placeholder={isRtl ? 'اكتب تفاصيل الواقعة للرجوع إليها أو إرفاقها عند الاتصال...' : 'Describe the incident...'}
+                className="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none resize-none"
+              />
+            </div>
 
-        {/* Comms & History HUD */}
-        <div className="space-y-10">
-          {/* Water Leak Reporter Feature */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="aeon-card p-10 bg-blue-500/10 border-blue-500/30 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 cyber-grid opacity-10" />
-            <div className="relative z-10 flex items-center gap-6">
-              <div className="p-5 bg-blue-500/20 rounded-3xl border border-blue-500/40">
-                <Droplets className="w-10 h-10 text-blue-400 animate-bounce" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{t.waterLeakTitle}</h3>
-                <p className="text-white/60 font-mono text-[10px] uppercase tracking-widest leading-relaxed mt-2">
-                  {t.waterLeakDesc}
+            <button
+              type="submit"
+              className="min-h-[48px] w-full bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              <Save className="w-4 h-4" />
+              <span>{t.submit}</span>
+            </button>
+          </form>
+        </section>
+
+        {/* Local Incident Log */}
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+          <h2 className="text-base font-extrabold text-slate-900">{t.history}</h2>
+          <div className="space-y-3 max-h-[460px] overflow-y-auto">
+            {reports.length === 0 ? (
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl py-12 px-4 text-center space-y-2">
+                <ShieldAlert className="w-8 h-8 text-slate-400 mx-auto" />
+                <p className="text-xs font-bold text-slate-600">
+                  {isRtl ? 'لا توجد ملاحظات حوادث محفوظة على جهازك حتى الآن.' : 'No local incident notes saved.'}
                 </p>
               </div>
-            </div>
-          </motion.div>
-
-          {/* Direct Comms HUD */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="aeon-card p-10 bg-aeon-plasma/5 border-aeon-plasma/20 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 cyber-grid opacity-5" />
-            <h2 className="text-2xl font-black text-white mb-8 flex items-center gap-4 uppercase tracking-tighter">
-              <Phone className="w-8 h-8 text-aeon-plasma" />
-              {t.hotline}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-              {[t.gasHotline, t.waterHotline, t.elecHotline, t.envHotline].map((h, i) => (
-                <div key={i} className="p-5 bg-aeon-obsidian border border-aeon-plasma/30 rounded-2xl text-white font-mono text-[10px] font-bold uppercase tracking-widest flex items-center justify-between group hover:bg-aeon-plasma hover:text-aeon-obsidian transition-all cursor-pointer">
-                  {h}
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Incident Log HUD */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="aeon-card p-10 space-y-8"
-          >
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{t.history}</h2>
-            <div className="space-y-6 max-h-[300px] sm:h-[500px] overflow-y-auto pr-4 scrollbar-hide">
-              {reports.length === 0 ? (
-                <div className="text-center py-20 space-y-4">
-                  <div className="w-16 h-16 bg-white/5 rounded-full border border-white/10 flex items-center justify-center mx-auto">
-                    <ShieldAlert className="w-8 h-8 text-white/10" />
+            ) : (
+              reports.map((r, i) => (
+                <article
+                  key={i}
+                  className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2.5 py-0.5 bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-md">
+                      {r.type}
+                    </span>
+                    <span className="text-xs text-slate-500 num-ltr">
+                      {new Date(r.created_at || r.date || Date.now()).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
+                    </span>
                   </div>
-                  <p className="text-white/20 font-mono text-[10px] uppercase tracking-[0.3em]">{isRtl ? 'لا توجد بلاغات سابقة' : 'No Incident Logs Detected'}</p>
-                </div>
-              ) : (
-                reports.map((r, i) => (
-                  <div key={i} className="p-6 bg-white/5 rounded-[2rem] border border-white/10 hover:border-aeon-plasma/30 transition-all group">
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="px-4 py-1.5 bg-aeon-plasma/10 text-aeon-plasma border border-aeon-plasma/20 text-[9px] font-mono font-bold rounded-full uppercase tracking-widest">
-                        {r.type}
-                      </span>
-                      <span className="text-[9px] font-mono text-white/30 uppercase tracking-widest">{new Date(r.created_at || r.date).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-white font-mono text-xs uppercase tracking-widest mb-2 group-hover:text-aeon-plasma transition-colors">{r.location}</p>
-                    <p className="text-white/40 font-mono text-[10px] leading-relaxed uppercase tracking-wider line-clamp-2">{r.description}</p>
-                    <div className="mt-6 pt-6 border-t border-white/5 flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full animate-pulse ${r.status === 'pending' ? 'bg-aeon-gold shadow-[0_0_8px_#d4af37]' : 'bg-green-500 shadow-[0_0_8px_#22c55e]'}`} />
-                      <span className="text-[9px] font-mono text-white/40 uppercase font-bold tracking-[0.2em]">{r.status}</span>
-                    </div>
+                  {r.location && <p className="text-xs font-bold text-slate-900">{r.location}</p>}
+                  <p className="text-xs text-slate-600 leading-relaxed">{r.description}</p>
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>{isRtl ? 'محفوظ محليًا — غير مرسل لجهة رسمية' : 'Saved locally only'}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </motion.div>
-        </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

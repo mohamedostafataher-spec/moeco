@@ -71,12 +71,12 @@ import {
   Fingerprint,
   X,
   Palmtree,
+  Accessibility,
 } from "lucide-react";
 import { translations } from "./i18n";
 import { Language, User, CarbonActivity } from "./types";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import BottomNav from "./components/BottomNav";
-import { FloatingAIAssistant } from "./components/FloatingAIAssistant";
 import { Onboarding } from "./components/Onboarding";
 import SplashScreen from "./components/SplashScreen";
 import { storageService } from "./services/storageService";
@@ -89,7 +89,11 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { PageSkeleton } from "./components/Skeleton";
 import { AccessibilityProvider } from "./context/AccessibilityContext";
-import { FloatingAccessibilityButton } from "./components/FloatingAccessibilityButton";
+import {
+  PrivacyConsentProvider,
+  usePrivacyConsent,
+} from "./context/PrivacyConsentContext";
+import { ConsentGateModal } from "./components/ConsentGateModal";
 import SignLanguageAssistant from "./components/SignLanguageAssistant";
 
 import { errorLogger } from "./services/errorLogger";
@@ -178,18 +182,19 @@ const WasteToIncome = React.lazy(() => import("./pages/WasteToIncome"));
 const MyHomeProfile = React.lazy(() => import("./pages/MyHomeProfile"));
 const ComplaintAssistant = React.lazy(() => import("./pages/ComplaintAssistant"));
 const LocalProjects = React.lazy(() => import("./pages/LocalProjects"));
+const MoreHub = React.lazy(() => import("./pages/MoreHub"));
+const PrivacyData = React.lazy(() => import("./pages/PrivacyData"));
+const MyData = React.lazy(() => import("./pages/MyData"));
+const OwnerAnalytics = React.lazy(() => import("./pages/OwnerAnalytics"));
 
 import { liveIntelEngine } from "./services/liveIntelEngine";
 import { newsService } from "./services/newsService";
 import { calculationEngine } from "./services/calculationEngine";
 import { alertService } from "./services/alertService";
-import { carbonDataService } from "./services/carbonDataService";
 import { EcoAlert } from "./types";
 import AlertBanner from "./components/AlertBanner";
 import { GlobalEmergencyReceiver } from "./components/GlobalEmergencyReceiver";
-import { MoEcoSmartIsland } from './components/MoEcoSmartIsland';
 import InAppWebView from "./components/InAppWebView";
-import { HUDOverlay } from "./components/HUDOverlay";
 
 const MaintenanceScreen: React.FC = () => (
   <div className="fixed inset-0 z-[1000] bg-eco-light flex flex-col items-center justify-center p-10 text-center text-eco-green overflow-hidden">
@@ -239,146 +244,33 @@ const MaintenanceScreen: React.FC = () => (
 
 import NotificationCenter from "./components/NotificationCenter";
 
-const Navigation: React.FC = () => {
-  const { t, language, setUser, user, theme, setIsAdmin, isAdmin, isRtl } =
-    useApp();
+const NavigationShell: React.FC = () => {
+  const { language, user, isRtl } = useApp();
+  const { isOwnerAdmin } = usePrivacyConsent();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [nationalRank, setNationalRank] = useState<number | null>(null);
-  const [carbonPulseValue, setCarbonPulseValue] = useState<string>("424.50");
-
-  const fetchPulse = useCallback(async () => {
-    try {
-      const val = await storageService.getCarbonPulse(user?.id);
-      setCarbonPulseValue(val);
-    } catch (e) {
-      console.warn("Could not fetch pulse", e);
-    }
-  }, [user?.id]);
 
   useEffect(() => {
-    fetchPulse();
-    const interval = setInterval(fetchPulse, 60000);
-    return () => clearInterval(interval);
-  }, [fetchPulse]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const profileSub = supabase
-      .channel(`profile:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "users",
-          filter: `id=eq.${user.id}`,
-        },
-        (payload) => {
-          const updatedUser = payload.new as any;
-          setUser((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  ...updatedUser,
-                  name:
-                    updatedUser.display_name ||
-                    updatedUser.full_name ||
-                    prev.name,
-                  avatar: updatedUser.avatar_url || prev.avatar,
-                }
-              : updatedUser,
-          );
-        },
-      )
-      .subscribe();
-
-    const carbonSub = supabase
-      .channel(`carbon:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "carbon_footprint_logs",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => fetchPulse(),
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "consumption_records",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => fetchPulse(),
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "transport_logs",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => fetchPulse(),
-      )
-      .subscribe();
-
-    return () => {
-      profileSub.unsubscribe();
-      carbonSub.unsubscribe();
-    };
-  }, [user?.id]);
-
-  useEffect(() => {
-    const fetchRank = async () => {
-      if (user?.id && user?.points !== undefined) {
-        try {
-          const { count } = await supabase
-            .from("users")
-            .select("*", { count: "exact", head: true })
-            .gt("points", user.points);
-
-          setNationalRank((count || 0) + 1);
-        } catch (e) {
-          console.warn("Could not fetch national rank");
-        }
-      }
-    };
-    fetchRank();
-  }, [user?.points, user?.id]);
-
-  useEffect(() => {
-    if (user) {
-      const loadUnread = async () => {
-        const notificationsData = await storageService.getNotifications();
-        const notifications = notificationsData || [];
-        if (notifications.length === 0) {
-          await storageService.createNotification(
-            user.id,
-            "مرحباً بك في مو إيكو!",
-            "Welcome to MoEco!",
-            "نحن سعداء بوجودك معنا. استكشف التطبيق وابدأ في تقليل بصمتك الكربونية اليوم.",
-            "We are happy to have you with us. Explore the app and start reducing your carbon footprint today.",
-            "info",
-          );
-          const updated = await storageService.getNotifications();
-          setUnreadCount(updated.filter((n) => !n.is_read).length);
-        } else {
+    if (!user) return;
+    let active = true;
+    const loadUnread = async () => {
+      try {
+        const notifications = (await storageService.getNotifications()) || [];
+        if (active) {
           setUnreadCount(notifications.filter((n) => !n.is_read).length);
         }
-      };
-      loadUnread();
-      const interval = setInterval(loadUnread, 60000);
-      return () => clearInterval(interval);
-    }
+      } catch {
+        // Ignore silent fetch errors
+      }
+    };
+    loadUnread();
+    const interval = setInterval(loadUnread, 60000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [user]);
 
   const clickCountRef = useRef(0);
@@ -389,36 +281,18 @@ const Navigation: React.FC = () => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
 
     if (clickCountRef.current >= 3) {
-      // 1. Force Admin check based on email AND role
-      const isOwner = user?.email === "mohamedostafataher@gmail.com";
-      const isAdminRole = [
-        "gov_admin",
-        "sector_admin",
-        "supervisor",
-        "admin",
-      ].includes(user?.role || "");
-
-      if (isAdminRole || isOwner) {
-        // If owner but role not set, update it locally for this session
-        if (isOwner && !isAdminRole && user) {
-          const updatedUser = { ...user, role: "admin" as any };
-          setUser(updatedUser);
-          storageService.saveUser(updatedUser);
-        }
-
-        setIsAdmin(true);
-        localStorage.setItem("moeco_is_admin", "true");
-        navigate("/admin");
+      if (isOwnerAdmin) {
+        navigate("/owner-stats");
         notificationService.success(
           language === "ar"
-            ? "أهلاً بك يا مدير النظام - تم الدخول"
-            : "Welcome Admin - Control Center access granted",
+            ? "مرحبًا بالمالك - تم التحقق من الصلاحية عبر الخادم"
+            : "Server-verified Owner Analytics access granted",
         );
       } else {
         notificationService.error(
           language === "ar"
-            ? "عذراً، هذا الحساب ليس له صلاحيات إدارية"
-            : "Access Denied: Admin role required",
+            ? "عذرًا، الوصول لإحصاءات المالك يتطلب التحقق عبر جدول app_admins في Supabase"
+            : "Access Denied: Server-side app_admins role required",
         );
       }
       clickCountRef.current = 0;
@@ -430,425 +304,165 @@ const Navigation: React.FC = () => {
     }, 1000);
   };
 
-  const navItems = [
-    { path: "/", label: t("home"), icon: HomeIcon },
+  const primaryLinks = [
+    { path: "/", label: isRtl ? "الرئيسية" : "Home", icon: HomeIcon },
+    { path: "/my-home", label: isRtl ? "ملف بيتي" : "My Home", icon: Zap },
     {
-      path: "/dashboard",
-      label: language === "ar" ? "لوحة المراقبة" : "Dashboard",
-      icon: Activity,
+      path: "/my-complaints",
+      label: isRtl ? "شكواي ما تضيعش" : "Complaints",
+      icon: FileText,
     },
     {
-      path: "/profile",
-      label: language === "ar" ? "حسابي" : "My Account",
-      icon: UserIcon,
+      path: "/local-projects",
+      label: isRtl ? "مشروعي في منطقتي" : "Local Projects",
+      icon: Building2,
     },
     {
-      label: language === "ar" ? "التحول الرقمي" : "Digital Hub",
-      icon: Terminal,
-      items: [
-        {
-          path: "/digital-gov",
-          label: language === "ar" ? "البوابة الرسمية" : "Citizen Hub",
-          icon: Landmark,
-        },
-        {
-          path: "/daily-missions",
-          label: language === "ar" ? "المهمات اليومية" : "Daily Missions",
-          icon: Zap,
-        },
-      ],
+      path: "/calculator",
+      label: isRtl ? "حاسبة الأثر" : "Calculator",
+      icon: CalcIcon,
     },
-    {
-      label: language === "ar" ? "العمل المجتمعي والمحلي" : "Civic Action Hub",
-      icon: ShieldAlert,
-      items: [
-        {
-          path: "/eco-watch",
-          label: language === "ar" ? "بلاغ بيئي" : "Environmental Report",
-          icon: ShieldAlert,
-        },
-        {
-          path: "/local-monitor",
-          label: language === "ar" ? "لوحة المتابعة المحلية" : "Local Monitor",
-          icon: BarChart3,
-        },
-        {
-          path: "/surplus-food",
-          label: language === "ar" ? "الفائض بدل الرمي" : "Surplus Food",
-          icon: Utensils,
-        },
-        {
-          path: "/water-saving",
-          label: language === "ar" ? "وفّر مياه منطقتك" : "Neighborhood Water",
-          icon: Droplets,
-        },
-        {
-          path: "/heat-shade-map",
-          label: language === "ar" ? "خريطة الحر والظل" : "Heat & Shade Map",
-          icon: Sun,
-        },
-        {
-          path: "/waste-to-income",
-          label: language === "ar" ? "المخلفات إلى دخل" : "Waste to Income",
-          icon: Trash2,
-        },
-        {
-          path: "/my-home",
-          label: language === "ar" ? "ملف بيتي" : "My Home Utilities",
-          icon: HomeIcon,
-        },
-        {
-          path: "/my-complaints",
-          label: language === "ar" ? "شكواي ما تضيعش" : "Complaint Organizer",
-          icon: FileText,
-        },
-        {
-          path: "/local-projects",
-          label: language === "ar" ? "مشروعي في منطقتي" : "Local Projects",
-          icon: Building2,
-        },
-      ],
-    },
-    {
-      label: language === "ar" ? "توفيرك وأثرك" : "Savings & Impact",
-      icon: Zap,
-      items: [
-        {
-          path: "/resources",
-          label: language === "ar" ? "الموارد والغذاء" : "Green Resources",
-          icon: Zap,
-        },
-        {
-          path: "/calculator",
-          label: language === "ar" ? "حاسبة الكربون" : "Carbon Calculator",
-          icon: CalcIcon,
-        },
-        {
-          path: "/methodology",
-          label: language === "ar" ? "كيف نحسب الأثر؟" : "Methodology",
-          icon: BookOpen,
-        },
-        {
-          path: "/sustain-hub",
-          label: language === "ar" ? "مركز الاستدامة" : "Sustain Hub",
-          icon: TrendingUp,
-        },
-        {
-          path: "/reports",
-          label:
-            language === "ar" ? "التقارير والشهادات" : "Reports & Certificates",
-          icon: FileText,
-        },
-      ],
-    },
-    {
-      label: language === "ar" ? "المجتمعات المباشرة" : "Live Communities",
-      icon: Users,
-      items: [
-        {
-          path: "/nearby-pulse",
-          label: language === "ar" ? "نبض الأماكن" : "Nearby Pulse",
-          icon: Activity,
-        },
-        {
-          path: "/community",
-          label: language === "ar" ? "المجتمع الأخضر" : "Green Community",
-          icon: Users,
-        },
-        {
-          path: "/family",
-          label: language === "ar" ? "بيت العائلة" : "Family Hub",
-          icon: Heart,
-        },
-        {
-          path: "/achievements",
-          label: language === "ar" ? "منصة الإنجازات" : "Achievement Hub",
-          icon: Sword,
-        },
-      ],
-    },
-    {
-      label: language === "ar" ? "بيئة ذكية" : "Smart Eco",
-      icon: Sprout,
-      items: [
-        {
-          path: "/green-economy",
-          label: language === "ar" ? "سوق المكافآت" : "Green Economy",
-          icon: Ticket,
-        },
-        {
-          path: "/eco-heritage",
-          label: language === "ar" ? "السياحة والتراث" : "Eco-Heritage",
-          icon: Palmtree,
-        },
-        {
-          path: "/eco-news",
-          label: language === "ar" ? "أخبار البيئة" : "Eco News",
-          icon: Newspaper,
-        },
-        {
-          path: "/transport-hub",
-          label: language === "ar" ? "النقل المستدام" : "Eco Transport",
-          icon: Train,
-        },
-        {
-          path: "/community-gardens",
-          label: language === "ar" ? "حدائق المجتمع" : "Gardens",
-          icon: Sprout,
-        },
-        {
-          path: "/green-jobs",
-          label: language === "ar" ? "وظائف خضراء" : "Green Jobs",
-          icon: Briefcase,
-        },
-        {
-          path: "/eco-watch",
-          label: language === "ar" ? "بلاغات الخبراء" : "Eco Watch",
-          icon: ShieldAlert,
-        },
-        {
-          path: "/emergency",
-          label: language === "ar" ? "تنبيهات الطوارئ" : "Emergency Alerts",
-          icon: ShieldAlert,
-        },
-      ],
-    },
-    {
-      label: language === "ar" ? "أدوات حكومية" : "Gov Tools",
-      icon: Landmark,
-      items: [
-        {
-          path: "/sustain-hub?tab=city",
-          label: language === "ar" ? "لوحة تحكم المدينة" : "City Dashboard",
-          icon: Building2,
-        },
-        {
-          path: "/digital-gov?tab=transparency",
-          label: language === "ar" ? "الشفافية" : "Transparency",
-          icon: ShieldCheck,
-        },
-        {
-          path: "/trends",
-          label: language === "ar" ? "حالة المدينة" : "City Status",
-          icon: Activity,
-        },
-      ],
-    },
+    { path: "/more", label: isRtl ? "المزيد" : "More", icon: Menu },
   ];
-
-  const handleLogout = async () => {
-    await storageService.logout();
-    setUser(null);
-    navigate("/login", { replace: true });
-  };
 
   return (
     <>
-      <nav className="fixed top-0 w-full z-50 h-16 md:h-20 flex items-center px-4 md:px-10 justify-between bg-slate-950/80 backdrop-blur-3xl border-b border-white/5 transition-all">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
-        <div className="flex items-center gap-3 md:gap-8 relative z-10">
+      {/* Desktop Sticky Sidebar (lg+) */}
+      <aside
+        aria-label={isRtl ? "القائمة الجانبية الرئيسية" : "Primary sidebar"}
+        className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-white border-e border-slate-200 sticky top-0 h-screen justify-between p-4 z-30"
+      >
+        <div className="space-y-6">
           <button
-            onClick={() => setIsOpen(true)}
-            className="p-2 md:p-3 bg-white/5 hover:bg-emerald-500/20 rounded-xl md:rounded-2xl border border-white/10 transition-all group shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-95"
-          >
-            <Menu className="w-5 h-5 md:w-6 md:h-6 text-emerald-400 group-hover:scale-110 transition-transform" />
-          </button>
-
-          <div
+            type="button"
             onClick={handleLogoClick}
-            className="cursor-pointer flex items-center gap-2 md:gap-3 select-none active:scale-95 transition-all group"
+            className="w-full flex items-center gap-3 px-2 py-2 rounded-xl text-start hover:bg-slate-50 transition-colors"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-emerald-500/20 blur-md rounded-full pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity" />
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:rotate-6 transition-transform relative z-10">
-                <Leaf className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
+              <Leaf className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg md:text-xl font-black tracking-tight text-white leading-none">
+            <div>
+              <span className="block text-lg font-extrabold text-slate-900 leading-none">
                 MoEco
               </span>
-              <span className="text-[8px] md:text-[10px] font-bold text-eco-green uppercase tracking-wider mt-0.5">
-                Egypt 2026
+              <span className="block text-[11px] font-semibold text-slate-500 mt-1">
+                {isRtl ? "منصة الأثر البيئي" : "Environmental Hub"}
               </span>
             </div>
-          </div>
-        </div>
-
-        <div className="hidden lg:flex items-center gap-6 relative z-10">
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-900/50 backdrop-blur-3xl rounded-full border border-emerald-500/20 group hover:border-emerald-500/50 transition-colors shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_#34d399]" />
-              <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest">
-                {language === "ar" ? "البصمة" : "FOOTPRINT"}
-              </span>
-            </div>
-            <div className="w-px h-3 bg-white/10" />
-            <span className="text-xs font-black tabular-nums text-emerald-400">
-              {carbonPulseValue}{" "}
-              <span className="text-[9px] opacity-60">KG</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-900/50 backdrop-blur-3xl rounded-full border border-amber-500/20 group hover:border-amber-500/50 transition-colors shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[9px] font-black text-amber-500/70 uppercase tracking-widest">
-                {language === "ar" ? "النقاط" : "POINTS"}
-              </span>
-            </div>
-            <div className="w-px h-3 bg-white/10" />
-            <span className="text-xs font-black tabular-nums text-amber-400">
-              {user?.points || 0}{" "}
-              <span className="text-[9px] opacity-60">PTS</span>
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 md:gap-4">
-          <button
-            onClick={() => setIsNotificationsOpen(true)}
-            className="p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl md:rounded-2xl border border-slate-100 transition-all relative group"
-          >
-            <Bell className="w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-eco-green transition-colors" />
-            {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-            )}
           </button>
 
-          <div className="hidden sm:block">
+          <nav className="space-y-1">
+            {primaryLinks.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`min-h-[44px] flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors ${
+                    isActive
+                      ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200"
+                      : "text-slate-700 hover:bg-slate-100 font-medium"
+                  }`}
+                >
+                  <Icon
+                    className={`w-5 h-5 shrink-0 ${
+                      isActive ? "text-emerald-700" : "text-slate-500"
+                    }`}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="space-y-2 border-t border-slate-200 pt-4">
+          <Link
+            to="/profile"
+            className={`min-h-[44px] flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              location.pathname === "/profile"
+                ? "bg-emerald-50 text-emerald-800"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <UserIcon className="w-4 h-4 shrink-0" />
+            <span>{isRtl ? "حسابي" : "Profile"}</span>
+          </Link>
+
+          <Link
+            to="/accessibility-settings"
+            className={`min-h-[44px] flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              location.pathname === "/accessibility-settings"
+                ? "bg-emerald-50 text-emerald-800"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Accessibility className="w-4 h-4 shrink-0" />
+            <span>{isRtl ? "سهولة الوصول" : "Accessibility"}</span>
+          </Link>
+
+          <div className="flex items-center justify-between gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsNotificationsOpen(true)}
+              aria-label={isRtl ? "الإشعارات" : "Notifications"}
+              className="min-h-[44px] min-w-[44px] px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center relative text-slate-700"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-600 rounded-full" />
+              )}
+            </button>
             <LanguageSwitcher />
           </div>
         </div>
-      </nav>
+      </aside>
+
+      {/* Mobile Compact Header (< lg) */}
+      <header className="lg:hidden sticky top-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={handleLogoClick}
+          className="flex items-center gap-2.5 min-h-[44px]"
+        >
+          <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center">
+            <Leaf className="w-4 h-4" />
+          </div>
+          <span className="text-base font-extrabold text-slate-900">MoEco</span>
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          <Link
+            to="/accessibility-settings"
+            aria-label={isRtl ? "إعدادات سهولة الوصول" : "Accessibility"}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
+          >
+            <Accessibility className="w-5 h-5" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsNotificationsOpen(true)}
+            aria-label={isRtl ? "الإشعارات" : "Notifications"}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 relative"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-600 rounded-full" />
+            )}
+          </button>
+          <LanguageSwitcher />
+        </div>
+      </header>
 
       <NotificationCenter
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
       />
-
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[200]"
-            />
-            <motion.aside
-              initial={{ x: isRtl ? "100%" : "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: isRtl ? "100%" : "-100%" }}
-              className={`fixed top-0 bottom-0 z-[201] w-80 bg-white border-slate-100 border-r shadow-2xl overflow-y-auto ${isRtl ? "right-0" : "left-0"}`}
-            >
-              <div className="egyptian-pattern absolute inset-0 opacity-5" />
-              <div className="p-10 border-b border-slate-50 space-y-10 relative">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-[1.8rem] overflow-hidden border-2 border-eco-green/20 group-hover:border-eco-green transition-colors bg-slate-50">
-                      <img
-                        src={
-                          user?.avatar ||
-                          `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
-                        }
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-eco-green rounded-full border-4 border-white shadow-lg" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-eco-green uppercase tracking-wider leading-none mb-1">
-                      المستوى {user?.level || 1}
-                    </span>
-                    <h3 className="text-xl font-bold text-slate-800 tracking-tight truncate max-w-[140px] leading-none">
-                      {user?.name}
-                    </h3>
-                  </div>
-                </div>
-
-                <div className="p-6 bg-eco-green/5 rounded-[2rem] border border-eco-green/10 space-y-4">
-                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    <span>مستوى الإنجاز</span>
-                    <span className="text-eco-green">نشط</span>
-                  </div>
-                  <div className="h-1.5 bg-white rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${Math.min(100, (user?.points || 0) % 100)}%`,
-                      }}
-                      className="h-full bg-eco-green"
-                    />
-                  </div>
-                  <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-tight">
-                    <span>{user?.points || 0} نقطة</span>
-                    <span>الترتيب: #{nationalRank || "-"}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-8 pb-32 relative">
-                {navItems.map((group, idx) => (
-                  <div key={idx} className="space-y-3">
-                    {group.path ? (
-                      <Link
-                        to={group.path}
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center gap-5 px-6 py-4 rounded-[1.5rem] font-bold text-sm transition-all group ${
-                          location.pathname === group.path
-                            ? "bg-eco-green text-white shadow-lg shadow-eco-green/20"
-                            : "text-slate-600 hover:text-eco-green hover:bg-eco-green/5"
-                        }`}
-                      >
-                        <group.icon
-                          className={`w-5 h-5 ${location.pathname === group.path ? "text-white" : "text-slate-400 group-hover:text-eco-green"}`}
-                        />
-                        <span className="relative z-10">{group.label}</span>
-                      </Link>
-                    ) : (
-                      <div className="space-y-3">
-                        <p className="px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          {group.label}
-                        </p>
-                        <div className="space-y-1">
-                          {group.items?.map((item) => (
-                            <Link
-                              key={item.path}
-                              to={item.path}
-                              onClick={() => setIsOpen(false)}
-                              className={`flex items-center gap-5 px-6 py-3 rounded-[1.2rem] font-medium text-xs transition-all group ${
-                                location.pathname === item.path
-                                  ? "text-eco-green bg-eco-green/5"
-                                  : "text-slate-500 hover:text-eco-green hover:bg-eco-green/5"
-                              }`}
-                            >
-                              <item.icon className="w-4 h-4" />
-                              <span>{item.label}</span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <div className="pt-8 border-t border-slate-50">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-5 px-8 py-4 rounded-[1.5rem] bg-rose-50 text-rose-500 font-bold text-xs hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    تسجيل الخروج
-                  </button>
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
     </>
   );
 };
@@ -918,9 +532,11 @@ const AppContent: React.FC = () => {
     language,
     theme,
     isAdmin,
+    setIsAdmin,
     appConfig,
     refreshGlobalData,
   } = useApp();
+  const { isOwnerAdmin } = usePrivacyConsent();
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [userCountry, setUserCountry] = useState<string>(
     localStorage.getItem("moeco_country") || "EG",
@@ -930,6 +546,10 @@ const AppContent: React.FC = () => {
   const [isAppReady, setIsAppReady] = useState(false);
   const location = useLocation();
   const isRtl = language === "ar";
+
+  useEffect(() => {
+    setIsAdmin(isOwnerAdmin);
+  }, [isOwnerAdmin, setIsAdmin]);
 
   const getScreenName = (path: string) => {
     const names: Record<string, string> = {
@@ -1075,7 +695,6 @@ const AppContent: React.FC = () => {
           event === "INITIAL_SESSION"
         ) {
           const profile = await storageService.getUserProfile(session.user.id);
-          const isOwner = session.user.email === "mohamedostafataher@gmail.com";
 
           const enrichedUser: User = {
             ...session.user,
@@ -1088,7 +707,7 @@ const AppContent: React.FC = () => {
               profile?.avatar_url || session.user.user_metadata?.avatar_url,
             points: profile?.points || 0,
             level: profile?.level || 1,
-            role: isOwner ? "admin" : profile?.role || "user",
+            role: profile?.role || "user",
           } as any;
           setUser(enrichedUser);
           storageService.saveUser(enrichedUser);
@@ -1307,31 +926,19 @@ const AppContent: React.FC = () => {
 
     return (
       <div
-        className={`min-h-screen flex flex-col bg-slate-950 transition-colors duration-500 overflow-x-hidden ${isRtl ? "rtl" : "ltr"}`}
+        className={`min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden ${isRtl ? "rtl" : "ltr"}`}
       >
-        <div className="scanline" />
-        <div className="flex-grow flex flex-col w-full max-w-[1440px] mx-auto relative bg-slate-900 shadow-2xl min-h-screen border-x border-white/5">
-          <HUDOverlay />
-          <AlertBanner />
-          <GlobalEmergencyReceiver />
-          <Navigation />
-          <MoEcoSmartIsland />
+        <AlertBanner />
+        <GlobalEmergencyReceiver />
 
-          <AnimatePresence></AnimatePresence>
+        <div className="lg:flex min-h-screen max-w-[1440px] mx-auto">
+          <NavigationShell />
 
-          <main className="flex-grow pt-24 md:pt-32 pb-24 md:pb-32 px-3 md:px-6 safe-area-inset">
-            <div className="w-full h-full">
-              <React.Suspense fallback={<PageSkeleton />}>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={location.pathname}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                  >
-                    <Routes>
+          <div className="flex-1 min-w-0 flex flex-col">
+            <main className="flex-grow px-4 py-5 md:px-8 md:py-7 pb-24 lg:pb-10">
+              <div className="w-full h-full">
+                <React.Suspense fallback={<PageSkeleton />}>
+                  <Routes>
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/" element={<Home />} />
@@ -1447,6 +1054,10 @@ const AppContent: React.FC = () => {
                       <Route path="/my-home" element={<MyHomeProfile />} />
                       <Route path="/my-complaints" element={<ComplaintAssistant />} />
                       <Route path="/local-projects" element={<LocalProjects />} />
+                      <Route path="/more" element={<MoreHub />} />
+                      <Route path="/privacy" element={<PrivacyData />} />
+                      <Route path="/my-data" element={<MyData />} />
+                      <Route path="/owner-stats" element={<OwnerAnalytics />} />
                       <Route
                         path="/calculation-records"
                         element={<CalculationRecords />}
@@ -1498,7 +1109,7 @@ const AppContent: React.FC = () => {
                       />
                       <Route
                         path="/emergency"
-                        element={<AlertsAndEmergencies language={language} />}
+                        element={<AlertsAndEmergencies />}
                       />
                       <Route
                         path="/transparency"
@@ -1558,7 +1169,6 @@ const AppContent: React.FC = () => {
                           <Navigate to="/sustain-hub?tab=system" replace />
                         }
                       />
-                      <Route path="/admin" element={<AdminDashboard />} />
                       <Route path="/presentation" element={<Presentation />} />
                       <Route
                         path="/accessibility-settings"
@@ -1570,14 +1180,12 @@ const AppContent: React.FC = () => {
                       />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
-                  </motion.div>
-                </AnimatePresence>
-              </React.Suspense>
-            </div>
-          </main>
+                </React.Suspense>
+              </div>
+            </main>
 
-          <BottomNav />
-          <FloatingAIAssistant />
+            <BottomNav />
+          </div>
         </div>
       </div>
     );
@@ -1590,7 +1198,6 @@ const AppContent: React.FC = () => {
         id="moeco-app-root"
       >
         {renderAppContent()}
-        <FloatingAccessibilityButton />
         <SignLanguageAssistant />
       </div>
     </AccessibilityProvider>
@@ -1616,25 +1223,8 @@ const App: React.FC = () => {
       "light"
     );
   });
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return localStorage.getItem("moeco_is_admin") === "true";
-  });
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
-
-  useEffect(() => {
-    if (
-      user &&
-      ["admin", "gov_admin", "sector_admin", "supervisor"].includes(
-        user.role || "",
-      )
-    ) {
-      setIsAdmin(true);
-      localStorage.setItem("moeco_is_admin", "true");
-    } else if (user) {
-      setIsAdmin(false);
-      localStorage.setItem("moeco_is_admin", "false");
-    }
-  }, [user?.role]);
   const [fontSize, setFontSize] = useState(() => {
     const userSession = storageService.getUser();
     return (
@@ -1846,8 +1436,9 @@ const App: React.FC = () => {
   }, [refreshGlobalData]);
 
   useEffect(() => {
-    localStorage.setItem("moeco_is_admin", isAdmin.toString());
-  }, [isAdmin]);
+    // Admin privilege is strictly verified from server (app_admins table) inside PrivacyConsentProvider.
+    localStorage.removeItem("moeco_is_admin");
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("moeco_lang", language);
@@ -1953,26 +1544,21 @@ const App: React.FC = () => {
   const toggleTheme = () =>
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
 
-  if (false && appConfig.global_theme?.maintenance_mode && !isAdmin) {
+  if (appConfig.global_theme?.maintenance_mode && !isAdmin) {
     return (
-      <div className="min-h-screen bg-aeon-obsidian flex flex-center p-10 text-center">
-        <div className="aeon-card p-12 max-w-md w-full space-y-8">
-          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto">
-            <ShieldAlert className="w-10 h-10" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full space-y-4">
+          <div className="w-16 h-16 bg-amber-50 text-amber-700 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+          <h1 className="text-2xl font-extrabold text-slate-900">
             {language === "ar" ? "النظام في وضع الصيانة" : "System Maintenance"}
           </h1>
-          <p className="text-zinc-500 text-sm leading-relaxed">
+          <p className="text-slate-600 text-sm leading-relaxed">
             {language === "ar"
-              ? "نحن نقوم بتحديث النظام حالياً لتقديم تجربة أفضل. يرجى العودة لاحقاً."
+              ? "نحن نقوم بتحديث النظام حاليًا لتقديم تجربة أفضل. يرجى العودة لاحقًا."
               : "We are currently updating the system to provide a better experience. Please check back later."}
           </p>
-          <div className="pt-6 border-t border-white/5">
-            <p className="text-[10px] font-mono text-aeon-cyan uppercase tracking-widest">
-              MO ECO Intelligence System
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -2021,7 +1607,10 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
         <HashRouter>
-          <AppContent />
+          <PrivacyConsentProvider>
+            <AppContent />
+            <ConsentGateModal />
+          </PrivacyConsentProvider>
         </HashRouter>
       </ErrorBoundary>
     </AppContext.Provider>
