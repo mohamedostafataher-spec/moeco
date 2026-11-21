@@ -1396,7 +1396,19 @@ export const storageService = {
         return currentUserCache;
       } catch (e) {}
     }
-    return null;
+    // Default guest user so anyone can enter and use the app immediately without an account
+    currentUserCache = {
+      id: 'guest-user-2026',
+      email: 'guest@moeco.gov.eg',
+      name: 'مستخدم زائر',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
+      points: 150,
+      level: 1,
+      role: 'user',
+      governorate: 'Cairo'
+    };
+    localStorage.setItem('moeco_user', JSON.stringify(currentUserCache));
+    return currentUserCache;
   },
 
   resetPassword: async (email: string) => {

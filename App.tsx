@@ -1241,16 +1241,6 @@ const AppContent: React.FC = () => {
     if (showOnboarding)
       return <Onboarding onComplete={handleOnboardingComplete} />;
 
-    if (!user) {
-      return (
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      );
-    }
-
     return (
       <div
         className={`min-h-screen flex flex-col bg-slate-950 transition-colors duration-500 overflow-x-hidden ${isRtl ? "rtl" : "ltr"}`}
