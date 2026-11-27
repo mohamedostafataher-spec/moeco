@@ -276,7 +276,7 @@ const Settings: React.FC = () => {
                 to="/my-data"
                 className="min-h-[44px] w-full flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-xs font-bold text-white hover:bg-white/20 transition"
               >
-                {isRtl ? 'بياناتي وتصديرها وحذفها (Supabase)' : 'My Data & Export (Supabase)'}
+                {isRtl ? 'بياناتي وتصديرها وحذفها (الخادم)' : 'My Data & Export (الخادم)'}
               </Link>
 
               <Link
@@ -332,4 +332,3 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
-
