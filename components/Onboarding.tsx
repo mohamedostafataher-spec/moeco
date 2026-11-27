@@ -16,11 +16,14 @@ import { useApp } from '../context/AppContext';
 import { supabase } from '../services/supabaseClient';
 import { storageService } from '../services/storageService';
 
+
 interface OnboardingProps {
   onComplete: () => void;
 }
 
+
 type OnboardingStep = 'intro' | 'routine' | 'ready';
+
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [step, setStep] = useState<OnboardingStep>('intro');
@@ -28,6 +31,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const { language } = useApp();
   const isRtl = language === 'ar';
   const ForwardIcon = isRtl ? ArrowLeft : ArrowRight;
+
 
   const finishOnboarding = async () => {
     try {
@@ -49,10 +53,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     onComplete();
   };
 
+
   const skipImmediately = () => {
     localStorage.setItem('moeco_onboarding', 'true');
     onComplete();
   };
+
 
   return (
     <div
@@ -68,6 +74,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           <span className="font-extrabold text-lg text-slate-900">MoEco</span>
         </div>
 
+
         <button
           type="button"
           onClick={skipImmediately}
@@ -76,6 +83,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           {isRtl ? 'تخطي والدخول للتطبيق' : 'Skip'}
         </button>
       </header>
+
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-4 py-6">
@@ -98,6 +106,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </p>
               </div>
 
+
               <div className="space-y-3">
                 {[
                   {
@@ -105,7 +114,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     title: isRtl ? 'ملف بيتي للكهرباء والمياه' : 'My Home Utilities',
                     desc: isRtl
                       ? 'سجّل قراءاتك أو فواتيرك بنفسك واحفظها في الخادم بموافقتك مع تصديرها وقتما تشاء.'
-                      : 'Record your own meter readings and bills privately in Supabase with your consent.',
+                      : 'Record your own meter readings and bills privately on your account with your consent.',
                   },
                   {
                     icon: FileText,
@@ -140,6 +149,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 })}
               </div>
 
+
               <button
                 type="button"
                 onClick={() => setStep('routine')}
@@ -150,6 +160,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
               </button>
             </>
           )}
+
 
           {step === 'routine' && (
             <>
@@ -163,6 +174,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     : 'Helps tailor calculator options without assuming consumption numbers.'}
                 </p>
               </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -191,6 +203,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 })}
               </div>
 
+
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -211,6 +224,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </>
           )}
 
+
           {step === 'ready' && (
             <>
               <div className="text-center space-y-3 py-2">
@@ -226,6 +240,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     : 'No placeholder numbers have been created for your account. Start by logging your first real utility reading or exploring the tools.'}
                 </p>
               </div>
+
 
               <button
                 type="button"
