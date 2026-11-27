@@ -1817,7 +1817,7 @@ export const storageService = {
     if (error) return [];
     return data.map(f => ({
       ...f,
-      totalPoints: Math.floor(Math.random() * 5000), // Placeholder for aggregation logic
+      totalPoints: Number((f as any).total_points) || 0, // real value only; 0 when not aggregated
       memberCount: (f as any).members?.[0]?.count || 0
     })).sort((a, b) => b.totalPoints - a.totalPoints);
   },
