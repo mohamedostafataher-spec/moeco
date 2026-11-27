@@ -18,6 +18,7 @@ import { usePrivacyConsent } from '../context/PrivacyConsentContext';
 import { ConsentRequiredNotice } from '../components/ConsentGateModal';
 import { storageService } from '../services/storageService';
 import { HomeUtilityRecord, PersonalComplaint } from '../services/personalCivicService';
+import DailyCarbonCard from '../components/DailyCarbonCard';
 import { supabaseDataService } from '../services/supabaseDataService';
 
 const Home: React.FC = () => {
@@ -113,6 +114,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-8" dir={isRtl ? 'rtl' : 'ltr'}>
+      <DailyCarbonCard />
       <section
         aria-label={isRtl ? 'الترحيب والتعريف بالتطبيق' : 'Welcome and overview'}
         className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 space-y-5"
