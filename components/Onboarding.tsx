@@ -104,7 +104,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     icon: Zap,
                     title: isRtl ? 'ملف بيتي للكهرباء والمياه' : 'My Home Utilities',
                     desc: isRtl
-                      ? 'سجّل قراءاتك أو فواتيرك بنفسك واحفظها في Supabase بموافقتك مع تصديرها وقتما تشاء.'
+                      ? 'سجّل قراءاتك أو فواتيرك بنفسك واحفظها في الخادم بموافقتك مع تصديرها وقتما تشاء.'
                       : 'Record your own meter readings and bills privately in Supabase with your consent.',
                   },
                   {
