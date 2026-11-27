@@ -22,6 +22,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { usePrivacyConsent } from '../context/PrivacyConsentContext';
 import { ConsentRequiredNotice } from '../components/ConsentGateModal';
+import { PageHero } from '../components/ui';
 import {
   ComplaintCategoryId,
   ComplaintLocalStatus,
@@ -369,31 +370,25 @@ const ComplaintAssistant: React.FC = () => {
       className="max-w-5xl mx-auto pb-12 space-y-6 text-slate-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <header className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
-              <FileText className="w-4 h-4" />
-              <span>تنظيم ومتابعة الشكاوى الشخصية (محفوظة في الخادم)</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">شكواي ما تضيعش</h1>
-            <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
-              جهّز مسودة شكواك وملاحظاتك الخاصة، وافتح القناة الرسمية الموثقة لتقديمها بنفسك، ثم
-              احتفظ برقم المتابعة وتذكير المراجعة في جلستك الخاصة.
-            </p>
-          </div>
-
+      <PageHero
+        eyebrow="تنظيم ومتابعة الشكاوى الشخصية (محفوظة في الخادم)"
+        title="شكواي ما تضيعش"
+        subtitle="جهّز مسودة شكواك وملاحظاتك الخاصة، وافتح القناة الرسمية الموثقة لتقديمها بنفسك، ثم احتفظ برقم المتابعة وتذكير المراجعة في جلستك الخاصة."
+        icon={<FileText className="w-5 h-5" />}
+      >
+        <div className="pt-3">
           <button
             type="button"
             onClick={openNewWizard}
-            className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
+            className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-emerald-900 hover:bg-emerald-50 font-bold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
           >
             <Plus className="w-4 h-4" />
             <span>تجهيز مسودة شكوى جديدة</span>
           </button>
         </div>
+      </PageHero>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900 leading-relaxed">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900 leading-relaxed">
           <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold">تنبيه شفافية مهم:</p>
@@ -413,7 +408,6 @@ const ComplaintAssistant: React.FC = () => {
             </span>
           </div>
         )}
-      </header>
 
       {!hasCoreConsent && <ConsentRequiredNotice featureTitle="شكواي ما تضيعش" />}
 
