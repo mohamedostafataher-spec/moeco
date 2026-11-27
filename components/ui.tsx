@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
+
 /** Fades and lifts each screen in when the route changes. */
 export const RouteTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -10,6 +11,7 @@ export const RouteTransition: React.FC<{ children: React.ReactNode }> = ({ child
     </div>
   );
 };
+
 
 /** Self-drawn lotus mark used in heroes and empty states. */
 export const LotusMark: React.FC<{ className?: string }> = ({ className }) => (
@@ -34,6 +36,7 @@ export const LotusMark: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+
 /** Nile-wave + papyrus pattern for hero backgrounds. */
 const HeroPattern: React.FC = () => (
   <svg className="absolute inset-0 w-full h-full opacity-[.16]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 200" aria-hidden="true">
@@ -46,10 +49,11 @@ const HeroPattern: React.FC = () => (
   </svg>
 );
 
+
 export const PageHero: React.FC<{
-  eyebrow?: string;
-  title: string;
-  subtitle?: string;
+  eyebrow?: React.ReactNode;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
   icon?: React.ReactNode;
   children?: React.ReactNode;
 }> = ({ eyebrow, title, subtitle, icon, children }) => (
@@ -77,6 +81,7 @@ export const PageHero: React.FC<{
     </div>
   </section>
 );
+
 
 export const EmptyState: React.FC<{
   title: string;
