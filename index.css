@@ -197,3 +197,53 @@
 [dir="rtl"] .leaflet-control-container {
   direction: ltr;
 }
+
+/* ===== MoEco mobile design system ===== */
+:root {
+  --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --sab: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+}
+.app-header {
+  padding-top: var(--sat);
+  background: linear-gradient(135deg, #0b6b54, #064e3f);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(6, 78, 63, 0.25);
+}
+.app-header * { color: inherit; }
+.app-header .hdr-btn {
+  width: 40px; height: 40px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.12);
+}
+.app-header .hdr-btn:active { background: rgba(255,255,255,.22); }
+.bottom-dock {
+  position: fixed; left: 12px; right: 12px; z-index: 50;
+  bottom: calc(10px + var(--sab));
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(16,185,129,.15);
+  border-radius: 26px;
+  box-shadow: 0 12px 40px rgba(6,78,63,.22);
+  padding: 6px;
+}
+.bottom-dock a { position: relative; transition: transform .15s ease; }
+.bottom-dock a:active { transform: scale(.92); }
+.dock-active { background: linear-gradient(135deg, #0b6b54, #0f9d6a); box-shadow: 0 6px 16px rgba(11,107,84,.35); }
+.dock-active, .dock-active * { color: #fff !important; }
+.hero-card {
+  background: linear-gradient(135deg, #0b6b54 0%, #064e3f 60%, #03352b 100%);
+  box-shadow: 0 14px 40px rgba(6, 78, 63, .28);
+}
+.page-enter { animation: pageIn .35s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.float-soft { animation: floatSoft 4s ease-in-out infinite; }
+@keyframes floatSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.lang-pill {
+  display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px;
+  border-radius: 14px; background: rgba(255,255,255,.12); font-weight: 700; font-size: 13px;
+}
+@media (max-width: 1023px) {
+  main { padding-bottom: calc(96px + var(--sab)) !important; }
+  .eco-card, .glass-card { border-radius: 22px; border-color: rgba(16,185,129,.12); box-shadow: 0 6px 22px rgba(6,78,63,.06); }
+}
+.lang-pill{border:0!important;box-shadow:none!important}
