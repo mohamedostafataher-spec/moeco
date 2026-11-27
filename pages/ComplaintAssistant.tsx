@@ -94,7 +94,7 @@ const ComplaintAssistant: React.FC = () => {
       const list = await supabaseDataService.listComplaintDrafts(userId);
       setComplaints(list);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تحميل مسودات الشكاوى من Supabase.');
+      setErrorMsg(err?.message || 'تعذر تحميل مسودات الشكاوى من الخادم.');
     } finally {
       setLoadingList(false);
     }
@@ -238,7 +238,7 @@ const ComplaintAssistant: React.FC = () => {
           lat: locationConsentGiven ? lat : undefined,
           lng: locationConsentGiven ? lng : undefined,
         });
-        setStatusNotice('تم تحديث مسودة الشكوى في قاعدة بيانات Supabase.');
+        setStatusNotice('تم تحديث مسودة الشكوى في قاعدة البيانات.');
       } else {
         await supabaseDataService.createComplaintDraft(userId, {
           category,
@@ -256,7 +256,7 @@ const ComplaintAssistant: React.FC = () => {
         if (analyticsEnabled) {
           trackUsageEvent('complaint_draft_created', { feature: 'my_complaints', status: category });
         }
-        setStatusNotice('تم حفظ المسودة بحالة «مسودة داخل MoEco» في Supabase. يمكنك الآن فتح القناة الرسمية وتقديم الشكوى بنفسك.');
+        setStatusNotice('تم حفظ المسودة بحالة «مسودة داخل MoEco» في الخادم. يمكنك الآن فتح القناة الرسمية وتقديم الشكوى بنفسك.');
       }
       await reload();
       resetDraftForm();
@@ -374,7 +374,7 @@ const ComplaintAssistant: React.FC = () => {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
               <FileText className="w-4 h-4" />
-              <span>تنظيم ومتابعة الشكاوى الشخصية (محفوظة في Supabase)</span>
+              <span>تنظيم ومتابعة الشكاوى الشخصية (محفوظة في الخادم)</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">شكواي ما تضيعش</h1>
             <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
@@ -399,7 +399,7 @@ const ComplaintAssistant: React.FC = () => {
             <p className="font-bold">تنبيه شفافية مهم:</p>
             <p>
               MoEco لا يرسل شكاوى لأي جهة حكومية تلقائيًا، بل ينظم بياناتك في مسودتك الخاصة على
-              Supabase (معزولة بسياسات RLS) ويحيلك للروابط الرسمية الموثقة لتقديمها ومتابعتها بنفسك.
+              الخادم (معزولة بسياسات RLS) ويحيلك للروابط الرسمية الموثقة لتقديمها ومتابعتها بنفسك.
             </p>
           </div>
         </div>
@@ -659,7 +659,7 @@ const ComplaintAssistant: React.FC = () => {
                   />
                   <span className="text-slate-700 leading-relaxed">
                     <strong>إرفاق موقع GPS اختياري (بموافقتي الصريحة):</strong> أوافق على حفظ
-                    إحداثيات الموقع داخل مسودتي الخاصة في Supabase لمساعدتي عند التقديم.
+                    إحداثيات الموقع داخل مسودتي الخاصة في الخادم لمساعدتي عند التقديم.
                   </span>
                 </label>
 
@@ -711,7 +711,7 @@ const ComplaintAssistant: React.FC = () => {
                 <h3 className="text-base font-extrabold text-slate-900">مراجعة البلاغ قبل حفظ المسودة</h3>
                 <p className="text-xs text-slate-600">
                   لن يتم إرسال أي شيء لأي جهة حكومية عند الضغط على «حفظ المسودة»؛ تُحفظ المسودة
-                  في جلستك الخاصة على Supabase بالحالة «مسودة داخل MoEco».
+                  في جلستك الخاصة على الخادم بالحالة «مسودة داخل MoEco».
                 </p>
 
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-4 rounded-xl border border-slate-200">
@@ -757,7 +757,7 @@ const ComplaintAssistant: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs"
                 >
                   {savingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  <span>حفظ المسودة في Supabase</span>
+                  <span>حفظ المسودة في الخادم</span>
                 </button>
               </div>
             </div>
@@ -790,7 +790,7 @@ const ComplaintAssistant: React.FC = () => {
           {confirmClearAll && (
             <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs font-bold text-rose-900">
-                هل تريد حذف جميع مسودات الشكاوى من قاعدة بيانات Supabase نهائيًا؟
+                هل تريد حذف جميع مسودات الشكاوى من قاعدة البيانات نهائيًا؟
               </p>
               <div className="flex gap-2">
                 <button
@@ -807,7 +807,7 @@ const ComplaintAssistant: React.FC = () => {
                     await supabaseDataService.deleteAllComplaintDrafts(userId);
                     setConfirmClearAll(false);
                     await reload();
-                    setStatusNotice('تم حذف جميع مسودات «شكواي ما تضيعش» من Supabase.');
+                    setStatusNotice('تم حذف جميع مسودات «شكواي ما تضيعش» من الخادم.');
                   }}
                   className="min-h-[44px] px-4 rounded-xl bg-rose-700 hover:bg-rose-800 text-xs font-bold text-white"
                 >
@@ -820,7 +820,7 @@ const ComplaintAssistant: React.FC = () => {
           {loadingList ? (
             <div className="py-10 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-              <span>جاري تحميل مسوداتك من Supabase...</span>
+              <span>جاري تحميل مسوداتك من الخادم...</span>
             </div>
           ) : complaints.length === 0 ? (
             <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center space-y-3">
