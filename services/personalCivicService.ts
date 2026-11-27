@@ -1,10 +1,13 @@
 import * as XLSX from 'xlsx';
 
+
 export interface VerifiedChannelLink {
   label: string;
+  labelEn?: string;
   url: string;
   sourceInRepo: string;
 }
+
 
 export interface LocalAttachment {
   id: string;
@@ -15,9 +18,11 @@ export interface LocalAttachment {
   addedAt: string;
 }
 
+
 export type UtilityServiceType = 'electricity' | 'water';
 export type UtilityEntryKind = 'reading' | 'consumption';
 export type UtilityDateMode = 'single_date' | 'billing_period';
+
 
 export interface HomeUtilityRecord {
   id: string;
@@ -38,6 +43,7 @@ export interface HomeUtilityRecord {
   updatedAt: string;
 }
 
+
 export type ComplaintCategoryId =
   | 'environment_waste'
   | 'water_sanitation'
@@ -46,11 +52,13 @@ export type ComplaintCategoryId =
   | 'consumer_protection'
   | 'other';
 
+
 export type ComplaintLocalStatus =
   | 'draft_moeco'
   | 'opened_official_channel'
   | 'tracking_entered'
   | 'closed_by_user';
+
 
 export interface ComplaintCategoryConfig {
   id: ComplaintCategoryId;
@@ -59,6 +67,7 @@ export interface ComplaintCategoryConfig {
   verifiedHotlines: { label: string; number: string; sourceInRepo: string }[];
   missingLinkNoticeAr?: string;
 }
+
 
 export interface PersonalComplaint {
   id: string;
@@ -85,6 +94,7 @@ export interface PersonalComplaint {
   updatedAt: string;
 }
 
+
 export interface VerifiedPublicProject {
   id: string;
   title: string;
@@ -97,6 +107,7 @@ export interface VerifiedPublicProject {
   budgetText?: string;
   completionPercent?: number;
 }
+
 
 export interface SavedPublicProjectNote {
   id: string;
@@ -111,6 +122,7 @@ export interface SavedPublicProjectNote {
   reportedErrorTag?: 'ملاحظة مستخدم غير متحققة';
   updatedAt: string;
 }
+
 
 export const VERIFIED_UTILITY_PORTALS: Record<
   UtilityServiceType,
@@ -133,6 +145,7 @@ export const VERIFIED_UTILITY_PORTALS: Record<
     portals: [
       {
         label: 'المنصة الموحدة لخدمات الكهرباء',
+        labelEn: 'Unified Electricity Services Platform',
         url: 'https://eservices.eehc.gov.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
@@ -161,6 +174,7 @@ export const VERIFIED_UTILITY_PORTALS: Record<
     portals: [
       {
         label: 'الشركة القابضة لمياه الشرب والصرف الصحي',
+        labelEn: 'Holding Company for Water and Wastewater',
         url: 'https://www.hcww.com.eg',
         sourceInRepo: 'server/services/govEngine.ts & services/TransparencyCenter.ts',
       },
@@ -181,13 +195,16 @@ export const VERIFIED_UTILITY_PORTALS: Record<
   },
 };
 
+
 export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
   {
     id: 'environment_waste',
     labelAr: 'البيئة أو المخلفات',
+    labelEn: 'Environment or Waste',
     verifiedUrls: [
       {
         label: 'منظومة الشكاوى الحكومية الموحدة',
+        labelEn: 'Unified Government Complaints Portal',
         url: 'https://www.shakwa.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
@@ -195,6 +212,7 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
     verifiedHotlines: [
       {
         label: 'خط شكاوى البيئة',
+        labelEn: 'Environment complaints hotline',
         number: '19808',
         sourceInRepo: 'pages/EmergencyServices.tsx',
       },
@@ -203,14 +221,17 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
   {
     id: 'water_sanitation',
     labelAr: 'المياه أو الصرف',
+    labelEn: 'Water or Sanitation',
     verifiedUrls: [
       {
         label: 'الشركة القابضة لمياه الشرب والصرف الصحي',
+        labelEn: 'Holding Company for Water and Wastewater',
         url: 'https://www.hcww.com.eg',
         sourceInRepo: 'server/services/govEngine.ts & services/TransparencyCenter.ts',
       },
       {
         label: 'منظومة الشكاوى الحكومية الموحدة',
+        labelEn: 'Unified Government Complaints Portal',
         url: 'https://www.shakwa.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
@@ -218,6 +239,7 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
     verifiedHotlines: [
       {
         label: 'طوارئ المياه',
+        labelEn: 'Water emergencies',
         number: '125',
         sourceInRepo: 'pages/EmergencyServices.tsx',
       },
@@ -226,14 +248,17 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
   {
     id: 'electricity',
     labelAr: 'الكهرباء',
+    labelEn: 'Electricity',
     verifiedUrls: [
       {
         label: 'المنصة الموحدة لخدمات الكهرباء',
+        labelEn: 'Unified Electricity Services Platform',
         url: 'https://eservices.eehc.gov.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
       {
         label: 'منظومة الشكاوى الحكومية الموحدة',
+        labelEn: 'Unified Government Complaints Portal',
         url: 'https://www.shakwa.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
@@ -241,6 +266,7 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
     verifiedHotlines: [
       {
         label: 'طوارئ الكهرباء',
+        labelEn: 'Electricity emergencies',
         number: '121',
         sourceInRepo: 'pages/EmergencyServices.tsx',
       },
@@ -249,24 +275,29 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
   {
     id: 'transport_rail',
     labelAr: 'النقل أو السكك الحديدية',
+    labelEn: 'Transport or Railways',
     verifiedUrls: [
       {
         label: 'وزارة النقل',
+        labelEn: 'Ministry of Transport',
         url: 'https://www.mot.gov.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
       {
         label: 'الهيئة القومية لسكك حديد مصر',
+        labelEn: 'Egyptian National Railways',
         url: 'https://enr.gov.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
       {
         label: 'الشركة المصرية لإدارة وتشغيل المترو',
+        labelEn: 'Egyptian Company for Metro Management',
         url: 'https://cairometro.gov.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
       {
         label: 'منظومة الشكاوى الحكومية الموحدة',
+        labelEn: 'Unified Government Complaints Portal',
         url: 'https://www.shakwa.eg',
         sourceInRepo: 'server/services/govEngine.ts',
       },
@@ -276,18 +307,23 @@ export const VERIFIED_COMPLAINT_CATEGORIES: ComplaintCategoryConfig[] = [
   {
     id: 'consumer_protection',
     labelAr: 'حماية المستهلك',
+    labelEn: 'Consumer Protection',
     verifiedUrls: [],
     verifiedHotlines: [],
     missingLinkNoticeAr: 'لا يتوفر رابط رسمي موثق حاليًا',
+    missingLinkNoticeEn: 'No verified official link is currently available',
   },
   {
     id: 'other',
     labelAr: 'أخرى',
+    labelEn: 'Other',
     verifiedUrls: [],
     verifiedHotlines: [],
     missingLinkNoticeAr: 'لا يتوفر رابط رسمي موثق حاليًا',
+    missingLinkNoticeEn: 'No verified official link is currently available',
   },
 ];
+
 
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintLocalStatus, string> = {
   draft_moeco: 'مسودة داخل MoEco',
@@ -296,8 +332,17 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintLocalStatus, string> = {
   closed_by_user: 'أغلق المستخدم السجل',
 };
 
+export const COMPLAINT_STATUS_LABELS_EN: Record<ComplaintLocalStatus, string> = {
+  draft_moeco: 'Draft inside MoEco',
+  opened_official_channel: 'Official channel opened',
+  tracking_entered: 'User entered a tracking number',
+  closed_by_user: 'Record closed by user',
+};
+
+
 // Strictly verified public project dataset from codebase: none exists currently
 export const VERIFIED_PUBLIC_PROJECTS: VerifiedPublicProject[] = [];
+
 
 const BLOCKED_EXTENSIONS = new Set([
   'svg',
@@ -319,7 +364,9 @@ const BLOCKED_EXTENSIONS = new Set([
   'xml',
 ]);
 
+
 const MAX_ATTACHMENT_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB for localStorage safety
+
 
 export function isSafeExternalUrl(url: string): boolean {
   try {
@@ -330,6 +377,7 @@ export function isSafeExternalUrl(url: string): boolean {
   }
 }
 
+
 export async function validateAndReadAttachment(
   file: File,
   options: { allowPdf?: boolean } = {},
@@ -339,15 +387,18 @@ export async function validateAndReadAttachment(
     throw new Error('نوع الملف غير مسموح لأسباب أمنية. يُسمح فقط بصور JPG/PNG/WebP' + (options.allowPdf ? ' أو PDF.' : '.'));
   }
 
+
   const allowedImageMimes = ['image/jpeg', 'image/png', 'image/webp'];
   const allowedImageExts = ['jpg', 'jpeg', 'png', 'webp'];
   const isPdfAllowed = options.allowPdf === true;
+
 
   const mimeOk =
     allowedImageMimes.includes(file.type) ||
     (isPdfAllowed && file.type === 'application/pdf');
   const extOk =
     allowedImageExts.includes(ext) || (isPdfAllowed && ext === 'pdf');
+
 
   if (!mimeOk || !extOk) {
     throw new Error(
@@ -357,9 +408,11 @@ export async function validateAndReadAttachment(
     );
   }
 
+
   if (file.size <= 0 || file.size > MAX_ATTACHMENT_SIZE_BYTES) {
     throw new Error('حجم الملف يجب أن يكون أقل من 2 ميجابايت لحفظه بأمان محليًا.');
   }
+
 
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -371,6 +424,7 @@ export async function validateAndReadAttachment(
     reader.readAsDataURL(file);
   });
 
+
   return {
     id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: file.name,
@@ -380,6 +434,7 @@ export async function validateAndReadAttachment(
     addedAt: new Date().toISOString(),
   };
 }
+
 
 // Pure client-side validation & export helpers (zero localStorage persistence of user records)
 export function checkUtilityWarnings(
@@ -397,19 +452,23 @@ export function checkUtilityWarnings(
 ): string[] {
   const warnings: string[] = [];
 
+
   if (candidate.dateMode === 'billing_period' && candidate.periodStart && candidate.periodEnd) {
     if (candidate.periodEnd < candidate.periodStart) {
       warnings.push('تاريخ نهاية الفترة أقدم من تاريخ البداية؛ يُرجى مراجعة التواريخ قبل الحفظ.');
     }
   }
 
+
   const sameService = existing.filter(
     (r) => r.id !== editingId && r.serviceType === candidate.serviceType,
   );
 
+
   if (candidate.readingDate && sameService.some((r) => r.readingDate === candidate.readingDate)) {
     warnings.push('يوجد سجل سابق لنفس الخدمة في هذا التاريخ. يمكنك الحفظ إذا كان متعمدًا، ولن يتم تعديل إدخالك تلقائيًا.');
   }
+
 
   if (
     candidate.dateMode === 'billing_period' &&
@@ -427,12 +486,15 @@ export function checkUtilityWarnings(
     warnings.push('الفترة المختارة تتداخل مع فترة مسجلة سابقًا لنفس الخدمة.');
   }
 
+
   if (candidate.value > 100000) {
     warnings.push('القيمة المدخلة كبيرة جدًا؛ تأكد من مطابقتها تمامًا للرقم الموجود في الفاتورة أو العداد.');
   }
 
+
   return warnings;
 }
+
 
 export interface ConsumptionTrendAnalysis {
   canCompare: boolean;
@@ -450,6 +512,7 @@ export interface ConsumptionTrendAnalysis {
   mixedEntryKinds?: boolean;
 }
 
+
 export function analyzeUtilityTrend(
   records: HomeUtilityRecord[],
   serviceType: UtilityServiceType,
@@ -457,6 +520,7 @@ export function analyzeUtilityTrend(
   const scoped = records
     .filter((r) => r.serviceType === serviceType)
     .sort((a, b) => (a.readingDate || '').localeCompare(b.readingDate || ''));
+
 
   if (scoped.length < 2) {
     return {
@@ -466,6 +530,7 @@ export function analyzeUtilityTrend(
     };
   }
 
+
   const units = Array.from(new Set(scoped.map((r) => r.unit.trim()).filter(Boolean)));
   if (units.length !== 1) {
     return {
@@ -474,6 +539,7 @@ export function analyzeUtilityTrend(
       series: [],
     };
   }
+
 
   const kinds = new Set(scoped.map((r) => r.entryKind));
   const mixedEntryKinds = kinds.size > 1;
@@ -489,9 +555,11 @@ export function analyzeUtilityTrend(
     currency: r.currency,
   }));
 
+
   const prev = series[series.length - 2];
   const curr = series[series.length - 1];
   const latestDelta = !mixedEntryKinds ? Number((curr.value - prev.value).toFixed(2)) : undefined;
+
 
   return {
     canCompare: !mixedEntryKinds,
@@ -505,10 +573,12 @@ export function analyzeUtilityTrend(
   };
 }
 
+
 function sanitizeExportCell(val: unknown): string {
   const s = val === undefined || val === null ? '' : String(val);
   return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
 }
+
 
 export function exportUtilityRecordsAsJson(records: HomeUtilityRecord[]): void {
   const sanitized = records.map(({ attachment, ...rest }) => ({
@@ -526,6 +596,7 @@ export function exportUtilityRecordsAsJson(records: HomeUtilityRecord[]): void {
   a.click();
   URL.revokeObjectURL(url);
 }
+
 
 export function exportUtilityRecordsAsExcel(records: HomeUtilityRecord[]): void {
   const rows = records.map((r) => ({
@@ -548,4 +619,3 @@ export function exportUtilityRecordsAsExcel(records: HomeUtilityRecord[]): void 
   XLSX.utils.book_append_sheet(wb, ws, 'سجل بيتي');
   XLSX.writeFile(wb, `moeco-my-home-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
-
