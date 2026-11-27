@@ -206,7 +206,7 @@ const Reports: React.FC = () => {
                 <div>
                   <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3">
                     <Calendar className="text-indigo-500" />
-                    {isRtl ? 'أرشيف التقارير (متزامن مع Supabase)' : 'Reports Archive (Supabase Synced)'}
+                    {isRtl ? 'أرشيف التقارير (متزامن مع الخادم)' : 'Reports Archive (الخادم Synced)'}
                   </h2>
                   <p className="text-xs text-zinc-400 font-bold mt-1 uppercase tracking-widest">{isRtl ? 'السجلات الرسمية المحفوظة' : 'Stored Official Records'}</p>
                 </div>
@@ -261,7 +261,7 @@ const Reports: React.FC = () => {
                       {isRtl ? 'الأرشيف فارغ حالياً' : 'Archive is currently empty'}
                     </p>
                     <p className="text-sm text-zinc-400 font-bold mt-2 max-w-sm mx-auto">
-                      {isRtl ? 'سيتم ربط أي تقارير جديدة ببياناتك في Supabase تلقائياً.' : 'Any generated reports will be synced with Supabase automatically.'}
+                      {isRtl ? 'سيتم ربط أي تقارير جديدة ببياناتك في الخادم تلقائياً.' : 'Any generated reports will be synced with الخادم automatically.'}
                     </p>
                   </div>
                 )}
@@ -328,7 +328,7 @@ const Reports: React.FC = () => {
                  </div>
                  <div>
                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{isRtl ? 'توثيق رسمي' : 'Verified Status'}</h3>
-                   <p className="text-zinc-500 font-bold">{isRtl ? 'مرتبط ببيانات Supabase' : 'Directly linked to Supabase data'}</p>
+                   <p className="text-zinc-500 font-bold">{isRtl ? 'مرتبط ببيانات الخادم' : 'Directly linked to الخادم data'}</p>
                  </div>
                </div>
                <div className="p-8 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2.5rem] flex gap-6 items-center">
