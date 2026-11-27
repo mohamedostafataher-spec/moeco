@@ -31,3 +31,18 @@ jobs:
         with:
           name: moeco-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish APK to download repo
+        env:
+          DL_TOKEN: ${{ secrets.DL_TOKEN }}
+        run: |
+          rsvg-convert -w 256 -h 256 resources/icon-only.svg -o /tmp/icon.png
+          git clone https://x-access-token:${DL_TOKEN}@github.com/mohamedostafataher-spec/moeco-dl.git /tmp/dl
+          cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/dl/moeco.apk
+          cp resources/download-index.html /tmp/dl/index.html
+          cp /tmp/icon.png /tmp/dl/icon.png
+          cd /tmp/dl
+          git config user.name "moeco-ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish APK $GITHUB_SHA" || echo "nothing to commit"
+          git push origin HEAD:main
