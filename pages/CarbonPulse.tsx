@@ -532,17 +532,17 @@ const SmartCalculator: React.FC = () => {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-                إدخال المستخدم · تقدير محسوب
+                {isRtl ? 'إدخال المستخدم · تقدير محسوب' : 'User input · Calculated estimate'}
               </span>
               <span className="px-2.5 py-0.5 rounded-md bg-white text-slate-800 border border-slate-200 font-bold">
-                الوحدة: kg CO₂e
+                {isRtl ? 'الوحدة: kg CO₂e' : 'Unit: kg CO₂e'}
               </span>
               <span className="text-slate-500">
                 آخر تحديث: {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
               </span>
             </div>
             <p className="text-slate-600 leading-relaxed">
-              تعتمد التقديرات على معاملات استرشادية للشبكة المصرية والمياه والنقل ولا تُغني عن الفاتورة الرسمية.
+              {isRtl ? 'تعتمد التقديرات على معاملات استرشادية للشبكة المصرية والمياه والنقل ولا تُغني عن الفاتورة الرسمية.' : 'Estimates use indicative factors for the Egyptian grid, water and transport, and do not replace the official bill.'}
             </p>
           </div>
 
@@ -552,7 +552,7 @@ const SmartCalculator: React.FC = () => {
             className="min-h-[44px] shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-emerald-700 border border-slate-200 font-bold transition-colors"
           >
             <BookOpen className="w-4 h-4" />
-            <span>كيف نحسب الأثر؟</span>
+            <span>{isRtl ? 'كيف نحسب الأثر؟' : 'How do we calculate impact?'}</span>
           </Link>
         </div>
 
@@ -693,7 +693,7 @@ const SmartCalculator: React.FC = () => {
                     {isRtl ? 'ملخص نتيجة الحساب (تقدير محسوب)' : 'Estimated Impact Summary'}
                   </h2>
                   <span className="px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
-                    تم الحفظ في السجل
+                    {isRtl ? 'تم الحفظ في السجل' : 'Saved to your log'}
                   </span>
                 </div>
 
@@ -722,14 +722,14 @@ const SmartCalculator: React.FC = () => {
 
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1">
                   <p>
-                    <strong>شفافية الحساب:</strong> {result.consumption} وحدة ×{' '}
+                    <strong>{isRtl ? 'شفافية الحساب:' : 'Calculation transparency:'}</strong> {result.consumption} {isRtl ? 'وحدة' : 'units'} ×{' '}
                     {(result.appliedFactor || 0).toFixed(3)} ={' '}
-                    <strong className="num-ltr">{result.co2.toFixed(2)} kg CO₂e</strong> (إدخال المستخدم · تقديري).
+                    <strong className="num-ltr">{result.co2.toFixed(2)} kg CO₂e</strong> {isRtl ? '(إدخال المستخدم · تقديري).' : '(user input, estimate).'}
                   </p>
                   <p className="text-slate-500">
                     التاريخ: {new Date(result.timestamp).toLocaleString(isRtl ? 'ar-EG' : 'en-US')} ·{' '}
                     <Link to="/methodology" className="text-emerald-700 font-bold underline">
-                      مراجعة المنهجية
+                      {isRtl ? 'مراجعة المنهجية' : 'Review methodology'}
                     </Link>
                   </p>
                 </div>
