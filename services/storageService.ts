@@ -1023,22 +1023,6 @@ export const storageService = {
     window.speechSynthesis.speak(utterance);
   },
 
-  simulateIoT: async (userId: string) => {
-    // Simulated MQTT/IoT data arrival
-    const randomUsage = Math.random() * 5 + 1;
-    const carbon = randomUsage * 0.5;
-    await storageService.insertConsumptionRecord({
-       user_id: userId,
-       sector: 'electricity',
-       value: parseFloat(randomUsage.toFixed(2)),
-       unit: 'kWh',
-       co2: parseFloat(carbon.toFixed(2)),
-       cost: randomUsage * 2,
-       description: 'IoT Live Stream (Simulated MQTT)'
-    });
-    return { value: randomUsage, carbon };
-  },
-
   getGovServices: async () => {
     const { data, error } = await supabase
       .from('gov_services')
