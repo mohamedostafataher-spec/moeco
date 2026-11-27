@@ -14,7 +14,7 @@ const About: React.FC = () => {
   const [supportForm, setSupportForm] = useState({ subject: '', content: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ users: '124k+', carbon: '8.2M', active: '15.4k' });
+  const [stats, setStats] = useState({ users: '—', carbon: '—', active: '—' });
 
   React.useEffect(() => {
     const fetchLiveStats = async () => {
@@ -24,9 +24,9 @@ const About: React.FC = () => {
         const totalCarbon = carbonData?.reduce((acc, curr) => acc + (curr.co2 < 0 ? Math.abs(curr.co2) : 0), 0) || 0;
         
         setStats({
-          users: userCount ? (userCount > 1000 ? `${(userCount / 1000).toFixed(1)}k+` : userCount.toString()) : '124k+',
-          carbon: totalCarbon > 1000000 ? `${(totalCarbon / 1000000).toFixed(1)}M` : (totalCarbon > 0 ? `${(totalCarbon / 1000).toFixed(1)}k` : '8.2M'),
-          active: (Math.floor(Math.random() * 500) + 12000).toLocaleString()
+          users: userCount ? (userCount > 1000 ? `${(userCount / 1000).toFixed(1)}k` : userCount.toString()) : '—',
+          carbon: totalCarbon > 1000000 ? `${(totalCarbon / 1000000).toFixed(1)}M` : (totalCarbon > 0 ? `${(totalCarbon / 1000).toFixed(1)}k` : '—'),
+          active: '—'
         });
       } catch (e) {
         console.error("Stats fetch error", e);
@@ -85,7 +85,7 @@ const About: React.FC = () => {
            <p className="text-4xl font-black text-emerald-950 tabular-nums">{stats.carbon}</p>
            <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">{isRtl ? 'كجم كربون تم توفيره' : 'KG CARBON SAVED'}</p>
         </div>
-        <div className={`p-8 rounded-[3rem] border border-stone-100 flex flex-col items-center justify-center text-center group hover:scale-105 transition-all ${theme === 'dark' ? 'bg-[#001a14]' : 'bg-white shadow-xl'}`}>
+        <div hidden className={`p-8 rounded-[3rem] border border-stone-100 flex flex-col items-center justify-center text-center group hover:scale-105 transition-all ${theme === 'dark' ? 'bg-[#001a14]' : 'bg-white shadow-xl'}`}>
            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors">
               <div className="relative">
                  <RefreshCw size={24} className="animate-spin-slow" />
