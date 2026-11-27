@@ -18,22 +18,27 @@ import { ConsentRequiredNotice } from '../components/ConsentGateModal';
 import { SavedPublicProjectNote, isSafeExternalUrl } from '../services/personalCivicService';
 import { supabaseDataService, OfficialSourceRecord } from '../services/supabaseDataService';
 
+
 const LocalProjects: React.FC = () => {
   const { isRtl } = useApp();
   const { isConfigured, authUser, hasCoreConsent, analyticsEnabled, openConsentModal, trackUsageEvent } =
     usePrivacyConsent();
   const userId = authUser?.id || '';
 
+
   const [officialSources, setOfficialSources] = useState<OfficialSourceRecord[]>([]);
   const [savedNotes, setSavedNotes] = useState<SavedPublicProjectNote[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
 
+
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [errorFlagDrafts, setErrorFlagDrafts] = useState<Record<string, string>>({});
+
 
   const loadSourcesAndNotes = useCallback(async () => {
     if (!isConfigured) {
@@ -53,21 +58,24 @@ const LocalProjects: React.FC = () => {
       setOfficialSources(sources);
       setSavedNotes(notes);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تحميل المشروعات. جرّب مرة تانية.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر تحميل المشروعات. جرّب مرة تانية.' : 'Could not load projects. Please try again.'));
     } finally {
       setLoading(false);
     }
   }, [isConfigured, userId, hasCoreConsent]);
 
+
   useEffect(() => {
     loadSourcesAndNotes();
   }, [loadSourcesAndNotes]);
+
 
   useEffect(() => {
     if (analyticsEnabled) {
       trackUsageEvent('feature_opened', { feature: 'local_projects' });
     }
   }, [analyticsEnabled, trackUsageEvent]);
+
 
   const filteredProjects = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -82,13 +90,14 @@ const LocalProjects: React.FC = () => {
     });
   }, [officialSources, searchTerm]);
 
+
   const handleSaveProjectNote = async (
     project: OfficialSourceRecord,
     personalNote: string,
     reportedErrorNote?: string,
   ) => {
     if (!hasCoreConsent || !userId) {
-      openConsentModal('حفظ ملاحظات المشروعات الموثقة');
+      openConsentModal(isRtl ? 'حفظ ملاحظات المشروعات الموثقة' : 'Saving verified project notes');
       return;
     }
     try {
@@ -102,9 +111,10 @@ const LocalProjects: React.FC = () => {
       });
       await loadSourcesAndNotes();
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر حفظ الملاحظة.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر حفظ الملاحظة.' : 'Could not save the note.'));
     }
   };
+
 
   return (
     <div
@@ -113,9 +123,9 @@ const LocalProjects: React.FC = () => {
     >
       <PageHero
         icon={<Building2 className="w-6 h-6" />}
-        eyebrow="مصادر رسمية"
-        title="مشروعي في منطقتي"
-        subtitle="تابع المشروعات المعلنة رسميًا في منطقتك، وكل مشروع معاه اسم الجهة والرابط الأصلي."
+        eyebrow={isRtl ? "مصادر رسمية" : "Official sources"}
+        title={isRtl ? "مشروعي في منطقتي" : "Projects in My Area"}
+        subtitle={isRtl ? "تابع المشروعات المعلنة رسميًا في منطقتك، وكل مشروع معاه اسم الجهة والرابط الأصلي." : "Follow officially announced projects in your area, each with its authority name and original link."}
       >
         <div className="flex gap-2 pt-3">
           <button
@@ -124,7 +134,7 @@ const LocalProjects: React.FC = () => {
             className="min-h-[44px] px-4 rounded-2xl text-sm font-bold transition-all active:scale-95"
             style={activeTab === 'all' ? { background: '#fff', color: '#064e3f' } : { background: 'rgba(255,255,255,.15)', color: '#fff' }}
           >
-            المشروعات ({officialSources.length})
+            {isRtl ? `المشروعات (${officialSources.length})` : `Projects (${officialSources.length})`}
           </button>
           <button
             type="button"
@@ -133,10 +143,11 @@ const LocalProjects: React.FC = () => {
             style={activeTab === 'saved' ? { background: '#fff', color: '#064e3f' } : { background: 'rgba(255,255,255,.15)', color: '#fff' }}
           >
             <Bookmark className="w-4 h-4" />
-            <span>المحفوظة ({savedNotes.length})</span>
+            <span>{isRtl ? `المحفوظة (${savedNotes.length})` : `Saved (${savedNotes.length})`}</span>
           </button>
         </div>
       </PageHero>
+
 
       {errorMsg && (
         <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-4 text-xs font-bold">
@@ -144,15 +155,16 @@ const LocalProjects: React.FC = () => {
         </div>
       )}
 
+
       {activeTab === 'saved' ? (
         <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
-          <h2 className="text-lg font-bold text-slate-900">مشروعاتي المحفوظة وملاحظاتي الخاصة</h2>
+          <h2 className="text-lg font-bold text-slate-900">{isRtl ? 'مشروعاتي المحفوظة وملاحظاتي الخاصة' : 'My saved projects and private notes'}</h2>
           {!hasCoreConsent ? (
-            <ConsentRequiredNotice featureTitle="حفظ ملاحظات المشروعات" />
+            <ConsentRequiredNotice featureTitle={isRtl ? "حفظ ملاحظات المشروعات" : "Saving project notes"} />
           ) : savedNotes.length === 0 ? (
             <EmptyState
-              title="مفيش مشروعات محفوظة"
-              text="احفظ أي مشروع تتابعه وضيف عليه ملاحظاتك."
+              title={isRtl ? "مفيش مشروعات محفوظة" : "No saved projects"}
+              text={isRtl ? "احفظ أي مشروع تتابعه وضيف عليه ملاحظاتك." : "Save any project you follow and add your notes."}
             />
           ) : (
             <div className="space-y-3">
@@ -163,13 +175,13 @@ const LocalProjects: React.FC = () => {
                 >
                   <div className="space-y-1">
                     <h3 className="text-sm font-bold text-slate-900">{item.projectTitle}</h3>
-                    <p className="text-xs text-slate-600">المصدر: {item.sourceName}</p>
+                    <p className="text-xs text-slate-600">{isRtl ? 'المصدر: ' : 'Source: '}{item.sourceName}</p>
                     {item.personalNote && (
-                      <p className="text-xs text-slate-800">ملاحظتي الخاصة: {item.personalNote}</p>
+                      <p className="text-xs text-slate-800">{isRtl ? 'ملاحظتي الخاصة: ' : 'My private note: '}{item.personalNote}</p>
                     )}
                     {item.reportedErrorNote && (
                       <p className="text-xs text-amber-800">
-                        {item.reportedErrorTag || 'ملاحظة مستخدم غير متحققة'}: {item.reportedErrorNote}
+                        {item.reportedErrorTag || (isRtl ? 'ملاحظة مستخدم غير متحققة' : 'Unverified user note')}: {item.reportedErrorNote}
                       </p>
                     )}
                   </div>
@@ -182,7 +194,7 @@ const LocalProjects: React.FC = () => {
                     className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>إزالة</span>
+                    <span>{isRtl ? 'إزالة' : 'Remove'}</span>
                   </button>
                 </article>
               ))}
@@ -192,32 +204,34 @@ const LocalProjects: React.FC = () => {
       ) : loading ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-          <span>جاري التحميل...</span>
+          <span>{isRtl ? 'جاري التحميل...' : 'Loading...'}</span>
         </div>
       ) : officialSources.length === 0 ? (
         <EmptyState
-          title="لسه مفيش مشروعات في منطقتك"
-          text="لما تتنشر مشروعات من جهات رسمية هتظهر هنا مع مصدرها. مش بنعرض أي أرقام غير مؤكدة."
+          title={isRtl ? "لسه مفيش مشروعات في منطقتك" : "No projects in your area yet"}
+          text={isRtl ? "لما تتنشر مشروعات من جهات رسمية هتظهر هنا مع مصدرها. مش بنعرض أي أرقام غير مؤكدة." : "When authorities publish projects they will appear here with their source. We never show unverified figures."}
         />
       ) : (
         <section className="space-y-4">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute end-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              aria-label="بحث في المشروعات الموثقة"
+              aria-label={isRtl ? "بحث في المشروعات الموثقة" : "Search verified projects"}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ابحث باسم المشروع أو المحافظة أو الجهة المصدرية..."
-              className="w-full min-h-[44px] pr-10 pl-4 rounded-xl bg-white border border-slate-300 text-sm text-slate-900"
+              placeholder={isRtl ? "ابحث باسم المشروع أو المحافظة أو الجهة المصدرية..." : "Search by project, governorate, or source authority..."}
+              className="w-full min-h-[44px] pe-10 ps-4 rounded-xl bg-white border border-slate-300 text-sm text-slate-900"
             />
           </div>
+
 
           <div className="grid grid-cols-1 gap-4">
             {filteredProjects.map((project) => {
               const saved = savedNotes.find((s) => s.projectId === project.id);
               const noteVal = noteDrafts[project.id] ?? saved?.personalNote ?? '';
               const flagVal = errorFlagDrafts[project.id] ?? saved?.reportedErrorNote ?? '';
+
 
               return (
                 <article
@@ -235,25 +249,25 @@ const LocalProjects: React.FC = () => {
                               : 'bg-slate-100 text-slate-700 border-slate-300'
                           }`}
                         >
-                          {project.dataStatus === 'verified' ? 'مصدر موثق' : 'أرشيف تاريخي'}
+                          {project.dataStatus === 'verified' ? (isRtl ? 'مصدر موثق' : 'Verified source') : (isRtl ? 'أرشيف تاريخي' : 'Historical archive')}
                         </span>
                       </div>
                       <p className="text-xs text-slate-600">
                         {[project.governorate, project.sector, project.statusText]
                           .filter(Boolean)
-                          .join(' · ') || 'بيانات رسمية منشورة'}
+                          .join(' · ') || (isRtl ? 'بيانات رسمية منشورة' : 'Published official data')}
                       </p>
                       <p className="text-xs text-emerald-700 font-semibold">
-                        الجهة المصدرية: {project.sourceOwner} · تاريخ الاستيراد:{' '}
+                        {isRtl ? 'الجهة المصدرية: ' : 'Source authority: '}{project.sourceOwner}{isRtl ? ' · تاريخ الاستيراد: ' : ' · Imported: '}{' '}
                         <span className="num-ltr">
-                          {new Date(project.importedAt).toLocaleDateString('ar-EG')}
+                          {new Date(project.importedAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB')}
                         </span>
                         {project.verifiedAt && (
                           <>
                             {' '}
-                            · تاريخ التحقق:{' '}
+                            {isRtl ? ' · تاريخ التحقق: ' : ' · Verified: '}{' '}
                             <span className="num-ltr">
-                              {new Date(project.verifiedAt).toLocaleDateString('ar-EG')}
+                              {new Date(project.verifiedAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB')}
                             </span>
                           </>
                         )}
@@ -266,17 +280,18 @@ const LocalProjects: React.FC = () => {
                         rel="noopener noreferrer"
                         className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-xs font-bold text-emerald-700"
                       >
-                        <span>المصدر الرسمي</span>
+                        <span>{isRtl ? 'المصدر الرسمي' : 'Official source'}</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
                   </div>
 
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-200 text-xs">
                     <div className="space-y-1.5">
                       <label className="font-bold text-slate-700 flex items-center gap-1.5">
                         <MessageSquare className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>ملاحظة شخصية خاصة (تُحفظ لجلستك فقط)</span>
+                        <span>{isRtl ? 'ملاحظة شخصية خاصة (تُحفظ لجلستك فقط)' : 'Private personal note (saved to your session only)'}</span>
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -285,7 +300,7 @@ const LocalProjects: React.FC = () => {
                           onChange={(e) =>
                             setNoteDrafts((prev) => ({ ...prev, [project.id]: e.target.value }))
                           }
-                          placeholder="احفظ ملاحظة متابعة لنفسك..."
+                          placeholder={isRtl ? "احفظ ملاحظة متابعة لنفسك..." : "Save a follow-up note for yourself..."}
                           className="flex-1 min-h-[44px] px-3 rounded-xl bg-white border border-slate-300 text-slate-900"
                         />
                         <button
@@ -293,15 +308,16 @@ const LocalProjects: React.FC = () => {
                           onClick={() => handleSaveProjectNote(project, noteVal, saved?.reportedErrorNote)}
                           className="min-h-[44px] px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold"
                         >
-                          حفظ
+                          {isRtl ? 'حفظ' : 'Save'}
                         </button>
                       </div>
                     </div>
 
+
                     <div className="space-y-1.5">
                       <label className="font-bold text-slate-700 flex items-center gap-1.5">
                         <Flag className="w-3.5 h-3.5 text-amber-700" />
-                        <span>إبلاغ عن خطأ في البيانات (ملاحظة غير متحققة)</span>
+                        <span>{isRtl ? 'إبلاغ عن خطأ في البيانات (ملاحظة غير متحققة)' : 'Report a data error (unverified note)'}</span>
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -310,7 +326,7 @@ const LocalProjects: React.FC = () => {
                           onChange={(e) =>
                             setErrorFlagDrafts((prev) => ({ ...prev, [project.id]: e.target.value }))
                           }
-                          placeholder="وصف الخطأ المنسوب للمصدر..."
+                          placeholder={isRtl ? "وصف الخطأ المنسوب للمصدر..." : "Describe the error attributed to the source..."}
                           className="flex-1 min-h-[44px] px-3 rounded-xl bg-white border border-slate-300 text-slate-900"
                         />
                         <button
@@ -318,7 +334,7 @@ const LocalProjects: React.FC = () => {
                           onClick={() => handleSaveProjectNote(project, noteVal, flagVal)}
                           className="min-h-[44px] px-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-bold"
                         >
-                          تسجيل الملاحظة
+                          {isRtl ? 'تسجيل الملاحظة' : 'Record note'}
                         </button>
                       </div>
                     </div>
@@ -332,5 +348,6 @@ const LocalProjects: React.FC = () => {
     </div>
   );
 };
+
 
 export default LocalProjects;
