@@ -70,7 +70,7 @@ const MyData: React.FC = () => {
       setProjectNotes(nList);
       setConsents(consList);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تحميل بياناتك من Supabase.');
+      setErrorMsg(err?.message || 'تعذر تحميل بياناتك من الخادم.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ const MyData: React.FC = () => {
       if (analyticsEnabled) {
         trackUsageEvent('data_exported', { feature: 'my_data', status: 'json' });
       }
-      setStatusMsg('تم تنزيل نسخة كاملة من بياناتك المحفوظة في Supabase بصيغة JSON.');
+      setStatusMsg('تم تنزيل نسخة كاملة من بياناتك المحفوظة في الخادم بصيغة JSON.');
     } catch (err: any) {
       setErrorMsg(err?.message || 'تعذر تصدير البيانات.');
     }
@@ -100,7 +100,7 @@ const MyData: React.FC = () => {
     try {
       await supabaseDataService.deleteHouseholdReading(authUser.id, id);
       setReadings((prev) => prev.filter((r) => r.id !== id));
-      setStatusMsg('تم حذف القراءة من Supabase.');
+      setStatusMsg('تم حذف القراءة من الخادم.');
     } catch (err: any) {
       setErrorMsg(err?.message || 'تعذر الحذف.');
     }
@@ -111,7 +111,7 @@ const MyData: React.FC = () => {
     try {
       await supabaseDataService.deleteComplaintDraft(authUser.id, id);
       setComplaints((prev) => prev.filter((c) => c.id !== id));
-      setStatusMsg('تم حذف مسودة الشكوى من Supabase.');
+      setStatusMsg('تم حذف مسودة الشكوى من الخادم.');
     } catch (err: any) {
       setErrorMsg(err?.message || 'تعذر الحذف.');
     }
@@ -132,7 +132,7 @@ const MyData: React.FC = () => {
       setConsents([]);
       await signOutSession();
       await refreshPrivacyState();
-      setStatusMsg('تم حذف جميع بياناتك وسجلات الموافقة من قاعدة بيانات Supabase وإنهاء الجلسة.');
+      setStatusMsg('تم حذف جميع بياناتك وسجلات الموافقة من قاعدة البيانات وإنهاء الجلسة.');
     } catch (err: any) {
       setErrorMsg(err?.message || 'تعذر حذف جميع البيانات.');
     } finally {
@@ -164,7 +164,7 @@ const MyData: React.FC = () => {
               <Database className="w-4 h-4" />
               <span>مركز التحكم في البيانات الشخصية</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">بياناتي في Supabase</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">بياناتي في الخادم</h1>
             <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
               اعرض السجلات المرتبطة بجلستك داخل قاعدة بيانات MoEco، وصدّرها متى شئت، أو احذف أي
               سجل أو احذف حسابك المجهول بالكامل.
@@ -218,7 +218,7 @@ const MyData: React.FC = () => {
           <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">الهوية الحالية في Supabase</h2>
+                <h2 className="text-base font-extrabold text-slate-900">الهوية الحالية في الخادم</h2>
                 <p className="text-xs text-slate-600 mt-0.5">
                   المعرّف: <span className="font-mono num-ltr">{authUser?.id}</span> · الحالة:{' '}
                   <strong>{authUser?.isAnonymous ? 'جلسة مجهولة' : `مرتبطة (${authUser?.email})`}</strong>
@@ -274,7 +274,7 @@ const MyData: React.FC = () => {
           {loading ? (
             <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-600 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-              <span>جاري تحميل سجلاتك من Supabase...</span>
+              <span>جاري تحميل سجلاتك من الخادم...</span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -290,7 +290,7 @@ const MyData: React.FC = () => {
                   </Link>
                 </div>
                 {readings.length === 0 ? (
-                  <p className="text-xs text-slate-500">لا توجد قراءات أو فواتير محفوظة في Supabase.</p>
+                  <p className="text-xs text-slate-500">لا توجد قراءات أو فواتير محفوظة في الخادم.</p>
                 ) : (
                   <div className="space-y-2">
                     {readings.map((r) => (
@@ -414,7 +414,7 @@ const MyData: React.FC = () => {
             className="bg-rose-50 border border-rose-200 rounded-2xl p-6 space-y-4"
           >
             <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-rose-950">حذف جميع بياناتي من Supabase</h2>
+              <h2 className="text-base font-extrabold text-rose-950">حذف جميع بياناتي من الخادم</h2>
               <p className="text-xs text-rose-900 leading-relaxed">
                 يحذف هذا الإجراء جميع قراءاتك المنزلية، ومسودات الشكاوى، وملاحظات المشروعات، وأحداث
                 الاستخدام، وسجل الموافقات من قاعدة البيانات بشكل نهائي ثم ينهي جلستك الحالية.
@@ -443,7 +443,7 @@ const MyData: React.FC = () => {
             ) : (
               <div className="bg-white border border-rose-300 rounded-xl p-4 space-y-3">
                 <p className="text-xs font-bold text-rose-900">
-                  تأكيد نهائي: سيتم حذف كافة سجلاتك من Supabase ولا يمكن التراجع. صدّر نسخة JSON قبل
+                  تأكيد نهائي: سيتم حذف كافة سجلاتك من الخادم ولا يمكن التراجع. صدّر نسخة JSON قبل
                   الحذف إذا احتجت إليها.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -454,7 +454,7 @@ const MyData: React.FC = () => {
                     className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-rose-700 text-white text-xs font-bold"
                   >
                     {deletingAll && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>نعم، احذف جميع بياناتي من Supabase</span>
+                    <span>نعم، احذف جميع بياناتي من الخادم</span>
                   </button>
                   <button
                     type="button"
