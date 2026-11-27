@@ -279,7 +279,7 @@ export const alertService = {
                 row.governorate ||
                 AiAlertAnalyzer.extractLocation(combinedText),
             },
-            affectedPopulation: Math.floor(Math.random() * 50000) + 1000,
+            affectedPopulation: 0, // unknown: never invent numbers
             timestamp: new Date(row.created_at).getTime(),
             source: {
               name: "National Alert System",
@@ -369,7 +369,7 @@ export const alertService = {
                   country: "Egypt",
                   city: AiAlertAnalyzer.extractLocation(combined),
                 },
-                affectedPopulation: 100000,
+                affectedPopulation: 0,
                 timestamp: new Date(f.fields.date.created).getTime(),
                 source: { name: "ReliefWeb / UN", url: f.fields.url },
                 isRealTime: true,
@@ -390,7 +390,15 @@ export const alertService = {
         );
         if (eqRes.ok) {
           const eqData = await eqRes.json();
+          // Only quakes near Egypt (lat 20-33, lon 24-38) from the last 72 hours; never global noise.
           earthquakeAlerts = (eqData.features || [])
+            .filter((f: any) => {
+              const [lon, lat] = f.geometry?.coordinates || [999, 999];
+              return (
+                lat >= 20 && lat <= 33 && lon >= 24 && lon <= 38 &&
+                Date.now() - f.properties.time < 72 * 3600 * 1000
+              );
+            })
             .slice(0, 5)
             .map((f: any) => ({
               id: f.id,
