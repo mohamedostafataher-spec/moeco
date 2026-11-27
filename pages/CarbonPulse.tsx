@@ -538,7 +538,7 @@ const SmartCalculator: React.FC = () => {
                 {isRtl ? 'الوحدة: kg CO₂e' : 'Unit: kg CO₂e'}
               </span>
               <span className="text-slate-500">
-                آخر تحديث: {new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
+                {isRtl ? 'آخر تحديث: ' : 'Last updated: '}{new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}
               </span>
             </div>
             <p className="text-slate-600 leading-relaxed">
