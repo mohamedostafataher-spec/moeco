@@ -2,20 +2,25 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, BarChart3, AlertTriangle, X, Loader2, Database } from 'lucide-react';
 import { usePrivacyConsent } from '../context/PrivacyConsentContext';
+import { useApp } from '../context/AppContext';
+
 
 export const ConsentRequiredNotice: React.FC<{
   featureTitle: string;
   onStartConsent?: () => void;
 }> = ({ featureTitle, onStartConsent }) => {
   const { isConfigured, loading, openConsentModal } = usePrivacyConsent();
+  const { isRtl } = useApp();
+
 
   if (loading) {
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-600">
-        جاري التحقق من حالة الجلسة...
+        {isRtl ? 'جاري التحقق من حالة الجلسة...' : 'Checking your session status...'}
       </div>
     );
   }
+
 
   if (!isConfigured) {
     return (
@@ -27,19 +32,20 @@ export const ConsentRequiredNotice: React.FC<{
           <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs leading-relaxed">
             <h2 className="text-sm font-extrabold text-amber-950">
-              الحفظ السحابي مش متاح دلوقتي
+              {isRtl ? 'الحفظ السحابي مش متاح دلوقتي' : 'Cloud saving is not available right now'}
             </h2>
             <p className="text-amber-900">
-              لحفظ «{featureTitle}» محتاجين الاتصال بالخادم. جرّب بعد شوية.
+              {isRtl ? `لحفظ «${featureTitle}» محتاجين الاتصال بالخادم. جرّب بعد شوية.` : `Saving "${featureTitle}" needs a server connection. Please try again shortly.`}
             </p>
             <p className="text-amber-800">
-              يمكنك استعراض البوابات الرسمية الموثقة والمنهجية وصفحة الخصوصية الآن دون حفظ بيانات.
+              {isRtl ? 'يمكنك استعراض البوابات الرسمية الموثقة والمنهجية وصفحة الخصوصية الآن دون حفظ بيانات.' : 'You can still browse the verified official portals, the methodology, and the privacy page now without saving any data.'}
             </p>
           </div>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6 space-y-4">
@@ -58,6 +64,7 @@ export const ConsentRequiredNotice: React.FC<{
           </p>
         </div>
       </div>
+
 
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -79,6 +86,7 @@ export const ConsentRequiredNotice: React.FC<{
   );
 };
 
+
 export const ConsentGateModal: React.FC = () => {
   const {
     isConfigured,
@@ -88,11 +96,14 @@ export const ConsentGateModal: React.FC = () => {
     acceptConsentAndSignIn,
   } = usePrivacyConsent();
 
+
   const [analyticsOptIn, setAnalyticsOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+
   if (!consentModalOpen) return null;
+
 
   const handleAccept = async () => {
     setErrorMsg(null);
@@ -103,6 +114,7 @@ export const ConsentGateModal: React.FC = () => {
       setErrorMsg(res.error || 'تعذر تفعيل الجلسة المجهولة.');
     }
   };
+
 
   return (
     <div
@@ -137,6 +149,7 @@ export const ConsentGateModal: React.FC = () => {
           </button>
         </div>
 
+
         <div className="space-y-3 text-xs text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-4">
           <p className="font-bold text-slate-900">1. حفظ البيانات الأساسية (مطلوب للحفظ في التطبيق):</p>
           <ul className="list-disc list-inside space-y-1.5">
@@ -164,6 +177,7 @@ export const ConsentGateModal: React.FC = () => {
           </ul>
         </div>
 
+
         {/* Separate Optional Analytics Toggle */}
         <div className="border border-slate-200 rounded-xl p-4 space-y-2.5 bg-white">
           <div className="flex items-start gap-2.5">
@@ -181,6 +195,7 @@ export const ConsentGateModal: React.FC = () => {
             </div>
           </div>
 
+
           <label className="flex items-center gap-2.5 pt-1 cursor-pointer text-xs font-bold text-slate-800">
             <input
               type="checkbox"
@@ -192,6 +207,7 @@ export const ConsentGateModal: React.FC = () => {
           </label>
         </div>
 
+
         {!isConfigured && (
           <div role="alert" className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" />
@@ -201,11 +217,13 @@ export const ConsentGateModal: React.FC = () => {
           </div>
         )}
 
+
         {errorMsg && (
           <div role="alert" className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs font-bold text-rose-800">
             {errorMsg}
           </div>
         )}
+
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <Link
@@ -215,6 +233,7 @@ export const ConsentGateModal: React.FC = () => {
           >
             التفاصيل الكاملة في صفحة الخصوصية
           </Link>
+
 
           <div className="flex items-center gap-2">
             <button
