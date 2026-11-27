@@ -17,12 +17,15 @@ jobs:
           java-version: 21
       - run: npm install --legacy-peer-deps
       - run: npx vite build
-      - run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
       - run: |
           mkdir -p assets
-          rsvg-convert -w 1024 -h 1024 resources/icon-only.svg -o assets/icon-only.png
-          rsvg-convert -w 1024 -h 1024 resources/icon-foreground.svg -o assets/icon-foreground.png
-          rsvg-convert -w 1024 -h 1024 resources/icon-background.svg -o assets/icon-background.png
+          base64 -d resources/icon-src.b64 > /tmp/icon-src.jpg
+          convert /tmp/icon-src.jpg -resize 1024x1024 assets/icon-only.png
+          convert assets/icon-only.png \( -size 1024x1024 xc:black -fill white -draw "circle 512,512 512,40" -blur 0x60 \) -alpha off -compose copy_opacity -composite -resize 760x760 /tmp/fg760.png
+          convert -size 1024x1024 xc:none /tmp/fg760.png -gravity center -composite assets/icon-foreground.png
+          convert -size 1024x1024 radial-gradient:'#0b5a47-#032a22' assets/icon-background.png
+          cp assets/icon-only.png resources/icon-only.png
       - run: npx cap add android
       - run: npx @capacitor/assets generate --android --iconBackgroundColor '#0a8a5c'
       - run: npx cap sync android
@@ -35,7 +38,7 @@ jobs:
         env:
           DL_TOKEN: ${{ secrets.DL_TOKEN }}
         run: |
-          rsvg-convert -w 256 -h 256 resources/icon-only.svg -o /tmp/icon.png
+          convert resources/icon-only.png -resize 256x256 /tmp/icon.png
           git clone https://x-access-token:${DL_TOKEN}@github.com/mohamedostafataher-spec/moeco-dl.git /tmp/dl
           cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/dl/moeco.apk
           cp resources/download-index.html /tmp/dl/index.html
