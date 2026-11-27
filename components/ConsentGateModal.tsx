@@ -27,12 +27,10 @@ export const ConsentRequiredNotice: React.FC<{
           <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs leading-relaxed">
             <h2 className="text-sm font-extrabold text-amber-950">
-              قاعدة بيانات Supabase غير مهيأة في هذه البيئة بعد
+              الحفظ السحابي مش متاح دلوقتي
             </h2>
             <p className="text-amber-900">
-              لكي تُحفظ سجلات «{featureTitle}» في قاعدة البيانات السحابية بأمان (دون تخزين محلي
-              وهمي)، يجب على صاحب التطبيق إضافة <code>VITE_SUPABASE_URL</code> و
-              <code>VITE_SUPABASE_ANON_KEY</code> في إعدادات البيئة وتشغيل ملفات الترحيل.
+              لحفظ «{featureTitle}» محتاجين الاتصال بالخادم. جرّب بعد شوية.
             </p>
             <p className="text-amber-800">
               يمكنك استعراض البوابات الرسمية الموثقة والمنهجية وصفحة الخصوصية الآن دون حفظ بيانات.
@@ -55,7 +53,7 @@ export const ConsentRequiredNotice: React.FC<{
           </h2>
           <p className="text-xs text-slate-600 leading-relaxed">
             لا يتطلب MoEco إنشاء حساب تقليدي أو كلمة مرور. عند موافقتك، يتم إنشاء جلسة مجهولة الهوية
-            برمز عشوائي (UUID) لحفظ سجلاتك بأمان في قاعدة بيانات MoEco على Supabase، مع إمكانية
+            برمز عشوائي (UUID) لحفظ سجلاتك بأمان في قاعدة بيانات MoEco على الخادم، مع إمكانية
             عرضها وتصديرها وحذفها في أي وقت.
           </p>
         </div>
@@ -144,7 +142,7 @@ export const ConsentGateModal: React.FC = () => {
           <ul className="list-disc list-inside space-y-1.5">
             <li>
               تُحفظ قراءاتك المنزلية، ومسودات الشكاوى، وملاحظاتك في قاعدة بيانات MoEco على{' '}
-              <strong>Supabase</strong> بحيث تقتصر قراءتها وتعديلها وحذفها على جلستك فقط (RLS).
+              <strong>الخادم</strong> بحيث تقتصر قراءتها وتعديلها وحذفها على جلستك فقط (RLS).
             </li>
             <li>
               للاستخدام دون إنشاء حساب تقليدي، ينشئ التطبيق جلسة مجهولة الهوية بمعرّف عشوائي
@@ -198,8 +196,7 @@ export const ConsentGateModal: React.FC = () => {
           <div role="alert" className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" />
             <span>
-              متغيرات <code>VITE_SUPABASE_URL</code> و<code>VITE_SUPABASE_ANON_KEY</code> غير
-              مضبوطة حاليًا في هذه البيئة؛ لن يمكن إنشاء جلسة Supabase حقيقية حتى يضبطها المالك.
+              الاتصال بالخادم مش متاح دلوقتي. جرّب بعد شوية.
             </span>
           </div>
         )}
