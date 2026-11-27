@@ -105,7 +105,7 @@ const MyHomeProfile: React.FC = () => {
       const list = await supabaseDataService.listHouseholdReadings(userId);
       setRecords(list);
     } catch (err: any) {
-      setLoadError(err?.message || 'تعذر تحميل القراءات من Supabase.');
+      setLoadError(err?.message || 'تعذر تحميل القراءات من الخادم.');
     } finally {
       setLoadingRecords(false);
     }
@@ -277,10 +277,10 @@ const MyHomeProfile: React.FC = () => {
 
       if (editingId) {
         await supabaseDataService.updateHouseholdReading(userId, editingId, payload);
-        setStatusMessage('تم تحديث السجل وحفظه في قاعدة بيانات Supabase.');
+        setStatusMessage('تم تحديث السجل وحفظه في قاعدة البيانات.');
       } else {
         await supabaseDataService.createHouseholdReading(userId, payload);
-        setStatusMessage('تم حفظ السجل في قاعدة بيانات Supabase بنجاح.');
+        setStatusMessage('تم حفظ السجل في قاعدة البيانات بنجاح.');
       }
 
       if (analyticsEnabled) {
@@ -291,7 +291,7 @@ const MyHomeProfile: React.FC = () => {
       resetForm();
       setShowForm(false);
     } catch (err: any) {
-      setFormError(err?.message || 'تعذر حفظ السجل في Supabase.');
+      setFormError(err?.message || 'تعذر حفظ السجل في الخادم.');
       setPreviewOpen(false);
     } finally {
       setSavingRecord(false);
@@ -307,7 +307,7 @@ const MyHomeProfile: React.FC = () => {
       }
       setConfirmDeleteId(null);
       await reloadRecords();
-      setStatusMessage('تم حذف السجل نهائيًا من قاعدة بيانات Supabase.');
+      setStatusMessage('تم حذف السجل نهائيًا من قاعدة البيانات.');
     } catch (err: any) {
       setLoadError(err?.message || 'تعذر حذف السجل.');
     }
@@ -330,7 +330,7 @@ const MyHomeProfile: React.FC = () => {
       await supabaseDataService.deleteAllHouseholdReadings(userId);
       setConfirmClearAll(false);
       await reloadRecords();
-      setStatusMessage('تم حذف جميع سجلات «ملف بيتي» من قاعدة بيانات Supabase.');
+      setStatusMessage('تم حذف جميع سجلات «ملف بيتي» من قاعدة البيانات.');
     } catch (err: any) {
       setLoadError(err?.message || 'تعذر حذف السجلات.');
     }
@@ -371,7 +371,7 @@ const MyHomeProfile: React.FC = () => {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
               <Zap className="w-4 h-4" />
-              <span>سجلات محفوظة في Supabase بجلستك فقط</span>
+              <span>سجلات محفوظة في الخادم بجلستك فقط</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
               ملف بيتي (المياه والكهرباء)
@@ -408,7 +408,7 @@ const MyHomeProfile: React.FC = () => {
           <div className="space-y-1">
             <p className="font-bold text-slate-900">خصوصية سجلاتك:</p>
             <p>
-              تُحفظ السجلات التي تضيفها في قاعدة بيانات MoEco على Supabase بمعرّف جلستك فقط وتُحمى
+              تُحفظ السجلات التي تضيفها في قاعدة بيانات MoEco على الخادم بمعرّف جلستك فقط وتُحمى
               بسياسات RLS، ولا تُنشر للعامة. لا يُطلب رقم الحساب أو الرقم القومي.
             </p>
           </div>
@@ -778,7 +778,7 @@ const MyHomeProfile: React.FC = () => {
             <div className="bg-emerald-50/50 border border-emerald-300 rounded-xl p-5 space-y-4">
               <h3 className="text-base font-bold text-slate-900">تأكيد معاينة السجل</h3>
               <p className="text-xs text-slate-600">
-                راجع التفاصيل التالية قبل الحفظ في قاعدة بيانات Supabase:
+                راجع التفاصيل التالية قبل الحفظ في قاعدة البيانات:
               </p>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-4 rounded-xl border border-slate-200">
                 <div>
@@ -830,7 +830,7 @@ const MyHomeProfile: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs"
                 >
                   {savingRecord ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  <span>تأكيد وحفظ في Supabase</span>
+                  <span>تأكيد وحفظ في الخادم</span>
                 </button>
               </div>
             </div>
@@ -1020,7 +1020,7 @@ const MyHomeProfile: React.FC = () => {
             {confirmClearAll && (
               <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs font-bold text-rose-900">
-                  هل تريد حذف جميع القراءات والفواتير في «ملف بيتي» نهائيًا من قاعدة بيانات Supabase؟
+                  هل تريد حذف جميع القراءات والفواتير في «ملف بيتي» نهائيًا من قاعدة البيانات؟
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -1044,7 +1044,7 @@ const MyHomeProfile: React.FC = () => {
             {loadingRecords ? (
               <div className="py-10 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-                <span>جاري تحميل سجلاتك من Supabase...</span>
+                <span>جاري تحميل سجلاتك من الخادم...</span>
               </div>
             ) : filteredRecords.length === 0 ? (
               <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center space-y-3">
