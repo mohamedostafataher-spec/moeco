@@ -12,28 +12,35 @@ import { supabase } from '../services/supabaseClient';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 
+
 type CitizenTab = 'services' | 'civic' | 'audit';
+
 
 const CitizenHub: React.FC = () => {
   const { language, isRtl, user } = useApp();
   const [activeTab, setActiveTab] = useState<CitizenTab>('services');
   const [loading, setLoading] = useState(true);
 
+
   // SERVICES STATE
   const [services, setServices] = useState<any[]>([]);
   const [activeServiceCat, setActiveServiceCat] = useState('all');
+
 
   // CIVIC STATE
   const [proposals, setProposals] = useState<any[]>([]);
   const [budget, setBudget] = useState(5000000000);
   const [activePolicies, setActivePolicies] = useState<string[]>([]);
 
+
   // AUDIT STATE
   const [auditLogs, setAuditLogs] = useState<{ alerts: any[], audits: any[] }>({ alerts: [], audits: [] });
+
 
   useEffect(() => {
     fetchData();
   }, [user]);
+
 
   const fetchData = async () => {
     setLoading(true);
@@ -53,6 +60,7 @@ const CitizenHub: React.FC = () => {
     }
   };
 
+
   useEffect(() => {
     if (!user) return;
     const channel = supabase.channel('citizen_hub_realtime')
@@ -60,8 +68,10 @@ const CitizenHub: React.FC = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'citizen_requests' }, () => fetchData())
       .subscribe();
 
+
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
 
   const handleCreateRequest = async (serviceId: string) => {
     if (!user) return notificationService.error(isRtl ? 'يجب تسجيل الدخول' : 'Please log in');
@@ -69,7 +79,7 @@ const CitizenHub: React.FC = () => {
       const { error } = await supabase.from('citizen_requests').insert({
         user_id: user.id,
         service_id: serviceId,
-        tracking_code: `REQ-${Math.floor(Math.random() * 1000000)}`
+        tracking_code: `REQ-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1296).toString(36).toUpperCase().padStart(2, '0')}`
       });
       if (error) throw error;
       notificationService.success(isRtl ? 'تم تقديم الطلب بنجاح' : 'Request submitted successfully');
@@ -79,11 +89,14 @@ const CitizenHub: React.FC = () => {
     }
   };
 
+
   const handleVote = async (id: string) => {
     notificationService.success(isRtl ? 'تم تسجيل صوتك!' : 'Vote recorded!');
   };
 
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Activity className="animate-spin text-emerald-500" /></div>;
+
 
   const getText = (val: any): string => {
     if (!val) return '';
@@ -97,6 +110,7 @@ const CitizenHub: React.FC = () => {
     }
     return String(val);
   };
+
 
   return (
     <div className="min-h-screen pb-40 px-4 md:px-10">
@@ -117,6 +131,7 @@ const CitizenHub: React.FC = () => {
                 <p className="text-[10px] md:text-sm font-bold text-slate-500 max-w-xl">{isRtl ? 'بوابتك السيادية للخدمات، المشاركة المدنية، والشفافية الحكومية المطلقة.' : 'Your sovereign portal for services, civic participation, and absolute government transparency.'}</p>
              </div>
 
+
              <div className="flex bg-slate-100 p-1 md:p-1.5 rounded-2xl md:rounded-[2.5rem] border border-slate-200 w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
                 {(['services', 'civic', 'audit'] as const).map(tab => (
                    <button
@@ -134,6 +149,7 @@ const CitizenHub: React.FC = () => {
                 ))}
              </div>
           </div>
+
 
           <AnimatePresence mode="wait">
              {activeTab === 'services' && (
@@ -169,6 +185,7 @@ const CitizenHub: React.FC = () => {
                       </div>
                    </div>
 
+
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pt-8">
                       {services.map(s => (
                          <div key={s.id} className="p-5 md:p-10 bg-white border border-slate-100 rounded-2xl md:rounded-[3.5rem] shadow-xl hover:border-slate-900 transition-all group flex flex-col justify-between">
@@ -191,6 +208,7 @@ const CitizenHub: React.FC = () => {
                    </div>
                 </motion.div>
              )}
+
 
              {activeTab === 'civic' && (
                 <motion.div key="civic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
@@ -232,6 +250,7 @@ const CitizenHub: React.FC = () => {
                             ))}
                          </div>
                       </div>
+
 
                       <div className="space-y-10">
                          <div className="p-10 bg-emerald-600 rounded-[3.5rem] text-white shadow-3xl text-center">
@@ -276,6 +295,7 @@ const CitizenHub: React.FC = () => {
                 </motion.div>
              )}
 
+
              {activeTab === 'audit' && (
                 <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                    <div className="flex flex-col md:flex-row gap-10">
@@ -288,6 +308,7 @@ const CitizenHub: React.FC = () => {
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'تتبع كل تعديل وتحديث في النظام لحظياً.' : 'Track every system update and modification in real-time.'}</p>
                                </div>
                             </div>
+
 
                             <div className="space-y-4">
                                {auditLogs.audits.map((a, i) => (
@@ -308,6 +329,7 @@ const CitizenHub: React.FC = () => {
                             </div>
                          </div>
                       </div>
+
 
                       <div className="md:w-96 space-y-8">
                          <div className="p-10 bg-slate-900 text-white rounded-[3.5rem] shadow-3xl text-center space-y-6">
@@ -344,9 +366,11 @@ const CitizenHub: React.FC = () => {
              )}
           </AnimatePresence>
 
+
        </div>
     </div>
   );
 };
+
 
 export default CitizenHub;
