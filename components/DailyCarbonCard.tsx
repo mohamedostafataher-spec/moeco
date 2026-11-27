@@ -106,16 +106,16 @@ const DailyCarbonCard: React.FC = () => {
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg md:text-xl font-extrabold">{L('بصمتك النهاردة في 30 ثانية', 'Today\'s footprint in 30 seconds')}</h2>
-          <p className="text-xs text-emerald-50/90 mt-1">{L('3 اختيارات بس. أرقام تقريبية للتوعية.', '3 taps. Approximate numbers for awareness.')}</p>
+          <h2 style={{ color: '#fff' }} className="text-lg md:text-xl font-extrabold">{L('بصمتك النهاردة في 30 ثانية', 'Today\'s footprint in 30 seconds')}</h2>
+          <p style={{ color: '#ecfdf5' }} className="text-xs mt-1">{L('3 اختيارات بس. أرقام تقريبية للتوعية.', '3 taps. Approximate numbers for awareness.')}</p>
         </div>
         <div className="flex flex-col items-center shrink-0 bg-white/15 rounded-2xl px-3 py-2 min-w-[84px]">
           <TreeIcon style={{ width: treeSize, height: treeSize }} className={`transition-all duration-500 ${missedYesterday ? 'opacity-50 grayscale' : ''}`} />
-          <span className="text-[11px] font-bold mt-1">{stageNames[stage]}</span>
+          <span style={{ color: '#fff' }} className="text-[11px] font-bold mt-1">{stageNames[stage]}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm font-bold">
+      <div style={{ color: '#fff' }} className="flex items-center gap-2 text-sm font-bold">
         <Flame className={`w-4 h-4 ${streak > 0 ? 'text-amber-300' : 'text-white/60'}`} />
         <span>
           {streak > 0
@@ -124,7 +124,7 @@ const DailyCarbonCard: React.FC = () => {
               ? L('الشجرة ذبلت شوية. ابدأ سلسلة جديدة النهاردة', 'Your tree wilted a little. Start a new streak today')
               : L('ابدأ سلسلتك النهاردة', 'Start your streak today')}
         </span>
-        {streak < 21 && streak > 0 && <span className="text-emerald-50/80 font-medium">{L(`(باقي ${nextAt - streak} ليوم الشجرة الجاية)`, `(${nextAt - streak} more to grow)`)}</span>}
+        {streak < 21 && streak > 0 && <span style={{ color: '#d1fae5' }} className="font-medium">{L(`(باقي ${nextAt - streak} ليوم الشجرة الجاية)`, `(${nextAt - streak} more to grow)`)}</span>}
       </div>
 
       {!done ? (
@@ -176,18 +176,18 @@ const DailyCarbonCard: React.FC = () => {
         <div className="bg-white rounded-2xl p-4 text-slate-800 space-y-3">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold text-slate-500">{L('بصمتك النهاردة', 'Today\'s footprint')}</p>
-              <p className="text-4xl font-black text-emerald-700 leading-none mt-1">
-                {done.kg} <span className="text-base font-bold text-slate-500">kg CO₂e</span>
+              <p style={{ color: '#64748b' }} className="text-xs font-bold">{L('بصمتك النهاردة', 'Today\'s footprint')}</p>
+              <p style={{ color: '#047857' }} className="text-4xl font-black leading-none mt-1">
+                {done.kg} <span style={{ color: '#64748b' }} className="text-base font-bold">kg CO₂e</span>
               </p>
             </div>
-            <p className={`text-sm font-extrabold ${done.kg <= GOAL_KG ? 'text-emerald-700' : 'text-amber-600'}`}>
+            <p style={{ color: done.kg <= GOAL_KG ? '#047857' : '#d97706' }} className="text-sm font-extrabold">
               {done.kg <= GOAL_KG
                 ? L(`تحت الهدف (${GOAL_KG} kg) 👏`, `Under the ${GOAL_KG} kg goal 👏`)
                 : L(`فوق الهدف بـ ${(done.kg - GOAL_KG).toFixed(1)} kg`, `${(done.kg - GOAL_KG).toFixed(1)} kg over the goal`)}
             </p>
           </div>
-          <p className="text-xs text-slate-600">
+          <p style={{ color: '#475569' }} className="text-xs">
             {done.kg > GOAL_KG
               ? done.t === 'car'
                 ? L('أسرع توفير: مشوار واحد بالمترو بدل العربية بيوفر حوالي 2 kg.', 'Quickest cut: one metro trip instead of the car saves about 2 kg.')
@@ -208,12 +208,12 @@ const DailyCarbonCard: React.FC = () => {
                 style={{ height: `${w.kg === null ? 8 : Math.max(10, (w.kg / max) * 100)}%` }}
                 title={w.kg === null ? '' : `${w.kg} kg`}
               />
-              <span className="text-[10px] text-emerald-50/80">{w.label}</span>
+              <span style={{ color: '#d1fae5' }} className="text-[10px]">{w.label}</span>
             </div>
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-emerald-50/70">{L('محفوظ على جهازك فقط. القيم تقديرية (متوسط للفرد).', 'Saved on your device only. Values are estimates (per-person averages).')}</p>
+      <p style={{ color: '#d1fae5' }} className="text-[10px]">{L('محفوظ على جهازك فقط. القيم تقديرية (متوسط للفرد).', 'Saved on your device only. Values are estimates (per-person averages).')}</p>
     </section>
   );
 };
