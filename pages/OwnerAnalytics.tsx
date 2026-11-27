@@ -66,7 +66,7 @@ const OwnerAnalytics: React.FC = () => {
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 space-y-2 text-xs text-amber-900">
           <div className="flex items-center gap-2 font-extrabold text-sm text-amber-950">
             <Database className="w-5 h-5 text-amber-700" />
-            <span>Supabase غير مهيأ بعد</span>
+            <span>الخادم غير مهيأ بعد</span>
           </div>
           <p>
             أضف <code>VITE_SUPABASE_URL</code> و<code>VITE_SUPABASE_ANON_KEY</code> أولًا ثم شغّل
@@ -97,7 +97,7 @@ const OwnerAnalytics: React.FC = () => {
           </h1>
           <p className="text-sm text-slate-600 leading-relaxed">
             لا تعتمد هذه الصفحة على أي علم محلي في المتصفح أو تخمين. للوصول إليها يجب أن يكون
-            معرّف جلستك الحالي مسجلًا داخل جدول <code>public.app_admins</code> في قاعدة Supabase
+            معرّف جلستك الحالي مسجلًا داخل جدول <code>public.app_admins</code> في قاعدة البيانات
             عبر لوحة التحكم (SQL Editor).
           </p>
 
@@ -106,7 +106,7 @@ const OwnerAnalytics: React.FC = () => {
             <ol className="list-decimal list-inside space-y-1">
               <li>سجّل الدخول أو فعّل الجلسة في التطبيق، أو أنشئ حسابك من لوحة Authentication.</li>
               <li>
-                افتح <strong>SQL Editor</strong> في Supabase وأضف صفًا إلى <code>public.app_admins</code>{' '}
+                افتح <strong>SQL Editor</strong> في الخادم وأضف صفًا إلى <code>public.app_admins</code>{' '}
                 بمعرّف المستخدم الخاص بك (<code>user_id</code>).
               </li>
               <li>أعد تحميل هذه الصفحة لقراءة الإحصاءات المجمّعة عبر دالة <code>get_owner_usage_summary</code>.</li>
