@@ -1,0 +1,46 @@
+name: flutter-apk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'flutter/**'
+      - '.github/workflows/flutter-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android platform files
+        run: flutter create --platforms android --project-name moeco .
+      - name: Pub get
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      - name: Build debug APK (sideloadable preview)
+        run: flutter build apk --debug
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/moeco-flutter-preview.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moeco-flutter-preview
+          path: flutter/build/app/outputs/flutter-apk/moeco-flutter-preview.apk
+      - name: Publish rolling release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: flutter-preview
+          name: MoEco Flutter preview
+          body: Debug-signed preview APK of the MoEco Flutter app (Phase 1). Rebuilt on every change under flutter/. Install by sideloading.
+          files: flutter/build/app/outputs/flutter-apk/moeco-flutter-preview.apk
