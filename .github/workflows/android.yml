@@ -17,7 +17,14 @@ jobs:
           java-version: 21
       - run: npm install --legacy-peer-deps
       - run: npx vite build
+      - run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+      - run: |
+          mkdir -p assets
+          rsvg-convert -w 1024 -h 1024 resources/icon-only.svg -o assets/icon-only.png
+          rsvg-convert -w 1024 -h 1024 resources/icon-foreground.svg -o assets/icon-foreground.png
+          rsvg-convert -w 1024 -h 1024 resources/icon-background.svg -o assets/icon-background.png
       - run: npx cap add android
+      - run: npx @capacitor/assets generate --android --iconBackgroundColor '#0a8a5c'
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
