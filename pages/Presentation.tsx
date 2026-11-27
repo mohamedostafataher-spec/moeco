@@ -114,7 +114,7 @@ const Presentation: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className={`p-10 rounded-[4rem] border space-y-6 ${theme === 'dark' ? 'bg-zinc-900 border-white/5' : 'bg-white border-stone-100 shadow-xl'}`}>
             <Database className="w-12 h-12 text-blue-500" />
-            <h3 className="text-2xl font-black font-arabic">{isAr ? 'نظام Supabase المقترح' : 'Proposed Supabase System'}</h3>
+            <h3 className="text-2xl font-black font-arabic">{isAr ? 'نظام الخادم المقترح' : 'Proposed الخادم System'}</h3>
             <p className="text-stone-500 font-bold leading-relaxed">
               {isAr 
                 ? 'نظام سحابي متكامل يعتمد على PostgreSQL، قادر على استيعاب ملايين المستخدمين. يوفر قاعدة بيانات حقيقية، نظام توثيق (Auth)، وتخزين ملفات.'
