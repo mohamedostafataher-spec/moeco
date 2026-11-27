@@ -39,7 +39,7 @@ const BottomNav: React.FC = () => {
   return (
     <nav
       aria-label={isAr ? 'التنقل الرئيسي على الهاتف' : 'Primary mobile navigation'}
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 px-1 py-1.5 shadow-[0_-2px_10px_rgba(15,23,42,0.05)]"
+      className="bottom-dock lg:hidden"
     >
       <div className="max-w-lg mx-auto grid grid-cols-5 items-center">
         {navItems.map((item) => {
@@ -54,9 +54,9 @@ const BottomNav: React.FC = () => {
               key={item.path}
               to={item.path}
               aria-current={isActive ? 'page' : undefined}
-              className={`min-h-[48px] flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 ${
+              className={`min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-[20px] px-1 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 ${
                 isActive
-                  ? 'text-emerald-700 bg-emerald-50 font-bold'
+                  ? 'dock-active font-bold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
               }`}
             >
