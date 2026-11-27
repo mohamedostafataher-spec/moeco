@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { PageHero, EmptyState } from '../components/ui';
 import { usePrivacyConsent } from '../context/PrivacyConsentContext';
 import { ConsentRequiredNotice } from '../components/ConsentGateModal';
 import { SavedPublicProjectNote, isSafeExternalUrl } from '../services/personalCivicService';
@@ -52,7 +53,7 @@ const LocalProjects: React.FC = () => {
       setOfficialSources(sources);
       setSavedNotes(notes);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تحميل المصادر الرسمية من Supabase.');
+      setErrorMsg(err?.message || 'تعذر تحميل المشروعات. جرّب مرة تانية.');
     } finally {
       setLoading(false);
     }
@@ -110,62 +111,32 @@ const LocalProjects: React.FC = () => {
       className="max-w-4xl mx-auto pb-10 space-y-6 text-slate-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <header className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
-              <Building2 className="w-4 h-4" />
-              <span>متابعة المصادر الرسمية المنشورة في Supabase</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
-              مشروعي في منطقتي
-            </h1>
-            <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
-              يعرض هذا القسم السجلات المستوردة من مصادر رسمية منشورة وموثقة فقط داخل قاعدة
-              البيانات (<code>official_sources</code>)، مع توضيح اسم الجهة المصدرية وتاريخ النشر
-              وحالة التحقق.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
-                activeTab === 'all'
-                  ? 'bg-emerald-700 border-emerald-700 text-white'
-                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              مصادر المشروعات الموثقة ({officialSources.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('saved')}
-              className={`min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
-                activeTab === 'saved'
-                  ? 'bg-emerald-700 border-emerald-700 text-white'
-                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Bookmark className="w-4 h-4" />
-              <span>مشروعاتي المحفوظة ({savedNotes.length})</span>
-            </button>
-          </div>
+      <PageHero
+        icon={<Building2 className="w-6 h-6" />}
+        eyebrow="مصادر رسمية"
+        title="مشروعي في منطقتي"
+        subtitle="تابع المشروعات المعلنة رسميًا في منطقتك، وكل مشروع معاه اسم الجهة والرابط الأصلي."
+      >
+        <div className="flex gap-2 pt-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('all')}
+            className="min-h-[44px] px-4 rounded-2xl text-sm font-bold transition-all active:scale-95"
+            style={activeTab === 'all' ? { background: '#fff', color: '#064e3f' } : { background: 'rgba(255,255,255,.15)', color: '#fff' }}
+          >
+            المشروعات ({officialSources.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('saved')}
+            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 rounded-2xl text-sm font-bold transition-all active:scale-95"
+            style={activeTab === 'saved' ? { background: '#fff', color: '#064e3f' } : { background: 'rgba(255,255,255,.15)', color: '#fff' }}
+          >
+            <Bookmark className="w-4 h-4" />
+            <span>المحفوظة ({savedNotes.length})</span>
+          </button>
         </div>
-
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3 text-xs text-slate-700 leading-relaxed">
-          <ShieldAlert className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-bold text-slate-900">سياسة التوثيق الصارمة:</p>
-            <p>
-              لا يعرض MoEco مشروعات وهمية أو نسب تنفيذ مفترضة أو تحديثات لحظية غير موثقة. أي سجل
-              يظهر هنا يخضع لوسم حالة واضح (<code>موثق</code> أو <code>أرشيف</code>) مع رابط مصدره
-              الأصلي.
-            </p>
-          </div>
-        </div>
-      </header>
+      </PageHero>
 
       {errorMsg && (
         <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-4 text-xs font-bold">
@@ -179,13 +150,10 @@ const LocalProjects: React.FC = () => {
           {!hasCoreConsent ? (
             <ConsentRequiredNotice featureTitle="حفظ ملاحظات المشروعات" />
           ) : savedNotes.length === 0 ? (
-            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center space-y-2">
-              <p className="text-base font-bold text-slate-900">لا توجد مشروعات محفوظة لديك حاليًا</p>
-              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                عند توفر بيانات مشروعات موثقة من جدول المصادر الرسمية، يمكنك حفظ أي مشروع هنا
-                وإضافة ملاحظاتك الشخصية.
-              </p>
-            </div>
+            <EmptyState
+              title="مفيش مشروعات محفوظة"
+              text="احفظ أي مشروع تتابعه وضيف عليه ملاحظاتك."
+            />
           ) : (
             <div className="space-y-3">
               {savedNotes.map((item) => (
@@ -224,25 +192,13 @@ const LocalProjects: React.FC = () => {
       ) : loading ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-          <span>جاري فحص المصادر الموثقة في Supabase...</span>
+          <span>جاري التحميل...</span>
         </div>
       ) : officialSources.length === 0 ? (
-        <section
-          aria-label="حالة توفر بيانات المشروعات الموثقة"
-          className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 text-center space-y-4"
-        >
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
-            <Info className="w-6 h-6 text-amber-700" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-900">
-            لا توجد بيانات موثقة متاحة حاليًا
-          </h2>
-          <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            {!isConfigured
-              ? 'اتصال Supabase غير مضبوط حاليًا في هذه البيئة. عند تفعيله واستيراد مصادر رسمية موثقة إلى جدول official_sources ستظهر هنا مع روابطها وتواريخ تحققها.'
-              : 'لا توجد سجلات منشورة ومعتمدة في جدول official_sources حاليًا. لا يعرض التطبيق أي بيانات نموذجية أو أرقام غير موثقة.'}
-          </p>
-        </section>
+        <EmptyState
+          title="لسه مفيش مشروعات في منطقتك"
+          text="لما تتنشر مشروعات من جهات رسمية هتظهر هنا مع مصدرها. مش بنعرض أي أرقام غير مؤكدة."
+        />
       ) : (
         <section className="space-y-4">
           <div className="relative">
