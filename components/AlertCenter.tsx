@@ -297,7 +297,7 @@ export const AlertCenter: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className={`text-right ${alert.affectedPopulation > 0 ? "" : "hidden"}`}>
                     <div className="flex items-center gap-1 text-egypt-gold">
                       <Users className="w-3 h-3" />
                       <span className="text-[10px] font-black">
