@@ -1,9 +1,11 @@
 
+
 import * as XLSX from 'xlsx';
 import { storageService } from './storageService';
 import { egyptEnergyService } from './egyptEnergyService';
 import { carbonDataService } from './carbonDataService';
 import { User, BillRecord, EmissionRecord } from '../types';
+
 
 // System Constants
 const SYSTEM_VERSION = "1.0.0";
@@ -26,6 +28,7 @@ const FILE_NAMES = {
   CITIZEN_REWARDS: 'citizen_rewards.xlsx'
 };
 
+
 export const excelSystemService = {
   /**
    * 1️⃣ Initialize Global Data Sources
@@ -44,6 +47,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.GLOBAL_SOURCES);
   },
 
+
   /**
    * 2️⃣ Initialize Global Emission Factors
    */
@@ -60,6 +64,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.GLOBAL_EF);
   },
 
+
   /**
    * 3️⃣ Generate Country & City Excel Files (Dynamic & Hierarchical)
    */
@@ -71,34 +76,31 @@ export const excelSystemService = {
       'Agriculture', 'Health', 'Emergency Services', 'Industry'
     ];
 
+
     cities.forEach(city => {
-      const data = sectors.map(sector => {
-        const activity = Math.random() * 1000000;
-        const ef = sector === 'Electricity' ? 0.533 : sector === 'Water' ? 0.298 : 0.45;
-        const co2 = activity * ef;
-        const pop = 500000; // Simplified
-        
-        return {
-          Year: 2025,
-          Month: new Date().getMonth() + 1,
-          City: city,
-          Sector: sector,
-          "Consumption/Activity": activity.toFixed(2),
-          "Emission Factor (EF)": ef,
-          "Total CO2 (kg)": co2.toFixed(2),
-          "CO2 per Capita (kg)": (co2 / pop).toFixed(3),
-          "Source Name": countryName === 'Egypt' ? 'CAPMAS / Ministry of Energy' : 'UN Stats / World Bank',
-          "Source Link": countryName === 'Egypt' ? 'https://www.capmas.gov.eg' : 'https://data.worldbank.org',
-          "Last Update": new Date().toISOString().split('T')[0],
-          "Trust Level": 'High',
-          "Validation Status": 'Verified by MoEco AI'
-        };
-      });
+      const data = sectors.map(sector => ({
+        Year: 2025,
+        Month: new Date().getMonth() + 1,
+        City: city,
+        Sector: sector,
+        "Consumption/Activity": '',
+        "Emission Factor (EF)": '',
+        "Total CO2 (kg)": '',
+        "CO2 per Capita (kg)": '',
+        "Data Status": 'No measured data yet',
+        "Source Name": '',
+        "Source Link": '',
+        "Last Update": '',
+        "Trust Level": 'Unmeasured',
+        "Validation Status": 'Awaiting official data'
+      }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), city.substring(0, 31));
     });
 
+
     XLSX.writeFile(wb, `${countryName}_Master_Data.xlsx`);
   },
+
 
   generateGlobalPopulationData: () => {
     const wb = XLSX.utils.book_new();
@@ -111,6 +113,7 @@ export const excelSystemService = {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Population");
     XLSX.writeFile(wb, FILE_NAMES.GLOBAL_POP);
   },
+
 
   /**
    * a) Official Sources Registry
@@ -127,6 +130,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.OFFICIAL_SOURCES);
   },
 
+
   /**
    * b) Emission Factors Library
    */
@@ -142,6 +146,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.EMISSION_FACTORS);
   },
 
+
   /**
    * c) Sectoral Data Additional
    */
@@ -155,20 +160,21 @@ export const excelSystemService = {
         Sector: sector,
         Governorate: gov.governorate,
         Year: 2025,
-        Annual_Consumption: (Math.random() * 50000).toFixed(0),
-        EF: 0.45,
-        Annual_CO2: (Math.random() * 22500).toFixed(2),
-        CO2_Per_Capita: (Math.random() * 0.5).toFixed(3),
-        Notes: 'Simulated based on regional activity',
-        Source_Link: 'https://www.capmas.gov.eg',
-        EF_Link: 'https://www.ipcc.ch',
-        Consumption_Link: 'Internal Model',
-        Population_Link: 'CAPMAS 2025'
+        Annual_Consumption: '',
+        EF: '',
+        Annual_CO2: '',
+        CO2_Per_Capita: '',
+        Notes: 'No measured data yet',
+        Source_Link: '',
+        EF_Link: '',
+        Consumption_Link: '',
+        Population_Link: ''
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sector.substring(0, 31));
     });
     XLSX.writeFile(wb, FILE_NAMES.SECTORAL_ADDITIONAL);
   },
+
 
   /**
    * d) User Consumption Data
@@ -177,6 +183,7 @@ export const excelSystemService = {
     const wb = XLSX.utils.book_new();
     const users = JSON.parse(localStorage.getItem('moeco_local_users') || '[]');
     const bills = JSON.parse(localStorage.getItem('moeco_bills') || '[]');
+
 
     const data = bills.map((b: any) => {
       const user = users.find((u: any) => u.id === b.userId);
@@ -201,6 +208,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.USER_CONSUMPTION);
   },
 
+
   /**
    * 5) International Mapping (ESG/SDG)
    */
@@ -215,6 +223,7 @@ export const excelSystemService = {
     XLSX.writeFile(wb, FILE_NAMES.INT_MAPPING);
   },
 
+
   /**
    * 1. Operational Files: moeco_users_input_data.xlsx
    */
@@ -223,7 +232,9 @@ export const excelSystemService = {
     const allBills = JSON.parse(localStorage.getItem('moeco_bills') || '[]');
     const allRecords = await storageService.getRecords();
 
+
     const wb = XLSX.utils.book_new();
+
 
     // Helper to map records to the requested columns
     const mapToColumns = (records: any[], type: string) => records.map(r => {
@@ -247,6 +258,7 @@ export const excelSystemService = {
       };
     });
 
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapToColumns(allBills.filter((b: any) => b.type === 'electricity'), 'Electricity')), "Electricity_Readings");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapToColumns(allBills.filter((b: any) => b.type === 'water'), 'Water')), "Water_Readings");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mapToColumns(allBills.filter((b: any) => b.type === 'gas'), 'Gas')), "Gas_Readings");
@@ -261,8 +273,10 @@ export const excelSystemService = {
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(householdProfile), "Household_Profile");
 
+
     XLSX.writeFile(wb, FILE_NAMES.USERS_INPUT);
   },
+
 
   /**
    * 2. Operational Files: moeco_monthly_reports.xlsx
@@ -271,6 +285,7 @@ export const excelSystemService = {
     const wb = XLSX.utils.book_new();
     const analytics = await storageService.getGovAnalytics();
     const monthYear = new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '_');
+
 
     const reportData = analytics.map(gov => ({
       Governorate: gov.governorate,
@@ -287,9 +302,11 @@ export const excelSystemService = {
       Generated_Date: new Date().toISOString()
     }));
 
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), monthYear);
     XLSX.writeFile(wb, FILE_NAMES.MONTHLY_REPORTS);
   },
+
 
   /**
    * 3. Operational Files: moeco_annual_reports.xlsx
@@ -298,6 +315,7 @@ export const excelSystemService = {
     const wb = XLSX.utils.book_new();
     const analytics = await storageService.getGovAnalytics();
     const year = new Date().getFullYear();
+
 
     const reportData = analytics.map(gov => ({
       Governorate: gov.governorate,
@@ -315,9 +333,11 @@ export const excelSystemService = {
       Generated_Date: new Date().toISOString()
     }));
 
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), `Year_${year}`);
     XLSX.writeFile(wb, FILE_NAMES.ANNUAL_REPORTS);
   },
+
 
   /**
    * 4. Master Unified Database: moeco_master_database.xlsx
@@ -326,6 +346,7 @@ export const excelSystemService = {
     const wb = XLSX.utils.book_new();
     const users = JSON.parse(localStorage.getItem('moeco_local_users') || '[]');
     const analytics = await storageService.getGovAnalytics();
+
 
     // 1) Users_Master
     const usersMaster = users.map((u: any) => ({
@@ -338,6 +359,7 @@ export const excelSystemService = {
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(usersMaster), "Users_Master");
 
+
     // 2) Monthly_Aggregated_Data
     const monthlyAgg = [{
       Month: new Date().getMonth() + 1,
@@ -348,6 +370,7 @@ export const excelSystemService = {
       Data_Completeness_Score: "98%"
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthlyAgg), "Monthly_Aggregated_Data");
+
 
     // 3) Annual_Aggregated_Data
     const annualAgg = [{
@@ -360,6 +383,7 @@ export const excelSystemService = {
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(annualAgg), "Annual_Aggregated_Data");
 
+
     // 4) Government_View
     const govView = analytics.map(g => ({
       Governorate: g.governorate,
@@ -371,6 +395,7 @@ export const excelSystemService = {
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(govView), "Government_View");
 
+
     // 5) National_Indicators
     const indicators = [{
       Energy_Poverty_Index: "0.12",
@@ -380,6 +405,7 @@ export const excelSystemService = {
       Sustainability_Score: "72/100"
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(indicators), "National_Indicators");
+
 
     // 6) Data_Quality_Score
     const quality = [{
@@ -391,6 +417,7 @@ export const excelSystemService = {
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(quality), "Data_Quality_Score");
 
+
     // 7) AI_Predictions
     const predictions = analytics.map(g => ({
       Governorate: g.governorate,
@@ -401,9 +428,10 @@ export const excelSystemService = {
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(predictions), "AI_Predictions");
 
+
     // 8) Alerts_System
     const alerts = analytics.filter(g => g.stressLevel > 80).map(g => ({
-      Alert_ID: `ALT-${Math.random().toString(36).substr(2, 9)}`,
+      Alert_ID: `ALT-${g.governorate.replace(/\\s+/g, '').substring(0, 6).toUpperCase()}-${new Date().toISOString().slice(0, 10)}`,
       Governorate: g.governorate,
       Alert_Type: "High Consumption",
       Severity_Level: "High",
@@ -412,6 +440,7 @@ export const excelSystemService = {
       Created_Date: new Date().toISOString()
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(alerts), "Alerts_System");
+
 
     // 9) Update_History
     const history = [{
@@ -425,8 +454,10 @@ export const excelSystemService = {
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(history), "Update_History");
 
+
     XLSX.writeFile(wb, FILE_NAMES.MASTER_DATABASE);
   },
+
 
   /**
    * 5. Admin Control Panel: moeco_admin_control_panel.xlsx
@@ -435,6 +466,7 @@ export const excelSystemService = {
     const wb = XLSX.utils.book_new();
     const users = JSON.parse(localStorage.getItem('moeco_local_users') || '[]');
     const analytics = await storageService.getGovAnalytics();
+
 
     // 1) System_Overview
     const overview = [{
@@ -449,6 +481,7 @@ export const excelSystemService = {
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(overview), "System_Overview");
 
+
     // 2) Governorate_Monitoring
     const monitoring = analytics.map(g => ({
       Governorate: g.governorate,
@@ -460,6 +493,7 @@ export const excelSystemService = {
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monitoring), "Governorate_Monitoring");
 
+
     // 3) Real_Time_Metrics
     const records = await storageService.getRecords();
     const realTime = [{
@@ -470,8 +504,10 @@ export const excelSystemService = {
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(realTime), "Real_Time_Metrics");
 
+
     XLSX.writeFile(wb, FILE_NAMES.ADMIN_CONTROL);
   },
+
 
   /**
    * Update Engine
@@ -485,6 +521,7 @@ export const excelSystemService = {
     const newConfig = { ...config, lastUpdated: new Date().toISOString() };
     egyptEnergyService.saveConfig(newConfig);
 
+
     const updateEntry = {
       date: new Date().toISOString(),
       type: 'System Sync',
@@ -495,6 +532,7 @@ export const excelSystemService = {
     
     return true;
   },
+
 
   /**
    * 6️⃣ Government Sectoral Data (Encrypted/Protected)
@@ -508,31 +546,33 @@ export const excelSystemService = {
         {
           Year: 2025,
           "Sector / Activity": sector,
-          "Annual Consumption / Production": (Math.random() * 5000000).toFixed(2),
-          "Emission Factor (EF)": sector === 'Electricity' ? 0.533 : sector === 'Cement' ? 0.912 : 0.45,
-          "Annual CO2 (Mt)": (Math.random() * 2500).toFixed(3),
-          "CO2 per Capita (kg)": (Math.random() * 5).toFixed(3),
-          "Source": "Official Gov Data / IEA",
-          "Direct Link": "https://www.iea.org/data-and-statistics",
-          "Notes": `Encrypted data for ${sector} in ${city}. Verified by MoEco Audit.`
+          "Annual Consumption / Production": '',
+          "Emission Factor (EF)": '',
+          "Annual CO2 (Mt)": '',
+          "CO2 per Capita (kg)": '',
+          "Source": "",
+          "Direct Link": "",
+          "Notes": `No measured data yet for ${sector} in ${city}.`
         },
         {
           Year: 2026,
           "Sector / Activity": sector,
-          "Annual Consumption / Production": (Math.random() * 4800000).toFixed(2),
-          "Emission Factor (EF)": sector === 'Electricity' ? 0.533 : sector === 'Cement' ? 0.912 : 0.45,
-          "Annual CO2 (Mt)": (Math.random() * 2400).toFixed(3),
-          "CO2 per Capita (kg)": (Math.random() * 4.8).toFixed(3),
-          "Source": "Official Gov Data / World Bank",
-          "Direct Link": "https://data.worldbank.org",
-          "Notes": "Historical baseline"
+          "Annual Consumption / Production": '',
+          "Emission Factor (EF)": '',
+          "Annual CO2 (Mt)": '',
+          "CO2 per Capita (kg)": '',
+          "Source": "",
+          "Direct Link": "",
+          "Notes": "No measured data yet"
         }
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), city.substring(0, 31));
     });
 
+
     XLSX.writeFile(wb, `${countryName}_${sector}_Gov_Data.xlsx`);
   },
+
 
   /**
    * 7️⃣ Alert History & Trend Analysis
@@ -564,8 +604,10 @@ export const excelSystemService = {
       });
     }
 
+
     XLSX.writeFile(wb, `${countryName}_Alert_History.xlsx`);
   },
+
 
   /**
    * 8️⃣ Generate Country Master Data Excel
@@ -579,18 +621,21 @@ export const excelSystemService = {
       'Digital', 'Disaster', 'Aviation', 'Food'
     ];
 
+
     const data = countries.map(country => {
       const row: any = { Country: country, Year: 2025 };
       sectors.forEach(sector => {
-        row[`${sector}_Activity`] = (Math.random() * 1000000).toFixed(2);
-        row[`${sector}_CO2`] = (Math.random() * 500000).toFixed(2);
+        row[`${sector}_Activity`] = '';
+        row[`${sector}_CO2`] = '';
       });
       return row;
     });
 
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Master_Data");
     XLSX.writeFile(wb, FILE_NAMES.COUNTRY_MASTER_DATA);
   },
+
 
   /**
    * 9️⃣ Generate City Sector Data for a specific Country
@@ -604,20 +649,24 @@ export const excelSystemService = {
       'Digital', 'Disaster', 'Aviation', 'Food'
     ];
 
+
     cities.forEach(city => {
       const data = sectors.map(sector => ({
         Sector: sector,
-        Activity: (Math.random() * 100000).toFixed(2),
-        CO2: (Math.random() * 50000).toFixed(2),
-        Population: 500000,
-        Source: 'Official Gov Data',
-        Last_Update: new Date().toISOString()
+        Activity: '',
+        CO2: '',
+        Population: '',
+        Data_Status: 'No measured data yet',
+        Source: '',
+        Last_Update: ''
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), (city as string).substring(0, 31));
     });
 
+
     XLSX.writeFile(wb, `city_sector_data_${countryName}.xlsx`);
   },
+
 
   /**
    * 🔟 Generate Citizen Rewards Excel
@@ -636,9 +685,11 @@ export const excelSystemService = {
       Last_Active: u.lastActive || new Date().toISOString()
     }));
 
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Rewards");
     XLSX.writeFile(wb, FILE_NAMES.CITIZEN_REWARDS);
   },
+
 
   /**
    * 11) Advanced Alert System Excel Export
@@ -671,8 +722,10 @@ export const excelSystemService = {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), (city as string).substring(0, 31));
     });
 
+
     XLSX.writeFile(wb, `${countryName}_Advanced_Alert_System.xlsx`);
   },
+
 
   /**
    * Full System Sync & Export
