@@ -741,7 +741,7 @@ export const GovDashboard: React.FC<GovDashboardProps> = ({ language, embeddedUs
                             {alert.co2Impact! > 0 ? '+' : ''}{alert.co2Impact} kg CO2
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className={`flex items-center gap-1 ${alert.affectedPopulation > 0 ? "" : "hidden"}`}>
                           <Users className="w-3 h-3 text-blue-500" />
                           <span className="text-[9px] md:text-[10px] font-bold text-blue-500">~{(alert.affectedPopulation / 1000).toFixed(0)}k Affected</span>
                         </div>
