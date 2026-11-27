@@ -145,7 +145,7 @@ export const PrivacyConsentProvider: React.FC<{ children: React.ReactNode }> = (
           if (error || !data?.user) {
             return {
               ok: false,
-              error: formatSupabaseErrorAr(error || new Error('تعذر إنشاء جلسة مجهولة')),
+              error: formatالخادمErrorAr(error || new Error('تعذر إنشاء جلسة مجهولة')),
             };
           }
           currentUser = data.user;
@@ -153,7 +153,7 @@ export const PrivacyConsentProvider: React.FC<{ children: React.ReactNode }> = (
 
         const mapped = mapAuthUser(currentUser);
         if (!mapped) {
-          return { ok: false, error: 'تعذر التحقق من معرّف الجلسة في Supabase.' };
+          return { ok: false, error: 'تعذر التحقق من معرّف الجلسة في الخادم.' };
         }
 
         const savedProfile = await supabaseDataService.upsertConsentProfile({
@@ -232,7 +232,7 @@ export const PrivacyConsentProvider: React.FC<{ children: React.ReactNode }> = (
         return {
           ok: true,
           message:
-            'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني عبر Supabase. بعد فتح الرابط تصبح سجلاتك الحالية مرتبطة ببريدك ويمكن استعادتها على جهاز آخر.',
+            'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني عبر الخادم. بعد فتح الرابط تصبح سجلاتك الحالية مرتبطة ببريدك ويمكن استعادتها على جهاز آخر.',
         };
       } catch (err: any) {
         return { ok: false, error: formatSupabaseErrorAr(err) };
