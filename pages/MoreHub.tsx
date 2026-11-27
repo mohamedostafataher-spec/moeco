@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
+
 interface HubLinkItem {
   path: string;
   titleAr: string;
@@ -38,12 +39,14 @@ interface HubLinkItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+
 interface HubSection {
   id: string;
   headingAr: string;
   headingEn: string;
   items: HubLinkItem[];
 }
+
 
 const HUB_SECTIONS: HubSection[] = [
   {
@@ -56,7 +59,7 @@ const HUB_SECTIONS: HubSection[] = [
         titleAr: 'ملف بيتي (الكهرباء والمياه)',
         titleEn: 'My Home Utilities',
         descAr: 'تنظيم قراءات العداد وفواتير الكهرباء والمياه الخاصة بك في الخادم',
-        descEn: 'Organize your personal electricity and water readings securely in Supabase',
+        descEn: 'Organize your personal electricity and water readings securely on your account',
         icon: Zap,
       },
       {
@@ -221,7 +224,7 @@ const HUB_SECTIONS: HubSection[] = [
         titleAr: 'بياناتي وتصديرها وحذفها',
         titleEn: 'My Data & Export',
         descAr: 'عرض سجلاتك في الخادم وتنزيل نسخة JSON وحذف كافة بياناتك نهائيًا',
-        descEn: 'View Supabase records, download JSON export, or delete all data',
+        descEn: 'View your saved records, download a JSON export, or delete all data',
         icon: Database,
       },
       {
@@ -276,9 +279,11 @@ const HUB_SECTIONS: HubSection[] = [
   },
 ];
 
+
 const MoreHub: React.FC = () => {
   const { isRtl } = useApp();
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-8" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -292,6 +297,7 @@ const MoreHub: React.FC = () => {
             : 'All MoEco tools organized clearly by purpose.'}
         </p>
       </header>
+
 
       <div className="space-y-6">
         {HUB_SECTIONS.map((section) => (
@@ -335,5 +341,6 @@ const MoreHub: React.FC = () => {
     </div>
   );
 };
+
 
 export default MoreHub;
