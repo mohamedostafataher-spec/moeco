@@ -201,7 +201,7 @@ const Home: React.FC = () => {
         <section aria-label={isRtl ? 'ملخصك الشخصي' : 'Personal summary'} className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-lg font-bold text-slate-900">
-              {isRtl ? 'ملخصك المسجل في Supabase' : 'Your Recorded Summary'}
+              {isRtl ? 'ملخصك المسجل في الخادم' : 'Your Recorded Summary'}
             </h2>
             <Link
               to="/methodology"
@@ -256,7 +256,7 @@ const Home: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                      {isRtl ? 'محفوظ في Supabase' : 'Saved'}
+                      {isRtl ? 'محفوظ في الخادم' : 'Saved'}
                     </span>
                   </div>
 
@@ -298,7 +298,7 @@ const Home: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                      {isRtl ? 'محفوظ في Supabase' : 'Saved'}
+                      {isRtl ? 'محفوظ في الخادم' : 'Saved'}
                     </span>
                   </div>
 
@@ -340,7 +340,7 @@ const Home: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                      {isRtl ? 'مسودات Supabase' : 'Saved Drafts'}
+                      {isRtl ? 'مسودات الخادم' : 'Saved Drafts'}
                     </span>
                   </div>
 
