@@ -88,7 +88,7 @@ const PrivacyData: React.FC = () => {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">اتصال Supabase غير مضبوط بعد في البيئة الحالية</p>
+              <p className="font-bold">اتصال الخادم غير مضبوط بعد في البيئة الحالية</p>
               <p className="mt-1">
                 لم يتم تزويد <code>VITE_SUPABASE_URL</code> و<code>VITE_SUPABASE_ANON_KEY</code>{' '}
                 بعد. حتى يتم ضبطهما، لا تُحفظ أي سجلات ولا تُنشأ جلسة مجهولة.
@@ -148,7 +148,7 @@ const PrivacyData: React.FC = () => {
           <ul className="list-disc list-inside space-y-1.5 text-slate-700">
             <li>
               <strong>ملف بيتي:</strong> قراءات الكهرباء والمياه، الوحدات، الفترات، المبالغ الاختيارية،
-              وملاحظاتك الشخصية في جدول <code>household_readings</code> بقاعدة بيانات Supabase.
+              وملاحظاتك الشخصية في جدول <code>household_readings</code> بقاعدة البيانات.
             </li>
             <li>
               <strong>شكواي ما تضيعش:</strong> مسودات الشكاوى، التصنيف، المنطقة التقريبية، وأرقام
@@ -191,9 +191,9 @@ const PrivacyData: React.FC = () => {
           الاستخدام بدون حساب تقليدي واستثناء الجلسة على المتصفح
         </h2>
         <p>
-          يعمل MoEco عبر <strong>جلسة مجهولة الهوية في Supabase</strong> دون إلزامك بإنشاء كلمة مرور.
+          يعمل MoEco عبر <strong>جلسة مجهولة الهوية في الخادم</strong> دون إلزامك بإنشاء كلمة مرور.
           لكي تظل سجلاتك متصلة بنفس المعرّف عند تحديث الصفحة، يحتفظ المتصفح فقط برمز جلسة المصادقة
-          (Session Token) الخاص بـ Supabase (وهو الاستثناء التقني الوحيد، ولا تُخزن سجلاتك كنسخ محلية
+          (Session Token) الخاص بـ الخادم (وهو الاستثناء التقني الوحيد، ولا تُخزن سجلاتك كنسخ محلية
           في <code>localStorage</code>).
         </p>
         <p className="font-semibold text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
@@ -252,7 +252,7 @@ const PrivacyData: React.FC = () => {
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
               لا يلزم ربط بريد للاستمرار في التطبيق. إذا رغبت في حفظ سجلاتك عند تغيير الهاتف أو مسح
-              المتصفح، أدخل بريدك الإلكتروني لترقيتك عبر Supabase مع الحفاظ على جميع سجلاتك الحالية.
+              المتصفح، أدخل بريدك الإلكتروني لترقيتك عبر الخادم مع الحفاظ على جميع سجلاتك الحالية.
             </p>
           </div>
 
@@ -294,7 +294,7 @@ const PrivacyData: React.FC = () => {
       {/* Shortcuts to My Data */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3">
         <div className="text-xs text-slate-600">
-          تريد مراجعة سجلاتك المحفوظة أو تنزيل نسخة JSON أو حذف بياناتك من Supabase؟
+          تريد مراجعة سجلاتك المحفوظة أو تنزيل نسخة JSON أو حذف بياناتك من الخادم؟
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
