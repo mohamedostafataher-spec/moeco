@@ -76,6 +76,7 @@ import {
 import { translations } from "./i18n";
 import { Language, User, CarbonActivity } from "./types";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { RouteTransition } from "./components/ui";
 import BottomNav from "./components/BottomNav";
 import { Onboarding } from "./components/Onboarding";
 import SplashScreen from "./components/SplashScreen";
@@ -424,23 +425,26 @@ const NavigationShell: React.FC = () => {
       </aside>
 
       {/* Mobile Compact Header (< lg) */}
-      <header className="lg:hidden sticky top-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 flex items-center justify-between">
+      <header className="app-header lg:hidden sticky top-0 z-40"><div className="h-14 px-4 flex items-center justify-between">
         <button
           type="button"
           onClick={handleLogoClick}
           className="flex items-center gap-2.5 min-h-[44px]"
         >
-          <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center">
-            <Leaf className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+            <Leaf className="w-5 h-5" />
           </div>
-          <span className="text-base font-extrabold text-slate-900">MoEco</span>
+          <div className="text-start leading-tight">
+            <span className="block text-base font-extrabold">MoEco</span>
+            <span className="block text-[10px] opacity-80 font-semibold">{isRtl ? "بيئة مصر" : "Egypt Eco"}</span>
+          </div>
         </button>
 
         <div className="flex items-center gap-1.5">
           <Link
             to="/accessibility-settings"
             aria-label={isRtl ? "إعدادات سهولة الوصول" : "Accessibility"}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
+            className="hdr-btn"
           >
             <Accessibility className="w-5 h-5" />
           </Link>
@@ -448,7 +452,7 @@ const NavigationShell: React.FC = () => {
             type="button"
             onClick={() => setIsNotificationsOpen(true)}
             aria-label={isRtl ? "الإشعارات" : "Notifications"}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 relative"
+            className="hdr-btn relative"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -457,7 +461,7 @@ const NavigationShell: React.FC = () => {
           </button>
           <LanguageSwitcher />
         </div>
-      </header>
+      </div></header>
 
       <NotificationCenter
         isOpen={isNotificationsOpen}
@@ -936,7 +940,7 @@ const AppContent: React.FC = () => {
 
           <div className="flex-1 min-w-0 flex flex-col">
             <main className="flex-grow px-4 py-5 md:px-8 md:py-7 pb-24 lg:pb-10">
-              <div className="w-full h-full">
+              <div className="w-full h-full"><RouteTransition>
                 <React.Suspense fallback={<PageSkeleton />}>
                   <Routes>
                       <Route path="/login" element={<Login />} />
@@ -1181,7 +1185,7 @@ const AppContent: React.FC = () => {
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </React.Suspense>
-              </div>
+              </RouteTransition></div>
             </main>
 
             <BottomNav />
