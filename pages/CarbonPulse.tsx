@@ -20,6 +20,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { PageHero } from '../components/ui';
 import { usePrivacyConsent } from '../context/PrivacyConsentContext';
 import { supabase, getSafeSession } from '../services/supabaseClient';
 import { notificationService } from '../services/notificationService';
@@ -28,13 +29,16 @@ import { calculationEngine } from '../services/calculationEngine';
 import { storageService } from '../services/storageService';
 import { errorLogger } from '../services/errorLogger';
 
+
 type ActivityType = 'transport' | 'electricity' | 'water' | 'gas' | 'food' | 'shopping';
+
 
 const SmartCalculator: React.FC = () => {
   const { language, user, isRtl } = useApp();
   const { isConfigured, hasCoreConsent, authUser, openConsentModal } = usePrivacyConsent();
   const location = useLocation();
   const locationState = location.state as { initialType: ActivityType } | null;
+
 
   const [activeTab, setActiveTab] = useState<'calculate' | 'history'>('calculate');
   const [selectedType, setSelectedType] = useState<ActivityType | null>(null);
@@ -50,6 +54,7 @@ const SmartCalculator: React.FC = () => {
     sectorsCount: 0,
   });
   const [categories, setCategories] = useState<any[]>([]);
+
 
   const getCategoryConfig = (id: string) => {
     const configs: Record<string, any> = {
@@ -119,6 +124,7 @@ const SmartCalculator: React.FC = () => {
     );
   };
 
+
   const defaultCategories = [
     {
       id: 'electricity',
@@ -132,6 +138,7 @@ const SmartCalculator: React.FC = () => {
     { id: 'shopping', name: isRtl ? 'التسوق' : 'Shopping', ...getCategoryConfig('shopping') },
   ];
 
+
   const fetchHistory = async () => {
     try {
       const session = await getSafeSession();
@@ -139,21 +146,25 @@ const SmartCalculator: React.FC = () => {
       const records = await storageService.fetchUserHistory(currentUserId);
       setHistory(records.slice(0, 15));
 
+
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
       const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
+
       const monthlyRecs = records.filter((r) => {
         const d = new Date(r.created_at || r.timestamp);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
 
+
       const prevMonthlyRecs = records.filter((r) => {
         const d = new Date(r.created_at || r.timestamp);
         return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
       });
+
 
       const currentTotal = monthlyRecs.reduce(
         (sum, r) => sum + (r.carbon_impact || r.co2_impact || r.co2 || 0),
@@ -164,7 +175,9 @@ const SmartCalculator: React.FC = () => {
         0,
       );
 
+
       const distinctSectors = new Set(records.map((r) => r.sector).filter(Boolean)).size;
+
 
       setStats({
         monthlyTotal: currentTotal,
@@ -177,6 +190,7 @@ const SmartCalculator: React.FC = () => {
       errorLogger.log(e, 'SmartCalculator:fetchHistory');
     }
   };
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -214,6 +228,7 @@ const SmartCalculator: React.FC = () => {
     }
     fetchHistory();
 
+
     const channel = supabase
       .channel('consumption_records_changes')
       .on(
@@ -225,10 +240,12 @@ const SmartCalculator: React.FC = () => {
       )
       .subscribe();
 
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [locationState, isRtl]);
+
 
   useEffect(() => {
     const calculateAndAutoSave = async () => {
@@ -236,6 +253,7 @@ const SmartCalculator: React.FC = () => {
         setResult(null);
         return;
       }
+
 
       let consumption = 0;
       if (['electricity', 'water', 'gas'].includes(selectedType)) {
@@ -248,20 +266,24 @@ const SmartCalculator: React.FC = () => {
         consumption = (parseFloat(inputs.meat) || 0) + (parseFloat(inputs.veg) || 0);
       }
 
+
       const hasMeaningfulInput =
         consumption > 0 ||
         (selectedType === 'food' &&
           (parseFloat(inputs.meat) > 0 || parseFloat(inputs.veg) > 0));
+
 
       if (!hasMeaningfulInput) {
         setResult(null);
         return;
       }
 
+
       try {
         const selectedCategory = categories.find((c) => c.id === selectedType);
         const metadata = { ...inputs, usage: consumption, unit: selectedCategory?.unit || 'unknown' };
         const calcResult = await calculationEngine.calculate(selectedType, consumption, metadata);
+
 
         const finalResult = {
           ...calcResult,
@@ -270,12 +292,15 @@ const SmartCalculator: React.FC = () => {
           timestamp: new Date().toISOString(),
         };
 
+
         setResult(finalResult);
+
 
         if (consumption > 0 && isConfigured && hasCoreConsent) {
           const session = await getSafeSession();
           const uid = authUser?.id || user?.id || session?.user?.id;
           if (!uid) return;
+
 
           storageService
             .insertConsumptionRecord({
@@ -301,15 +326,18 @@ const SmartCalculator: React.FC = () => {
       }
     };
 
+
     const timeout = setTimeout(() => {
       calculateAndAutoSave();
     }, 2000);
     return () => clearTimeout(timeout);
   }, [inputs, selectedType, categories, language, user?.id, authUser?.id, isConfigured, hasCoreConsent]);
 
+
   const handleCalculateAndSaveDirectly = async () => {
     if (!selectedType) return;
     setIsCalculating(true);
+
 
     try {
       let consumption = 0;
@@ -331,10 +359,12 @@ const SmartCalculator: React.FC = () => {
         consumption = (parseFloat(inputs.meat) || 0) + (parseFloat(inputs.veg) || 0);
       }
 
+
       const hasMeaningfulInput =
         consumption > 0 ||
         (selectedType === 'food' &&
           (parseFloat(inputs.meat) > 0 || parseFloat(inputs.veg) > 0));
+
 
       if (!hasMeaningfulInput) {
         notificationService.error(
@@ -344,9 +374,11 @@ const SmartCalculator: React.FC = () => {
         return;
       }
 
+
       const selectedCategory = categories.find((c) => c.id === selectedType);
       const metadata = { ...inputs, usage: consumption, unit: selectedCategory?.unit || 'unknown' };
       const calcResult = await calculationEngine.calculate(selectedType, consumption, metadata);
+
 
       const finalResult = {
         ...calcResult,
@@ -355,13 +387,16 @@ const SmartCalculator: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
 
+
       setResult(finalResult);
+
 
       if (!isConfigured || !hasCoreConsent) {
         openConsentModal(isRtl ? 'حاسبة الأثر الكربوني' : 'Carbon Calculator');
         setIsCalculating(false);
         return;
       }
+
 
       const session = await getSafeSession();
       const uid = authUser?.id || user?.id || session?.user?.id;
@@ -370,6 +405,7 @@ const SmartCalculator: React.FC = () => {
         setIsCalculating(false);
         return;
       }
+
 
       await storageService.insertConsumptionRecord({
         user_id: uid,
@@ -383,9 +419,11 @@ const SmartCalculator: React.FC = () => {
         metadata: { ...metadata, manual_saved: true, tier: calcResult.tier },
       });
 
+
       if (calcResult.points > 0) {
         await storageService.awardPoints(uid, calcResult.points, `Calculation: ${selectedType}`);
       }
+
 
       notificationService.success(
         isRtl ? 'تم الحساب وحفظ العملية في السجل بنجاح' : 'Calculated and saved successfully',
@@ -401,36 +439,30 @@ const SmartCalculator: React.FC = () => {
     }
   };
 
+
   return (
     <div className="max-w-5xl mx-auto pb-12 space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* 1. Calm Hero Header */}
-      <header className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
-              {isRtl ? 'حاسبة البصمة الكربونية' : 'Carbon Footprint Calculator'}
-            </h1>
-            <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
-              {isRtl
+      <PageHero
+        title={isRtl ? 'حاسبة البصمة الكربونية' : 'Carbon Footprint Calculator'}
+        subtitle={isRtl
                 ? 'احسب الأثر الكربوني التقديري لاستهلاكك اليومي من الكهرباء والمياه والمواصلات بوحدة kg CO₂e، وتابع سجلاتك عبر الزمن.'
                 : 'Estimate carbon footprint from your daily utilities and commute in kg CO₂e.'}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
+        icon={<CalcIcon className="w-5 h-5" />}
+      >
+        <div className="pt-3 flex flex-wrap gap-2">
+          <Link
               to="/edge-ai"
-              className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
+              className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white backdrop-blur text-xs font-bold transition-colors"
             >
               <BrainCircuit className="w-4 h-4 text-emerald-700" />
               <span>{isRtl ? 'المساعد التحليلي' : 'Smart Analyst'}</span>
             </Link>
-          </div>
         </div>
+      </PageHero>
 
-        {/* 2. Honest Summary Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-emerald-100 rounded-[24px] p-4 space-y-1 shadow-[0_8px_30px_rgba(6,78,59,.06)]">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-slate-600">
                 {isRtl ? 'انبعاثات الشهر (تقدير محسوب)' : 'Monthly Total'}
@@ -443,7 +475,8 @@ const SmartCalculator: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1">
+
+          <div className="bg-white border border-emerald-100 rounded-[24px] p-4 space-y-1 shadow-[0_8px_30px_rgba(6,78,59,.06)]">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-slate-600">
                 {isRtl ? 'مقارنة بالشهر السابق' : 'vs Previous Month'}
@@ -470,7 +503,8 @@ const SmartCalculator: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1">
+
+          <div className="bg-white border border-emerald-100 rounded-[24px] p-4 space-y-1 shadow-[0_8px_30px_rgba(6,78,59,.06)]">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-slate-600">
                 {isRtl ? 'السجلات المحفوظة' : 'Saved Records'}
@@ -480,7 +514,8 @@ const SmartCalculator: React.FC = () => {
             <p className="text-xl font-extrabold text-slate-900 num-ltr">{stats.totalCount}</p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1">
+
+          <div className="bg-white border border-emerald-100 rounded-[24px] p-4 space-y-1 shadow-[0_8px_30px_rgba(6,78,59,.06)]">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-slate-600">
                 {isRtl ? 'القطاعات المسجلة' : 'Logged Sectors'}
@@ -491,8 +526,9 @@ const SmartCalculator: React.FC = () => {
           </div>
         </div>
 
+
         {/* Transparency Metadata Bar */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="bg-white border border-emerald-100 rounded-[24px] p-4 text-xs shadow-[0_8px_30px_rgba(6,78,59,.06)] text-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-bold">
@@ -510,6 +546,7 @@ const SmartCalculator: React.FC = () => {
             </p>
           </div>
 
+
           <Link
             to="/methodology"
             className="min-h-[44px] shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-emerald-700 border border-slate-200 font-bold transition-colors"
@@ -519,8 +556,9 @@ const SmartCalculator: React.FC = () => {
           </Link>
         </div>
 
+
         {/* Mode Switcher */}
-        <div className="flex flex-wrap gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 w-fit">
+        <div className="flex flex-wrap gap-2 bg-emerald-50 p-1 rounded-2xl border border-emerald-100 w-fit">
           {[
             { id: 'calculate', label: isRtl ? 'احسب الآن' : 'Calculate Now', icon: CalcIcon },
             { id: 'history', label: isRtl ? 'السجل' : 'History Log', icon: HistoryIcon },
@@ -540,7 +578,7 @@ const SmartCalculator: React.FC = () => {
             </button>
           ))}
         </div>
-      </header>
+
 
       {activeTab === 'calculate' ? (
         <div className="space-y-6">
@@ -569,6 +607,7 @@ const SmartCalculator: React.FC = () => {
             ))}
           </div>
 
+
           {/* Input Form */}
           {selectedType && (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-6">
@@ -582,6 +621,7 @@ const SmartCalculator: React.FC = () => {
                     : 'Enter values to compute estimated emissions and save to history.'}
                 </p>
               </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {categories
@@ -610,6 +650,7 @@ const SmartCalculator: React.FC = () => {
                   ))}
               </div>
 
+
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -623,6 +664,7 @@ const SmartCalculator: React.FC = () => {
                   <XCircle className="w-4 h-4" />
                   <span>{isRtl ? 'إلغاء وتفريغ' : 'Clear'}</span>
                 </button>
+
 
                 <button
                   type="button"
@@ -641,6 +683,7 @@ const SmartCalculator: React.FC = () => {
             </div>
           )}
 
+
           {/* Result Display */}
           {result && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
@@ -653,6 +696,7 @@ const SmartCalculator: React.FC = () => {
                     تم الحفظ في السجل
                   </span>
                 </div>
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 border-y border-slate-200">
                   <div>
@@ -675,6 +719,7 @@ const SmartCalculator: React.FC = () => {
                   </div>
                 </div>
 
+
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1">
                   <p>
                     <strong>شفافية الحساب:</strong> {result.consumption} وحدة ×{' '}
@@ -689,6 +734,7 @@ const SmartCalculator: React.FC = () => {
                   </p>
                 </div>
               </div>
+
 
               <div className="md:col-span-4 bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center gap-2 text-emerald-700">
@@ -708,6 +754,7 @@ const SmartCalculator: React.FC = () => {
             </h2>
             <span className="text-xs font-bold text-slate-500 num-ltr">{history.length}</span>
           </div>
+
 
           {history.length > 0 ? (
             <div className="space-y-3">
@@ -748,5 +795,6 @@ const SmartCalculator: React.FC = () => {
     </div>
   );
 };
+
 
 export default SmartCalculator;
