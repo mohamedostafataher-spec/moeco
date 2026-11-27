@@ -292,7 +292,7 @@ const NavigationShell: React.FC = () => {
       } else {
         notificationService.error(
           language === "ar"
-            ? "عذرًا، الوصول لإحصاءات المالك يتطلب التحقق عبر جدول app_admins في Supabase"
+            ? "عذرًا، الوصول لإحصاءات المالك يتطلب التحقق عبر جدول app_admins في الخادم"
             : "Access Denied: Server-side app_admins role required",
         );
       }
