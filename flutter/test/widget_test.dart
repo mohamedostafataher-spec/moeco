@@ -10,6 +10,9 @@ import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
+import 'package:moeco/services/share_card_service.dart';
+import 'package:moeco/services/footprint_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -339,5 +342,24 @@ void main() {
     expect(a.id, b.id);
     expect(a.id, isNot(c.id));
     expect(a.egpSaved(0.95), a.kwhSavedMonthly * 0.95);
+  });
+
+
+  test('F5: share card shows exactly the on-device numbers', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final store = FootprintStore(prefs);
+    // Nothing logged: the card must refuse to render meaningful stats
+    final empty = ShareCardService.compute(store);
+    expect(empty.hasAnything, isFalse);
+    // One logged day + one green trip: card numbers equal the record
+    await store.addLog(transport: 'مترو/قطار', electricity: 'قليل', food: 'مشكل');
+    await store.addGreenTrip(mode: 'مشي', km: 12.0);
+    final stats = ShareCardService.compute(store);
+    expect(stats.hasAnything, isTrue);
+    expect(stats.totalLoggedDays, 1);
+    expect(stats.streakDays, 1);
+    expect(stats.greenKm, 12.0);
+    expect(stats.co2SavedKg, closeTo(12.0 * FootprintStore.co2PerCarKm, 0.001));
   });
 }
