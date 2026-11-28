@@ -14,6 +14,7 @@ import 'recycling_screen.dart';
 import 'services_screen.dart';
 import 'green_spots_screen.dart';
 import 'alerts_screen.dart';
+import 'error_log_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -156,6 +157,9 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.crisis_alert, s.alHeroTitle, s.alHeroSub,
                   AlertsScreen(s: s)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.bug_report_outlined, s.errLogTitle,
+                  s.errLogSub, ErrorLogScreen(s: s)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
