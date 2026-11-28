@@ -47,6 +47,39 @@ class S {
       ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
       : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
   String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  // Fuel prices (official, pricing committee 2026-11-28)
+  String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
+  String get fuelHeroSub => ar
+      ? 'الأسعار الرسمية وحاسبة التموين بالكربون.'
+      : 'Official prices plus a fill-up carbon calculator.';
+  String get fuelPricesTitle => ar ? 'الأسعار الرسمية الحالية' : 'Current official prices';
+  String get fuelAsOf => ar
+      ? 'بناءً على قرار لجنة التسعير التلقائي، ٢٨ نوفمبر ٢٠٢٦ (تثبيت الأسعار).'
+      : 'Per the automatic pricing committee decision, 28 Nov 2026 (prices unchanged).';
+  String get fuelSource => ar
+      ? 'المصدر: وزارة البترول، منقول عن الصحافة المصرية.'
+      : 'Source: Ministry of Petroleum, via Egyptian press.';
+  String get fuelCalcTitle => ar ? 'حاسبة التموين' : 'Fill-up calculator';
+  String get fuelType => ar ? 'نوع الوقود' : 'Fuel type';
+  String get fuelLiters => ar ? 'عدد اللترات' : 'Liters';
+  String fuelCostResult(String egp) => ar ? 'التكلفة: $egp جنيه' : 'Cost: $egp EGP';
+  String fuelCo2Result(String kg) => ar
+      ? 'انبعاثات ≈ $kg كجم CO₂'
+      : 'Emissions ≈ $kg kg CO2';
+  String get fuelCo2Note => ar
+      ? 'معاملات احتراق قياسية (٢.٣١ بنزين / ٢.٦٨ سولار كجم لكل لتر) — تقدير.'
+      : 'Standard combustion factors (2.31 gasoline / 2.68 diesel kg per liter), estimate.';
+  String get fuelTipsTitle => ar ? 'نصائح توفر وقود' : 'Fuel-saving tips';
+  String get fuelTip1 => ar
+      ? 'ضغط الكاوتش الصحيح يقلل الاستهلاك حوالي ٣٪.'
+      : 'Correct tire pressure cuts consumption by about 3%.';
+  String get fuelTip2 => ar
+      ? 'السرعة الثابتة ٨٠–٩٠ كم/س أوفر من التسارع والفرملة المتكررة.'
+      : 'Steady 80-90 km/h beats repeated acceleration and braking.';
+  String get fuelTip3 => ar
+      ? 'اطفي الموتور لو هتقف أكتر من دقيقة.'
+      : 'Turn the engine off when stopping for more than a minute.';
+
   String ptName(String key) {
     if (!ar) return key;
     switch (key) {
