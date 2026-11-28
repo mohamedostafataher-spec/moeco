@@ -47,6 +47,19 @@ class S {
       ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
       : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
   String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  // Eco news (The Guardian environment RSS via rss2json)
+  String get newsHeroTitle => ar ? 'أخبار البيئة' : 'Eco News';
+  String get newsHeroSub => ar
+      ? 'آخر أخبار البيئة من مصدر موثوق (بالإنجليزية).'
+      : 'Latest environment news from a trusted source.';
+  String get newsLoading => ar ? 'بنجيب الأخبار...' : 'Fetching news...';
+  String get newsUnavailable => ar
+      ? 'الأخبار مش متاحة دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'News is unavailable right now. We will retry automatically.';
+  String get newsSourceNote => ar
+      ? 'المصدر: The Guardian — قسم البيئة (محتوى إنجليزي، بيتحدث كل ٣ ساعات).'
+      : 'Source: The Guardian — environment desk (updates every 3 hours).';
+
   // Weather (live, Open-Meteo)
   String get wxTitle => ar ? 'طقس القاهرة دلوقتي' : 'Cairo weather right now';
   String get wxLoading => ar ? 'بنجيب الطقس...' : 'Fetching weather...';
