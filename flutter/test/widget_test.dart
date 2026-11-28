@@ -9,10 +9,10 @@ import 'package:moeco/services/services_data.dart';
 import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/error_log_service.dart';
+import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
-import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/footprint_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -395,5 +395,13 @@ void main() {
     final share = ErrorLogService.formatForShare([back]);
     expect(share.contains('boom'), isTrue);
     expect(share.contains('1 entries'), isTrue);
+  });
+
+  test('F6: meter OCR parser picks the plausible reading', () {
+    expect(MeterOcrService.extractMeterReading('KWH 004521'), 4521);
+    expect(MeterOcrService.extractMeterReading('2026-11-28 14:30'), isNull);
+    expect(MeterOcrService.extractMeterReading('no digits at all'), isNull);
+    // Longest plausible run wins over short noise
+    expect(MeterOcrService.extractMeterReading('5 1234567 88'), 1234567);
   });
 }
