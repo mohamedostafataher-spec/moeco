@@ -89,8 +89,19 @@ class FootprintStore {
       'title': title,
       'category': category,
       'notes': notes,
+      'status': 'draft',
       'createdAt': DateTime.now().toIso8601String(),
     });
+    await _writeList(_kDrafts, items);
+  }
+
+  /// User-kept status: draft -> sent -> replied (and back, if needed).
+  Future<void> updateDraftStatus(String id, String status) async {
+    final items = drafts;
+    final i = items.indexWhere((d) => d['id'] == id);
+    if (i < 0) return;
+    items[i]['status'] = status;
+    items[i]['statusAt'] = DateTime.now().toIso8601String();
     await _writeList(_kDrafts, items);
   }
 
