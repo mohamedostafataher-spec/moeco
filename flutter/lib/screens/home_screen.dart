@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../strings.dart';
@@ -32,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<WeatherAlert>? _nalerts;
   final TextEditingController _kwhCtrl = TextEditingController();
   double? _billKg;
+  bool _offline = false;
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
 
   // Rough awareness estimates (per-person daily averages), same spirit as the web app.
   /// Rough per-day EGP cost per mode (awareness estimates, see weeklyEstimateNote).
@@ -86,10 +90,21 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() => _nalerts = alerts);
     });
+    // F7: offline-first. Watch connectivity and show an honest banner;
+    // every data service already serves its last saved data when offline.
+    Connectivity().checkConnectivity().then((r) {
+      if (!mounted) return;
+      setState(() => _offline = r.contains(ConnectivityResult.none));
+    });
+    _connSub = Connectivity().onConnectivityChanged.listen((r) {
+      if (!mounted) return;
+      setState(() => _offline = r.contains(ConnectivityResult.none));
+    });
   }
 
   @override
   void dispose() {
+    _connSub?.cancel();
     _kwhCtrl.dispose();
     super.dispose();
   }
@@ -827,6 +842,25 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icons.spa_outlined,
           chip: streak > 0 ? s.streakDays(streak) : null,
         ),
+        if (_offline)
+          Container(
+            width: double.infinity,
+            color: const Color(0xFFFFF3CD),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.wifi_off, size: 16, color: Color(0xFF8D6E00)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(s.offBanner,
+                      style: const TextStyle(
+                          color: Color(0xFF8D6E00),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          ),
         if (_aqAlert() != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
