@@ -10,6 +10,7 @@ import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/error_log_service.dart';
 import 'package:moeco/services/meter_ocr_service.dart';
+import 'package:moeco/services/bill_compare_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
@@ -403,5 +404,29 @@ void main() {
     expect(MeterOcrService.extractMeterReading('no digits at all'), isNull);
     // Longest plausible run wins over short noise
     expect(MeterOcrService.extractMeterReading('5 1234567 88'), 1234567);
+  });
+
+  test('F11: bill comparison orders months and computes deltas', () {
+    final cmp = BillCompareService.compare([
+      {'month': '2026-10', 'kwh': 300.0, 'm3': 10.0},
+      {'month': '2026-09', 'kwh': 250.0, 'm3': 9.0},
+      {'month': '2026-11', 'kwh': 200.0, 'm3': 8.0},
+    ]);
+    expect(cmp.hasEnoughData, isTrue);
+    expect(cmp.months.map((m) => m.month).toList(),
+        ['2026-09', '2026-10', '2026-11']);
+    expect(cmp.kwhDeltaVsPrev, [null, 50.0, -100.0]);
+    expect(cmp.highestMonth.month, '2026-10');
+    expect(cmp.lowestMonth.month, '2026-11');
+    expect(cmp.averageKwh, closeTo(250.0, 0.001));
+    // Slab re-rating: 300 kWh lands in the 1.55 EGP tier (bill = 300*1.55+11)
+    expect(cmp.months[1].estimatedBill, closeTo(300 * 1.55 + 11, 0.001));
+  });
+
+  test('F11: a single reading is not enough to compare', () {
+    final cmp = BillCompareService.compare([
+      {'month': '2026-10', 'kwh': 300.0, 'm3': 10.0},
+    ]);
+    expect(cmp.hasEnoughData, isFalse);
   });
 }
