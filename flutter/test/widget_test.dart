@@ -9,6 +9,7 @@ import 'package:moeco/services/services_data.dart';
 import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/global_events_service.dart';
+import 'package:moeco/services/savings_tips_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -304,5 +305,39 @@ void main() {
     // A moderate quake near Egypt is raised one level
     expect(GlobalEventsService.quakeSeverity(4.7, true), AlertSeverity.watch);
     expect(GlobalEventsService.quakeSeverity(5.5, true), AlertSeverity.warning);
+  });
+
+
+  test('F4: tier table stays in sync with the official slab system', () {
+    // Same bill as utilities_screen.dart for boundary + mid values
+    expect(SavingsTipsService.estimateBill(0), 0 * 0.68 + 1);
+    expect(SavingsTipsService.estimateBill(50), 50 * 0.68 + 1);
+    expect(SavingsTipsService.estimateBill(100), 100 * 0.78 + 2);
+    expect(SavingsTipsService.estimateBill(200), 200 * 0.95 + 6);
+    expect(SavingsTipsService.estimateBill(201), 201 * 1.55 + 11);
+    expect(SavingsTipsService.estimateBill(650), 650 * 1.95 + 15);
+    expect(SavingsTipsService.estimateBill(1000), 1000 * 2.10 + 25);
+    expect(SavingsTipsService.estimateBill(1500), 1500 * 2.58 + 40);
+  });
+
+  test('F4: slab-boundary warning fires only near the next tier', () {
+    final safe = SavingsTipsService.tierStatus(120);
+    expect(safe.nearNextTier, isFalse);
+    final near = SavingsTipsService.tierStatus(195);
+    expect(near.nearNextTier, isTrue);
+    // Crossing 200->201 re-rates the whole bill: the jump is big and positive
+    expect(near.crossingJump!, greaterThan(100));
+    final top = SavingsTipsService.tierStatus(1500);
+    expect(top.kwhToNext, isNull);
+    expect(top.nearNextTier, isFalse);
+  });
+
+  test('F4: weekly tip rotates weekly and prices at the marginal slab', () {
+    final a = SavingsTipsService.weeklyTip(DateTime(2026, 11, 28));
+    final b = SavingsTipsService.weeklyTip(DateTime(2026, 11, 30)); // same week
+    final c = SavingsTipsService.weeklyTip(DateTime(2026, 12, 7)); // next week
+    expect(a.id, b.id);
+    expect(a.id, isNot(c.id));
+    expect(a.egpSaved(0.95), a.kwhSavedMonthly * 0.95);
   });
 }
