@@ -17,6 +17,7 @@ import 'alerts_screen.dart';
 import 'error_log_screen.dart';
 import 'bill_compare_screen.dart';
 import 'challenge_screen.dart';
+import 'action_plan_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -168,6 +169,9 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.emoji_events_outlined, s.chTitle,
                   s.chSub, ChallengeScreen(s: s, store: store)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.checklist, s.apTitle, s.apSub,
+                  ActionPlanScreen(s: s, store: store)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
