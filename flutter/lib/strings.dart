@@ -47,6 +47,19 @@ class S {
       ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
       : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
   String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  // Weather (live, Open-Meteo)
+  String get wxTitle => ar ? 'طقس القاهرة دلوقتي' : 'Cairo weather right now';
+  String get wxLoading => ar ? 'بنجيب الطقس...' : 'Fetching weather...';
+  String get wxUnavailable => ar
+      ? 'الطقس مش متاح دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'Weather is unavailable right now. We will retry automatically.';
+  String wxLine(String temp, String cond, String hum, String wind) => ar
+      ? '$temp° · $cond · رطوبة $hum٪ · رياح $wind كم/س'
+      : '$temp° · $cond · humidity $hum% · wind $wind km/h';
+  String wxSource(String time) => ar
+      ? 'مصدر: Open-Meteo، آخر تحديث $time'
+      : 'Source: Open-Meteo, updated $time';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
