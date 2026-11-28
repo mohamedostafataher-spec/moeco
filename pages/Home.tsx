@@ -195,7 +195,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {!hasCoreConsent && <ConsentRequiredNotice featureTitle="حفظ السجلات في MoEco" />}
+      {!hasCoreConsent && <ConsentRequiredNotice featureTitle={isRtl ? 'حفظ السجلات في MoEco' : 'Saving records in MoEco'} />}
 
       {hasCoreConsent && (
         <section aria-label={isRtl ? 'ملخصك الشخصي' : 'Personal summary'} className="space-y-4">
