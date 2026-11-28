@@ -351,6 +351,21 @@ class S {
       ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
       : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
 
+  // F5: shareable achievement card (real on-device numbers only)
+  String get shCardTitle => ar ? 'إنجازي مع MoEco' : 'My MoEco achievement';
+  String get shStreak => ar ? 'أيام متتالية' : 'day streak';
+  String get shDays => ar ? 'يوم مسجل' : 'days logged';
+  String get shGreenKm => ar ? 'كم مواصلات نظيفة' : 'green km';
+  String get shCo2 => ar ? 'كجم كربون موفّر' : 'kg CO2 saved';
+  String get shCardFooter => ar
+      ? 'أرقام حقيقية من سجلي على التطبيق (محفوظة على جهازي فقط).'
+      : 'Real numbers from my app log (stored on my device only).';
+  String get shShareButton => ar ? 'مشاركة الصورة' : 'Share image';
+  String get shCancel => ar ? 'إلغاء' : 'Cancel';
+  String get shShareText => ar ? 'إنجازي في تطبيق MoEco 🌿' : 'My MoEco app achievement';
+  String get shNothingYet => ar ? 'سجّل يومك الأول أو رحلة نظيفة الأول وبعدين شارك إنجازك' : 'Log your first day or green trip before sharing';
+  String get shShareCard => ar ? 'شارك إنجازك' : 'Share your achievement';
+
   // F4: tier-nearing alert + savings tips (estimates, EGP)
   String svTierNow(String price) => ar ? 'شريحتك الحالية: $price جنيه لكل ك.و.س' : 'Your current slab: $price EGP/kWh';
   String svTierFar(String n) => ar ? 'باقي $n ك.و.س للشريحة التالية — أنت في المنطقة الآمنة' : '$n kWh to the next slab - you are in the safe zone';
