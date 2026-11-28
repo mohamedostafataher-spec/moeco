@@ -209,47 +209,56 @@ const TransportHub: React.FC = () => {
   // Directory Interactive State
   const [activeDirectoryRoute, setActiveDirectoryRoute] = useState<any | null>(null);
 
-  // Recents & Favorites
-  const [recentLocations, setRecentLocations] = useState<any[]>([
-    {
-      id: "r1",
-      name_ar: "ميدان التحرير",
-      name_en: "Tahrir Square",
-      type: "area",
-      geom: { coordinates: [31.2357, 30.0444] },
-    },
-    {
-      id: "r2",
-      name_ar: "محطة رمسيس",
-      name_en: "Ramses Station",
-      type: "station",
-      geom: { coordinates: [31.2464, 30.0617] },
-    },
-    {
-      id: "r3",
-      name_ar: "مطار القاهرة الكبرى",
-      name_en: "Cairo Airport Terminal",
-      type: "area",
-      geom: { coordinates: [31.3996, 30.1219] },
-    },
-  ]);
+  // Recents & Favorites: only the user's OWN actions, persisted locally.
+  // No preset/demo places — a fresh session starts empty (honesty rule).
+  const [recentLocations, setRecentLocations] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("moeco_recent_locations") || "[]");
+    } catch {
+      return [];
+    }
+  });
 
-  const [favoriteLocations, setFavoriteLocations] = useState<any[]>([
-    {
-      id: "f1",
-      name_ar: "المنزل (المعادي)",
-      name_en: "Home (Maadi)",
-      type: "favorite",
-      geom: { coordinates: [31.2502, 29.9542] },
-    },
-    {
-      id: "f2",
-      name_ar: "الجامعة (الجيزة)",
-      name_en: "University (Giza)",
-      type: "favorite",
-      geom: { coordinates: [31.2001, 30.0264] },
-    },
-  ]);
+  const [favoriteLocations, setFavoriteLocations] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("moeco_favorite_locations") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const persistRecents = (list: any[]) => {
+    setRecentLocations(list);
+    try {
+      localStorage.setItem("moeco_recent_locations", JSON.stringify(list));
+    } catch { /* storage full/blocked: keep in-memory */ }
+  };
+
+  const persistFavorites = (list: any[]) => {
+    setFavoriteLocations(list);
+    try {
+      localStorage.setItem("moeco_favorite_locations", JSON.stringify(list));
+    } catch { /* storage full/blocked: keep in-memory */ }
+  };
+
+  const isFavorite = (loc: any) =>
+    favoriteLocations.some(
+      (f) => (f.name_en || f.name_ar) === (loc.name_en || loc.name_ar)
+    );
+
+  const toggleFavorite = (loc: any) => {
+    if (isFavorite(loc)) {
+      persistFavorites(
+        favoriteLocations.filter(
+          (f) => (f.name_en || f.name_ar) !== (loc.name_en || loc.name_ar)
+        )
+      );
+    } else {
+      persistFavorites(
+        [{ ...loc, id: "f" + Date.now(), type: "favorite" }, ...favoriteLocations].slice(0, 8)
+      );
+    }
+  };
 
   const [showRecents, setShowRecents] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
@@ -667,19 +676,12 @@ const TransportHub: React.FC = () => {
         );
       }
     } else {
-      // Simulate/Match central Tahrir position if device GPS is empty
-      const tahrirCoords = [30.0444, 31.2357] as [number, number];
-      setUserLocation(tahrirCoords);
-      const nearest = getNearestStation(tahrirCoords[0], tahrirCoords[1]);
-      if (nearest) {
-        setFromStationId(nearest.station_id);
-        setFromQuery(
-          language === "ar"
-            ? `موقعي الحالي (أقرب: ${nearest.station_name_ar})`
-            : `My Location (Near: ${nearest.station_name_en})`
-        );
-        setFromCoords({ lat: tahrirCoords[0], lon: tahrirCoords[1] });
-      }
+      // Never fabricate a position: tell the user honestly and let them pick manually.
+      notificationService.error(
+        language === "ar"
+          ? "موقعك غير متاح حاليًا. فعّل إذن الموقع أو اختر محطة الانطلاق يدويًا."
+          : "Your location is unavailable. Enable location access or pick your origin station manually."
+      );
     }
   };
 
@@ -749,6 +751,21 @@ const TransportHub: React.FC = () => {
         );
         setIsLoading(false);
         return;
+      }
+
+      // Remember this destination as a real recent search (the user's own).
+      const destLabel = toQuery.split("(")[0].trim();
+      if (destLabel) {
+        const entry = {
+          id: "r" + Date.now(),
+          name_ar: destLabel,
+          name_en: destLabel,
+          type: "search",
+          geom: { coordinates: [finalToCoords.lon, finalToCoords.lat] },
+        };
+        persistRecents(
+          [entry, ...recentLocations.filter((r) => (r.name_en || r.name_ar) !== destLabel)].slice(0, 6)
+        );
       }
 
       setMapBounds(
@@ -1486,7 +1503,8 @@ const TransportHub: React.FC = () => {
 
                     {/* FAVORITES AND RECENT LOCATIONS list */}
                     <div className="space-y-4">
-                      {/* FAVORITES */}
+                      {/* FAVORITES (only the user's own saved places) */}
+                      {favoriteLocations.length > 0 && (
                       <div>
                         <div className="flex justify-between items-center mb-1 px-1">
                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
@@ -1516,7 +1534,9 @@ const TransportHub: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* RECENTS */}
+                      )}
+                      {/* RECENTS (only places the user actually searched) */}
+                      {recentLocations.length > 0 && (
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 mb-1.5 px-1">
                           <History size={11} className="text-slate-400" />
@@ -1524,7 +1544,7 @@ const TransportHub: React.FC = () => {
                         </span>
                         <div className="space-y-1.5">
                           {recentLocations.map((r) => (
-                            <button
+                            <div
                               key={r.id}
                               onClick={() => {
                                 setToQuery(language === "ar" ? r.name_ar : r.name_en);
@@ -1541,11 +1561,24 @@ const TransportHub: React.FC = () => {
                                 <Clock size={11} className="text-slate-500" />
                                 <span>{language === "ar" ? r.name_ar : r.name_en}</span>
                               </div>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500">{r.type}</span>
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(r);
+                                }}
+                                title={language === "ar" ? "حفظ في المفضلة" : "Save to favorites"}
+                                className="p-1 cursor-pointer hover:scale-110 transition-transform"
+                              >
+                                <Star
+                                  size={13}
+                                  className={isFavorite(r) ? "fill-amber-400 text-amber-400" : "text-slate-500"}
+                                />
+                              </button>
+                            </div>
                           ))}
                         </div>
                       </div>
+                      )}
                     </div>
 
                     {/* DISPATCH ACTION */}
