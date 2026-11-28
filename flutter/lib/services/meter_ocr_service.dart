@@ -26,7 +26,12 @@ class MeterOcrService {
       // Skip tokens that are part of a date or time (adjacent : or /).
       final before = m.start > 0 ? cleaned[m.start - 1] : '';
       final after = m.end < cleaned.length ? cleaned[m.end] : '';
-      if (before == ':' || after == ':' || before == '/' || after == '/') {
+      if (before == ':' ||
+          after == ':' ||
+          before == '/' ||
+          after == '/' ||
+          before == '-' ||
+          after == '-') {
         continue;
       }
       final intPart = token.split('.').first;
