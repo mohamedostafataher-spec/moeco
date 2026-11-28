@@ -226,10 +226,10 @@ export function formatSupabaseErrorAr(err: unknown): string {
   const lower = raw.toLowerCase();
 
   if (code === 'SUPABASE_NOT_CONFIGURED' || lower.includes('not configured')) {
-    return 'قاعدة بيانات Supabase غير مهيأة بعد. أضف VITE_SUPABASE_URL وVITE_SUPABASE_ANON_KEY في ملف البيئة.';
+    return 'الخدمة السحابية مش متصلة دلوقتي. جرّب مرة تانية بعد شوية.';
   }
   if (lower.includes('anonymous sign-ins are disabled') || lower.includes('anonymous provider')) {
-    return 'تسجيل الدخول المجهول غير مُفعّل في مشروع Supabase. يرجى تفعيله من Authentication -> Providers -> Anonymous في لوحة Supabase.';
+    return 'جلسة الاستخدام مش متاحة حاليًا. جرّب لاحقًا من فضلك.';
   }
   if (
     status === 429 ||
@@ -241,7 +241,7 @@ export function formatSupabaseErrorAr(err: unknown): string {
     lower.includes('project is paused') ||
     lower.includes('egress')
   ) {
-    return 'الخدمة السحابية مشغولة حاليًا أو تم بلوغ حد الاستخدام المجاني/توقف المشروع مؤقتًا في Supabase. لن نفترض الحفظ؛ حاول لاحقًا أو صدّر بياناتك احتياطيًا.';
+    return 'الخدمة السحابية متوقفة مؤقتًا أو عند حد الاستخدام المجاني. لم يتم حفظ التعديل؛ حاول لاحقًا أو صدّر بياناتك احتياطيًا.';
   }
   if (
     lower.includes('already been registered') ||
@@ -261,12 +261,12 @@ export function formatSupabaseErrorAr(err: unknown): string {
     lower.includes('could not find the table') ||
     lower.includes('relation') && lower.includes('does not exist')
   ) {
-    return 'جداول MoEco المطلوبة لم تُنشأ بعد في مشروع Supabase المتصل؛ يُرجى تشغيل ملف الترحيل 20261121000000_moeco_core_rls_and_analytics.sql في SQL Editor ثم إعادة المحاولة.';
+    return 'الخدمة السحابية لسه مش جاهزة بالكامل. حاول لاحقًا من فضلك.';
   }
   if (lower.includes('timeout') || lower.includes('failed to fetch') || lower.includes('network')) {
-    return 'تعذر الوصول إلى خادم Supabase (تأكد من الاتصال بالإنترنت أو حالة المشروع). لم يتم حفظ التعديل.';
+    return 'تعذر الوصول للخادم (تأكد من الاتصال بالإنترنت). لم يتم حفظ التعديل.';
   }
-  return raw ? `تعذر إتمام العملية في Supabase: ${raw}` : 'حدث خطأ غير متوقع أثناء الاتصال بقاعدة البيانات.';
+  return 'تعذر إتمام العملية. حاول مرة أخرى لاحقًا.';
 }
 
 export const validateSystemConnections = async () => {
