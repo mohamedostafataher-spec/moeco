@@ -16,6 +16,7 @@ const HealthCenter: React.FC = () => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHealth = async (lat: number, lng: number) => {
@@ -36,8 +37,9 @@ const HealthCenter: React.FC = () => {
   }, []);
 
   const filteredFacilities = facilities.filter(f => 
-    f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.type.toLowerCase().includes(searchQuery.toLowerCase())
+    (f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    f.type.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (!typeFilter || f.type === typeFilter)
   );
 
   return (
@@ -71,9 +73,9 @@ const HealthCenter: React.FC = () => {
               <h2 className="text-4xl font-black tracking-tighter">123</h2>
             </div>
           </div>
-          <button className="px-8 py-4 bg-white text-red-500 rounded-2xl font-black hover:scale-105 transition-transform">
+          <a href="tel:123" className="px-8 py-4 bg-white text-red-500 rounded-2xl font-black hover:scale-105 transition-transform">
             {language === 'ar' ? 'اتصال فوري' : 'Call Now'}
-          </button>
+          </a>
         </div>
 
         {/* Search */}
@@ -91,12 +93,12 @@ const HealthCenter: React.FC = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {[
-            { label: language === 'ar' ? 'مستشفيات' : 'Hospitals', icon: Hospital, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-            { label: language === 'ar' ? 'صيدليات' : 'Pharmacies', icon: Pill, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-            { label: language === 'ar' ? 'عيادات' : 'Clinics', icon: Stethoscope, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-            { label: language === 'ar' ? 'طوارئ' : 'Emergency', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+            { label: language === 'ar' ? 'مستشفيات' : 'Hospitals', icon: Hospital, color: 'text-blue-500', bg: 'bg-blue-500/10', type: 'hospital' },
+            { label: language === 'ar' ? 'صيدليات' : 'Pharmacies', icon: Pill, color: 'text-emerald-500', bg: 'bg-emerald-500/10', type: 'pharmacy' },
+            { label: language === 'ar' ? 'عيادات' : 'Clinics', icon: Stethoscope, color: 'text-purple-500', bg: 'bg-purple-500/10', type: 'clinic' },
+            { label: language === 'ar' ? 'طوارئ' : 'Emergency', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', type: 'emergency' },
           ].map((item) => (
-            <button key={item.label} className={`p-6 rounded-[2rem] ${item.bg} border border-white/5 flex flex-col items-center gap-3 hover:scale-105 transition-transform`}>
+            <button key={item.label} onClick={() => item.type === 'emergency' ? (window.location.href = 'tel:123') : setTypeFilter(typeFilter === item.type ? null : item.type)} className={`p-6 rounded-[2rem] ${item.bg} border ${typeFilter === item.type ? 'border-egypt-gold ring-2 ring-egypt-gold/30' : 'border-white/5'} flex flex-col items-center gap-3 hover:scale-105 transition-transform`}>
               <item.icon className={`w-8 h-8 ${item.color}`} />
               <span className="text-xs font-black">{item.label}</span>
             </button>
@@ -140,18 +142,38 @@ const HealthCenter: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="p-4 bg-zinc-100 dark:bg-white/5 rounded-2xl hover:bg-egypt-gold hover:text-egypt-black transition-all">
-                      <Phone className="w-5 h-5" />
-                    </button>
-                    <button className="p-4 bg-egypt-gold text-egypt-black rounded-2xl hover:scale-110 transition-transform">
-                      <Navigation className="w-5 h-5" />
-                    </button>
+                    {f.phone ? (
+                      <a href={`tel:${f.phone}`} className="p-4 bg-zinc-100 dark:bg-white/5 rounded-2xl hover:bg-egypt-gold hover:text-egypt-black transition-all" title={language === 'ar' ? 'اتصال' : 'Call'}>
+                        <Phone className="w-5 h-5" />
+                      </a>
+                    ) : (
+                      <span className="p-4 bg-zinc-100 dark:bg-white/5 rounded-2xl opacity-30 cursor-not-allowed" title={language === 'ar' ? 'لا يوجد رقم متاح' : 'No number available'}>
+                        <Phone className="w-5 h-5" />
+                      </span>
+                    )}
+                    {(f.lat && f.lng) ? (
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lng}`} target="_blank" rel="noreferrer" className="p-4 bg-egypt-gold text-egypt-black rounded-2xl hover:scale-110 transition-transform" title={language === 'ar' ? 'الاتجاهات' : 'Directions'}>
+                        <Navigation className="w-5 h-5" />
+                      </a>
+                    ) : (
+                      <span className="p-4 bg-egypt-gold text-egypt-black rounded-2xl opacity-30 cursor-not-allowed" title={language === 'ar' ? 'الموقع غير متاح' : 'Location unavailable'}>
+                        <Navigation className="w-5 h-5" />
+                      </span>
+                    )}
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
         </div>
+
+        {filteredFacilities.length === 0 && !loading && (
+          <div className="p-10 text-center bg-white dark:bg-egypt-black rounded-[2.5rem] border border-zinc-100 dark:border-white/5">
+            <Hospital className="w-10 h-10 mx-auto text-zinc-300 mb-4" />
+            <p className="font-black text-zinc-400">{language === 'ar' ? 'لا توجد بيانات مرافق متاحة حالياً' : 'No facility data available right now'}</p>
+            <p className="text-xs font-bold text-zinc-400 mt-2">{language === 'ar' ? 'خدمة البحث عن المرافق غير متوفرة في الوقت الحالي - جرّب لاحقاً' : 'The facility lookup service is unavailable at the moment - try again later'}</p>
+          </div>
+        )}
 
         {/* Health Alert */}
         <div className="mt-12 p-8 bg-amber-500/10 border border-amber-500/20 rounded-[3rem] flex items-start gap-6">
