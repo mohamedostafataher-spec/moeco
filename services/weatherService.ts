@@ -5,6 +5,8 @@ export interface WeatherData {
   windSpeed: number;
   condition: string;
   aqi: number;
+  pm10: number;
+  isFallback: boolean;
   description: string;
   icon: string;
 }
@@ -14,7 +16,7 @@ export const weatherService = {
     try {
       const [weatherRes, aqiRes] = await Promise.all([
         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`),
-        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
+        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10`)
       ]).catch(err => {
         console.warn("Fetch failed, using fallback weather", err);
         return [null, null];
@@ -24,6 +26,7 @@ export const weatherService = {
 
       const weatherData = await weatherRes.json();
       const aqiData = await aqiRes.json();
+      if (aqiData.current?.us_aqi == null || aqiData.current?.pm10 == null) throw new Error("Air quality unavailable");
       
       const code = weatherData.current.weather_code;
       const condition = weatherService.getConditionFromCode(code, lang);
@@ -33,7 +36,9 @@ export const weatherService = {
         humidity: Math.round(weatherData.current.relative_humidity_2m),
         windSpeed: Math.round(weatherData.current.wind_speed_10m),
         condition: condition.label,
-        aqi: aqiData.current?.us_aqi || 50,
+        aqi: Math.round(aqiData.current.us_aqi),
+        pm10: Math.round(aqiData.current.pm10),
+        isFallback: false,
         description: condition.description,
         icon: condition.icon
       };
@@ -46,6 +51,8 @@ export const weatherService = {
         windSpeed: 12,
         condition: lang === 'ar' ? 'صافي' : 'Clear',
         aqi: 45,
+        pm10: 20,
+        isFallback: true,
         description: lang === 'ar' ? 'سماء صافية (بيانات افتراضية)' : 'Clear sky (fallback data)',
         icon: 'Sun'
       };
