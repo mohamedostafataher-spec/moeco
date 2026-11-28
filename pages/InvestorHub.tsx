@@ -11,31 +11,28 @@ import { storageService } from '../services/storageService';
 
 const InvestorHub: React.FC = () => {
   const { t, language, theme } = useApp();
-  const [globalStats, setGlobalStats] = useState({ totalUsers: 0, totalCO2: 0, valuation: 0 });
+  const [globalStats, setGlobalStats] = useState({ totalUsers: 0, totalCO2: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       const stats = await storageService.getGlobalMetrics();
-      const config = await storageService.getGlobalConfig();
-      const valuationFactor = (config as any).investorValuationFactor || 120;
-      
       setGlobalStats({
-        totalUsers: stats.totalUsers || 1,
-        totalCO2: stats.totalCO2Saved || 1500,
-        valuation: (stats.totalUsers || 1) * valuationFactor
+        totalUsers: stats.totalUsers || 0,
+        totalCO2: stats.totalCO2Saved || 0
       });
       setLoading(false);
     };
     loadData();
   }, []);
 
+  // Illustrative target scenario for the pitch — NOT actual onboarding data.
   const growthProjection = [
-    { month: 'Day 1', users: 10 },
-    { month: 'Day 5', users: 25 },
-    { month: 'Day 10', users: 80 },
-    { month: 'Day 15', users: 150 },
-    { month: 'Day 20', users: globalStats.totalUsers || 200 },
+    { month: 'Month 1', users: 100 },
+    { month: 'Month 3', users: 500 },
+    { month: 'Month 6', users: 1500 },
+    { month: 'Month 9', users: 4000 },
+    { month: 'Month 12', users: 10000 },
   ];
 
   return (
@@ -65,8 +62,8 @@ const InvestorHub: React.FC = () => {
               {language === 'ar' ? 'عرض الاستثمار' : 'View Pitch Deck'}
             </Link>
             <div className="bg-white/10 backdrop-blur-md px-8 py-5 rounded-[2rem] border border-white/10 flex flex-col justify-center">
-               <p className="text-[10px] font-black text-emerald-400 uppercase mb-1">Current Valuation</p>
-               <p className="text-2xl font-black tabular-nums">$ {globalStats.valuation.toLocaleString()}</p>
+               <p className="text-[10px] font-black text-emerald-400 uppercase mb-1">{language === 'ar' ? 'مستخدمو التطبيق الآن' : 'Live App Users'}</p>
+               <p className="text-2xl font-black tabular-nums">{globalStats.totalUsers.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -77,7 +74,7 @@ const InvestorHub: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
          {[
            { icon: TrendingUp, label: "Market Scalability", value: 'High', sub: 'Ready for Global Expansion' },
-           { icon: Users, label: "Active User Base", value: String(globalStats.totalUsers), sub: 'Verified via Supabase Cloud' },
+           { icon: Users, label: "Active User Base", value: String(globalStats.totalUsers), sub: 'Live count from the app' },
            { icon: Coins, label: "Eco-Economy Vol.", value: `${globalStats.totalCO2.toFixed(1)} kg`, sub: 'Real Impact Tracked' }
          ].map((item, i) => (
            <div key={i} className={`p-10 rounded-[3rem] border shadow-xl transition-all ${
@@ -103,19 +100,20 @@ const InvestorHub: React.FC = () => {
              <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100">
                 <p className="text-stone-500 text-sm leading-relaxed">
                   {language === 'ar' 
-                    ? 'يعتمد نموذج التمويل المستدام لدينا على تفعيل المساهمات من خلال الإعلانات داخل التطبيق (Rewarded Ads) حيث يحقق كل مستخدم متوسط عائد لدعم البيئة قدره 1.5 دولار شهرياً.'
-                    : 'Our sustainable funding model is based on contributions through Rewarded Ads where each user generates an average of $1.5/month for environmental support.'}
+                    ? 'يعتمد نموذج التمويل المستدام لدينا على المساهمات من خلال الإعلانات داخل التطبيق (Rewarded Ads)، ونستهدف متوسط عائد قدره 1.5 دولار شهرياً لكل مستخدم نشط لدعم البيئة.'
+                    : 'Our sustainable funding model relies on Rewarded Ads, targeting an average of $1.5/month per active user for environmental support.'}
                 </p>
              </div>
              <div className="flex gap-4 items-center p-4 bg-emerald-50 rounded-2xl">
                 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                <span className="font-black text-emerald-900 text-sm">Verified Data via Supabase Backend</span>
+                <span className="font-black text-emerald-900 text-sm">{language === 'ar' ? 'بيانات مباشرة من التطبيق' : 'Live data from the app'}</span>
              </div>
            </div>
         </div>
 
         <div className="flex-1 h-[300px] sm:h-[400px]">
-           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-6">Real-time User Onboarding (Verified)</p>
+           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">{language === 'ar' ? 'سيناريو النمو المستهدف' : 'Target Growth Scenario'}</p>
+           <p className="text-[10px] font-bold text-stone-400 mb-6">{language === 'ar' ? 'توقع توضيحي للعرض الاستثماري — ليس بيانات فعلية' : 'Illustrative projection for the pitch, not actual data'}</p>
            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growthProjection}>
                 <defs>
