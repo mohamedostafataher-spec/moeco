@@ -8,6 +8,7 @@ import 'package:moeco/services/weather_service.dart';
 import 'package:moeco/services/services_data.dart';
 import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
+import 'package:moeco/services/error_log_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
@@ -384,5 +385,15 @@ void main() {
     expect(parsed.first.egyptRelevant, isTrue);
     // Corrupt cache is reported, never thrown
     expect(GlobalEventsService.tryParseCache('not json'), isNull);
+  });
+
+  test('F15: error log entries round-trip and format for sharing', () {
+    final e = ErrorLogEntry(DateTime.utc(2026, 11, 28, 12), 'boom', 'line1');
+    final back = ErrorLogEntry.fromJson(e.toJson());
+    expect(back.message, 'boom');
+    expect(back.stackSummary, 'line1');
+    final share = ErrorLogService.formatForShare([back]);
+    expect(share.contains('boom'), isTrue);
+    expect(share.contains('1 entries'), isTrue);
   });
 }
