@@ -23,6 +23,7 @@ import {
   ReportCategory,
 } from '../services/civicActionService';
 import { notificationService } from '../services/notificationService';
+import { useApp } from '../context/AppContext';
 
 interface MonitorMetrics {
   totalReports: number;
@@ -35,11 +36,11 @@ interface MonitorMetrics {
   hasDemoData: boolean;
 }
 
-const INITIATIVE_STATUS_AR: Record<LocalInitiative['status'], { label: string; cls: string }> = {
-  proposed: { label: 'مقترحة', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
-  coordinating: { label: 'قيد التنسيق', cls: 'bg-sky-500/15 text-sky-300 border-sky-400/40' },
-  in_progress: { label: 'قيد التنفيذ', cls: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/40' },
-  verified: { label: 'تم التحقق', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
+const INITIATIVE_STATUS_AR: Record<LocalInitiative['status'], { label: string; labelEn: string; cls: string }> = {
+  proposed: { label: 'مقترحة', labelEn: 'Proposed', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
+  coordinating: { label: 'قيد التنسيق', labelEn: 'Coordinating', cls: 'bg-sky-500/15 text-sky-300 border-sky-400/40' },
+  in_progress: { label: 'قيد التنفيذ', labelEn: 'In progress', cls: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/40' },
+  verified: { label: 'تم التحقق', labelEn: 'Verified', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
 };
 
 const INITIATIVE_CAT_ICON: Record<LocalInitiative['category'], React.FC<{ className?: string }>> = {
@@ -50,6 +51,8 @@ const INITIATIVE_CAT_ICON: Record<LocalInitiative['category'], React.FC<{ classN
 };
 
 const LocalMonitor: React.FC = () => {
+  const { language } = useApp();
+  const ar = language === 'ar';
   const [includeDemo, setIncludeDemo] = useState(true);
   const [metrics, setMetrics] = useState<MonitorMetrics | null>(null);
   const [initiatives, setInitiatives] = useState<LocalInitiative[]>([]);
@@ -68,7 +71,7 @@ const LocalMonitor: React.FC = () => {
       setInitiatives(inits);
     } catch (e) {
       console.error('LocalMonitor load error:', e);
-      setError('تعذر تحميل مؤشرات المتابعة المحلية حالياً.');
+      setError(ar ? 'تعذر تحميل مؤشرات المتابعة المحلية حالياً.' : 'Could not load local monitoring metrics right now.');
     } finally {
       setLoading(false);
     }
@@ -83,8 +86,8 @@ const LocalMonitor: React.FC = () => {
     setInitiatives(updated);
     notificationService.success(
       currentlyJoined
-        ? `تم إلغاء انضمامك إلى «${title}»`
-        : `تم تسجيل انضمامك إلى «${title}» (تجريبي محلياً)`
+        ? (ar ? `تم إلغاء انضمامك إلى «${title}»` : `You left "${title}"`)
+        : (ar ? `تم تسجيل انضمامك إلى «${title}» (تجريبي محلياً)` : `You joined "${title}" (demo, local only)`)
     );
   };
 
@@ -92,7 +95,7 @@ const LocalMonitor: React.FC = () => {
   const maxRegionCount = Math.max(1, ...(metrics?.byRegionList.map((r) => r.count) || [1]));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir="rtl">
+    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir={ar ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -102,15 +105,17 @@ const LocalMonitor: React.FC = () => {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-black text-white">لوحة المتابعة المحلية</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-white">{ar ? 'لوحة المتابعة المحلية' : 'Local monitoring dashboard'}</h1>
                 {(includeDemo || metrics?.hasDemoData) && (
                   <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/40">
-                    بيانات تجريبية مدمجة
+                    {ar ? 'بيانات تجريبية مدمجة' : 'Includes demo data'}
                   </span>
                 )}
               </div>
               <p className="text-sm text-slate-300 mt-1">
-                مؤشرات مجمّعة للبلاغات والمبادرات المحلية دون عرض أي بيانات شخصية أو مواقع دقيقة للمواطنين.
+                {ar
+                  ? 'مؤشرات مجمّعة للبلاغات والمبادرات المحلية دون عرض أي بيانات شخصية أو مواقع دقيقة للمواطنين.'
+                  : 'Aggregated metrics for local reports and initiatives, with no personal data or precise citizen locations shown.'}
               </p>
             </div>
           </div>
@@ -119,7 +124,7 @@ const LocalMonitor: React.FC = () => {
             to="/eco-watch"
             className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
           >
-            <span>تقديم بلاغ بيئي</span>
+            <span>{ar ? 'تقديم بلاغ بيئي' : 'Submit an environmental report'}</span>
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </div>
@@ -129,10 +134,12 @@ const LocalMonitor: React.FC = () => {
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-              تُحسب الأرقام التالية مباشرةً من سجلات البلاغات المحفوظة في التطبيق. عند تفعيل وضع «بلاغات المستخدمين فقط» تُستبعد العينات التجريبية الأولية ولا تُختلق أي نسب أو مدد استجابة غير مسجلة.
+              {ar
+                ? 'تُحسب الأرقام التالية مباشرةً من سجلات البلاغات المحفوظة في التطبيق. عند تفعيل وضع «بلاغات المستخدمين فقط» تُستبعد العينات التجريبية الأولية ولا تُختلق أي نسب أو مدد استجابة غير مسجلة.'
+                : 'The numbers below are computed directly from report records saved in the app. In "user reports only" mode the initial demo samples are excluded, and no ratios or response times are invented.'}
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0" role="group" aria-label="تصفية مصدر البيانات">
+          <div className="flex items-center gap-2 shrink-0" role="group" aria-label={ar ? 'تصفية مصدر البيانات' : 'Filter data source'}>
             <button
               type="button"
               onClick={() => setIncludeDemo(true)}
@@ -143,7 +150,7 @@ const LocalMonitor: React.FC = () => {
               }`}
             >
               <Filter className="w-3.5 h-3.5 inline ml-1.5" />
-              شامل البيانات التجريبية
+              {ar ? 'شامل البيانات التجريبية' : 'Including demo data'}
             </button>
             <button
               type="button"
@@ -154,7 +161,7 @@ const LocalMonitor: React.FC = () => {
                   : 'bg-slate-900 text-slate-400 border-white/10 hover:text-white'
               }`}
             >
-              بلاغات المستخدمين فقط
+              {ar ? 'بلاغات المستخدمين فقط' : 'User reports only'}
             </button>
           </div>
         </div>
@@ -176,59 +183,59 @@ const LocalMonitor: React.FC = () => {
       ) : metrics ? (
         <>
           {/* KPI Summary Cards */}
-          <section aria-label="ملخص المؤشرات المجمعة" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <section aria-label={ar ? 'ملخص المؤشرات المجمعة' : 'Aggregated metrics summary'} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-5 space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
-                <span>إجمالي البلاغات المجمّعة</span>
+                <span>{ar ? 'إجمالي البلاغات المجمّعة' : 'Total aggregated reports'}</span>
                 <BarChart3 className="w-4 h-4 text-emerald-400" />
               </div>
               <p className="text-3xl font-black text-white tabular-nums">{metrics.totalReports}</p>
               <span className="inline-block text-[11px] font-bold text-slate-400">
-                {includeDemo ? 'تقديري / يتضمن عينات تجريبية' : 'مسجل من المستخدمين'}
+                {includeDemo ? (ar ? 'تقديري / يتضمن عينات تجريبية' : 'Estimated / includes demo samples') : (ar ? 'مسجل من المستخدمين' : 'Recorded from users')}
               </span>
             </div>
 
             <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-5 space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
-                <span>بلاغات مفتوحة</span>
+                <span>{ar ? 'بلاغات مفتوحة' : 'Open reports'}</span>
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
               </div>
               <p className="text-3xl font-black text-amber-300 tabular-nums">{metrics.openCount}</p>
               <span className="inline-block text-[11px] text-slate-400">
-                تشمل: تم الاستلام، قيد المراجعة، أُحيل لشريك
+                {ar ? 'تشمل: تم الاستلام، قيد المراجعة، أُحيل لشريك' : 'Includes: received, under review, referred to a partner'}
               </span>
             </div>
 
             <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-5 space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
-                <span>بلاغات مغلقة</span>
+                <span>{ar ? 'بلاغات مغلقة' : 'Closed reports'}</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               </div>
               <p className="text-3xl font-black text-emerald-300 tabular-nums">{metrics.closedCount}</p>
               <span className="inline-block text-[11px] text-slate-400">
-                تم التحقق من الحل أو تعذّر التحقق
+                {ar ? 'تم التحقق من الحل أو تعذّر التحقق' : 'Resolution verified or unverifiable'}
               </span>
             </div>
 
             <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-5 space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
-                <span>متوسط زمن الاستجابة</span>
+                <span>{ar ? 'متوسط زمن الاستجابة' : 'Average response time'}</span>
                 <Clock className="w-4 h-4 text-sky-400" />
               </div>
               {metrics.hasResponseTimestamps && metrics.avgResponseHours !== null ? (
                 <>
                   <p className="text-3xl font-black text-sky-300 tabular-nums">
-                    {metrics.avgResponseHours} <span className="text-sm font-bold">ساعة</span>
+                    {metrics.avgResponseHours} <span className="text-sm font-bold">{ar ? 'ساعة' : 'hours'}</span>
                   </p>
                   <span className="inline-block text-[11px] text-emerald-400">
-                    محسوب من طوابع الاستجابة الفعلية
+                    {ar ? 'محسوب من طوابع الاستجابة الفعلية' : 'Computed from actual response timestamps'}
                   </span>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-black text-slate-300">غير متوفر حالياً</p>
+                  <p className="text-lg font-black text-slate-300">{ar ? 'غير متوفر حالياً' : 'Not available yet'}</p>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    لا توجد طوابع زمنية فعلية لاستجابة الجهات بعد؛ لن نعرض رقماً افتراضياً.
+                    {ar ? 'لا توجد طوابع زمنية فعلية لاستجابة الجهات بعد؛ لن نعرض رقماً افتراضياً.' : 'No actual authority-response timestamps yet; we will not show a placeholder number.'}
                   </p>
                 </>
               )}
@@ -239,9 +246,11 @@ const LocalMonitor: React.FC = () => {
           {metrics.totalReports === 0 ? (
             <div className="bg-slate-900/70 border border-white/10 rounded-3xl p-10 text-center space-y-3">
               <Info className="w-10 h-10 text-slate-400 mx-auto" />
-              <h2 className="text-lg font-black text-white">لا توجد بلاغات مسجلة من المستخدمين بعد</h2>
+              <h2 className="text-lg font-black text-white">{ar ? 'لا توجد بلاغات مسجلة من المستخدمين بعد' : 'No user reports recorded yet'}</h2>
               <p className="text-sm text-slate-400 max-w-md mx-auto">
-                أضف بلاغك الأول من قسم «بلاغ بيئي» أو فعّل عرض البيانات التجريبية لمعاينة التوزيع.
+                {ar
+                  ? 'أضف بلاغك الأول من قسم «بلاغ بيئي» أو فعّل عرض البيانات التجريبية لمعاينة التوزيع.'
+                  : 'Add your first report from Eco Watch, or enable demo data to preview the distribution.'}
               </p>
             </div>
           ) : (
@@ -249,8 +258,8 @@ const LocalMonitor: React.FC = () => {
               {/* By Category */}
               <section className="bg-slate-900/70 border border-white/10 rounded-3xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-white">أكثر المشكلات تكراراً حسب النوع</h2>
-                  <span className="text-xs font-bold text-slate-400">إجمالي: {metrics.totalReports}</span>
+                  <h2 className="text-lg font-black text-white">{ar ? 'أكثر المشكلات تكراراً حسب النوع' : 'Most frequent issues by type'}</h2>
+                  <span className="text-xs font-bold text-slate-400">{ar ? 'إجمالي' : 'Total'}: {metrics.totalReports}</span>
                 </div>
                 <div className="space-y-3">
                   {metrics.topIssues.map((item) => {
@@ -259,9 +268,9 @@ const LocalMonitor: React.FC = () => {
                     return (
                       <div key={item.category} className="space-y-1.5">
                         <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="text-slate-200">{item.label}</span>
+                          <span className="text-slate-200">{ar ? item.label : (REPORT_CATEGORY_META[item.category]?.labelEn || item.label)}</span>
                           <span className={`${meta?.color || 'text-emerald-400'} tabular-nums`}>
-                            {item.count} بلاغ
+                            {item.count} {ar ? 'بلاغ' : 'reports'}
                           </span>
                         </div>
                         <div className="h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/5">
@@ -279,11 +288,13 @@ const LocalMonitor: React.FC = () => {
               {/* By Governorate */}
               <section className="bg-slate-900/70 border border-white/10 rounded-3xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-white">التوزيع الجغرافي العام (حسب المحافظة)</h2>
+                  <h2 className="text-lg font-black text-white">{ar ? 'التوزيع الجغرافي العام (حسب المحافظة)' : 'General geographic distribution (by governorate)'}</h2>
                   <MapPin className="w-5 h-5 text-sky-400" />
                 </div>
                 <p className="text-xs text-slate-400">
-                  يُعرض التوزيع على مستوى المحافظة فقط لحماية خصوصية المواقع الفردية.
+                  {ar
+                    ? 'يُعرض التوزيع على مستوى المحافظة فقط لحماية خصوصية المواقع الفردية.'
+                    : 'Distribution is shown at governorate level only, to protect individual location privacy.'}
                 </p>
                 <div className="space-y-3">
                   {metrics.byRegionList.map((reg) => {
@@ -292,7 +303,7 @@ const LocalMonitor: React.FC = () => {
                       <div key={reg.region} className="space-y-1.5">
                         <div className="flex items-center justify-between text-xs font-bold">
                           <span className="text-slate-200">{reg.region}</span>
-                          <span className="text-sky-400 tabular-nums">{reg.count} بلاغ</span>
+                          <span className="text-sky-400 tabular-nums">{reg.count} {ar ? 'بلاغ' : 'reports'}</span>
                         </div>
                         <div className="h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/5">
                           <div
@@ -312,13 +323,15 @@ const LocalMonitor: React.FC = () => {
           <section className="bg-slate-900/70 border border-white/10 rounded-3xl p-6 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-black text-white">المبادرات المحلية القابلة للانضمام</h2>
+                <h2 className="text-xl font-black text-white">{ar ? 'المبادرات المحلية القابلة للانضمام' : 'Local initiatives you can join'}</h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  مبادرات مجتمعية تجريبية لتنظيم العمل التطوعي على مستوى الحي والمنطقة.
+                  {ar
+                    ? 'مبادرات مجتمعية تجريبية لتنظيم العمل التطوعي على مستوى الحي والمنطقة.'
+                    : 'Demo community initiatives for organizing volunteer work at neighborhood and district level.'}
                 </p>
               </div>
               <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/40">
-                نماذج مبادرات تجريبية
+                {ar ? 'نماذج مبادرات تجريبية' : 'Demo initiative samples'}
               </span>
             </div>
 
@@ -337,7 +350,7 @@ const LocalMonitor: React.FC = () => {
                           <Icon className="w-5 h-5" />
                         </div>
                         <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${st.cls}`}>
-                          {st.label}
+                          {ar ? st.label : st.labelEn}
                         </span>
                       </div>
 
@@ -351,13 +364,13 @@ const LocalMonitor: React.FC = () => {
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Users className="w-3.5 h-3.5 text-emerald-400" />
-                          {init.participantsCount} مشارك
+                          {init.participantsCount} {ar ? 'مشارك' : 'participants'}
                         </span>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-slate-500">تحديث: {init.lastUpdated}</span>
+                      <span className="text-[10px] text-slate-500">{ar ? 'تحديث' : 'Updated'}: {init.lastUpdated}</span>
                       <button
                         type="button"
                         onClick={() => handleToggleInitiative(init.id, init.title, init.joinedByMe)}
@@ -366,9 +379,9 @@ const LocalMonitor: React.FC = () => {
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/40'
                             : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
                         }`}
-                        aria-label={init.joinedByMe ? `إلغاء الانضمام إلى ${init.title}` : `انضمام إلى ${init.title}`}
+                        aria-label={init.joinedByMe ? (ar ? `إلغاء الانضمام إلى ${init.title}` : `Leave ${init.title}`) : (ar ? `انضمام إلى ${init.title}` : `Join ${init.title}`)}
                       >
-                        {init.joinedByMe ? 'منضم (اضغط للإلغاء)' : 'انضم للمبادرة'}
+                        {init.joinedByMe ? (ar ? 'منضم (اضغط للإلغاء)' : 'Joined (tap to leave)') : (ar ? 'انضم للمبادرة' : 'Join initiative')}
                       </button>
                     </div>
                   </article>
@@ -379,7 +392,9 @@ const LocalMonitor: React.FC = () => {
             <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-950/50 border border-white/5 rounded-xl p-3">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>
-                يُستخدم الانضمام إلى المبادرات المحلية كأحد شروط التحقق في قسم «التحديات والأثر الحقيقي».
+                {ar
+                  ? 'يُستخدم الانضمام إلى المبادرات المحلية كأحد شروط التحقق في قسم «التحديات والأثر الحقيقي».'
+                  : 'Joining local initiatives counts toward verification in the Challenges & Real Impact section.'}
               </span>
             </div>
           </section>
