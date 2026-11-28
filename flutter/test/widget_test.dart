@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moeco/strings.dart';
 import 'package:moeco/screens/metro_screen.dart';
 import 'package:moeco/services/air_quality.dart';
+import 'package:moeco/services/recycling_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -34,6 +35,28 @@ void main() {
     expect(AirQualityService.worst(const []), isNull);
     // No alert bands: worst at exactly 100 stays below the sensitive alert.
     expect(AirQualityService.worst([r('Cairo', 100)])!.aqi, 100);
+  });
+
+  test('recycling parser keeps named points with coordinates', () {
+    final elements = [
+      {
+        'type': 'node',
+        'lat': 30.05,
+        'lon': 31.24,
+        'tags': {'name': 'Green Point', 'recycling:plastic': 'yes', 'recycling:paper': 'yes'},
+      },
+      {
+        'type': 'way',
+        'center': {'lat': 31.2, 'lon': 29.9},
+        'tags': {'recycling_type': 'container'},
+      },
+      {'type': 'node', 'tags': {'name': 'No coords'}},
+    ];
+    final pts = RecyclingService.parseElements(elements);
+    expect(pts.length, 2);
+    expect(pts.first.name, 'Green Point');
+    expect(pts.first.materials, containsAll(['plastic', 'paper']));
+    expect(pts[1].name, 'container');
   });
 
   test('metro subscriptions are zone-based and ascending', () {
