@@ -163,12 +163,17 @@ extension GreenTrips on FootprintStore {
   Future<void> addGreenTrip({
     required String mode,
     required double km,
+    // What the trip replaced: 'car' (default), 'metro' or 'microbus'.
+    // Used for the EGP-saved estimate; trips logged before this field
+    // existed are treated as car trips.
+    String instead = 'car',
   }) async {
     final items = _readList(_kTrips);
     items.add({
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
       'mode': mode,
       'km': km,
+      'instead': instead,
       'createdAt': DateTime.now().toIso8601String(),
     });
     await _writeList(_kTrips, items);
@@ -183,5 +188,37 @@ extension GreenTrips on FootprintStore {
       0, (sum, e) => sum + ((e['km'] as num?)?.toDouble() ?? 0));
 
   double get greenTripCo2SavedKg => greenTripTotalKm * co2PerCarKm;
+
+  /// Rough EGP saved vs the transport the trip replaced. Honest
+  /// approximation, labeled as تقديري in the UI: car ~3 EGP/km (fuel +
+  /// wear), metro ~12 EGP/ride, microbus ~10 EGP/ride.
+  static const carCostPerKm = 3.0;
+  static const metroTripCost = 12.0;
+  static const microbusTripCost = 10.0;
+
+  static double tripEgpSaved(Map<String, dynamic> trip) {
+    final instead = trip['instead'] as String? ?? 'car';
+    final km = (trip['km'] as num?)?.toDouble() ?? 0;
+    switch (instead) {
+      case 'metro':
+        return metroTripCost;
+      case 'microbus':
+        return microbusTripCost;
+      default:
+        return km * carCostPerKm;
+    }
+  }
+
+  double get greenTripEgpSaved =>
+      greenTrips.fold<double>(0, (sum, t) => sum + GreenTrips.tripEgpSaved(t));
+
+  /// EGP saved this calendar month only.
+  double greenTripEgpSavedThisMonth(DateTime now) {
+    final prefix =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    return greenTrips
+        .where((t) => (t['createdAt'] as String? ?? '').startsWith(prefix))
+        .fold<double>(0, (sum, t) => sum + GreenTrips.tripEgpSaved(t));
+  }
 }
 
