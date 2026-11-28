@@ -334,11 +334,22 @@ class S {
   String get climateSource => ar
       ? 'المصدر: Open-Meteo (إعادة تحليل ERA5). أرقام تقديرية للتوعية، مش بديل عن تقارير الأرصاد الرسمية.'
       : 'Source: Open-Meteo (ERA5 reanalysis). Estimates for awareness, not a substitute for official met reports.';
-  // Complaints: copy helpers
-  String get compCopy => ar ? 'نسخ الشكوى' : 'Copy complaint';
-  String get compCopied => ar
-      ? 'اتنسخت! الصقها في القناة الرسمية المناسبة'
-      : 'Copied! Paste it into the right official channel';
+  // Onboarding (first run)
+  String get onbSkip => ar ? 'تخطي' : 'Skip';
+  String get onbNext => ar ? 'التالي' : 'Next';
+  String get onbStart => ar ? 'ابدأ' : 'Get started';
+  String get onbTitle1 => ar ? 'بصمتك اليومية في ٣٠ ثانية' : 'Your daily footprint in 30 seconds';
+  String get onbBody1 => ar
+      ? 'سجّل مواصلاتك وكهربتك وأكلك كل يوم، وشوف أثرك التقريبي بالأرقام والرسوم. القيم تقديرات للتوعية من مصادر موثقة.'
+      : 'Log your transport, electricity and food each day and see your approximate impact in numbers and charts. Values are awareness estimates from verified sources.';
+  String get onbTitle2 => ar ? 'شكاويك منظمة، وتتقدم بنفسك' : 'Your complaints, organized and submitted by you';
+  String get onbBody2 => ar
+      ? 'جهّز مسودة شكواك على جهازك، انسخها جاهزة، وقدّمها بنفسك في القناة الرسمية الموثقة. التطبيق لا يرسل أي شكوى نيابة عنك.'
+      : 'Prepare your complaint draft on your device, copy it ready-made, and submit it yourself through the verified official channel. The app never submits complaints for you.';
+  String get onbTitle3 => ar ? 'بياناتك على جهازك أولًا' : 'Your data stays on your device first';
+  String get onbBody3 => ar
+      ? 'سجلاتك ومسوداتك تُحفظ محليًا على هاتفك. لا حساب إجباري، ولا بيانات تخرج من جهازك في هذه النسخة.'
+      : 'Your logs and drafts are stored locally on your phone. No mandatory account, and nothing leaves your device in this version.';
 
   String get version => '0.2.0';
 }
