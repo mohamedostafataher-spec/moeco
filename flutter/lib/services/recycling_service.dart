@@ -123,7 +123,8 @@ class RecyclingService {
   static List<RecyclingPoint> parseElements(List<dynamic> elements) {
     final out = <RecyclingPoint>[];
     for (final e in elements.whereType<Map>()) {
-      final tags = e['tags'] is Map ? Map<String, dynamic>.from(e['tags']) : {};
+      final Map<String, dynamic> tags =
+          e['tags'] is Map ? Map<String, dynamic>.from(e['tags']) : {};
       double? lat = (e['lat'] as num?)?.toDouble();
       double? lon = (e['lon'] as num?)?.toDouble();
       final center = e['center'];
