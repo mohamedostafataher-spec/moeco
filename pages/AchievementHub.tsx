@@ -255,7 +255,7 @@ const AchievementHub: React.FC = () => {
                     {tab === 'real_impact' ? <Shield size={14} /> : tab === 'missions' ? <Target size={14} /> : tab === 'challenges' ? <Award size={14} /> : tab === 'leaderboard' ? <Trophy size={14} /> : <Sword size={14} />}
                     <span>
                       {tab === 'real_impact'
-                        ? 'تحديات الأثر الحقيقي'
+                        ? (isRtl ? 'تحديات الأثر الحقيقي' : 'Real Impact')
                         : tab === 'missions'
                           ? (isRtl ? 'مهمات' : 'Missions')
                           : tab === 'challenges'
