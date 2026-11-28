@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { Link } from 'react-router-dom';
 import { 
   BarChart3, PieChart, TrendingUp, Users, ShieldCheck, Zap, 
   Target, Rocket, Coins, Briefcase, Globe, ArrowUpRight, CheckCircle2, DollarSign 
@@ -59,10 +60,10 @@ const InvestorHub: React.FC = () => {
               : 'MoEco is a massive data engine connecting green consumer behavior with sustainable ad-revenue streams.'}
           </p>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-emerald-400 text-black px-10 py-5 rounded-[2rem] font-black text-lg flex items-center gap-3 hover:scale-105 transition-transform shadow-2xl">
+            <Link to="/presentation" className="bg-emerald-400 text-black px-10 py-5 rounded-[2rem] font-black text-lg flex items-center gap-3 hover:scale-105 transition-transform shadow-2xl">
               <Briefcase className="w-6 h-6" />
-              {language === 'ar' ? 'طلب عرض الاستثمار' : 'Request Pitch Deck'}
-            </button>
+              {language === 'ar' ? 'عرض الاستثمار' : 'View Pitch Deck'}
+            </Link>
             <div className="bg-white/10 backdrop-blur-md px-8 py-5 rounded-[2rem] border border-white/10 flex flex-col justify-center">
                <p className="text-[10px] font-black text-emerald-400 uppercase mb-1">Current Valuation</p>
                <p className="text-2xl font-black tabular-nums">$ {globalStats.valuation.toLocaleString()}</p>
