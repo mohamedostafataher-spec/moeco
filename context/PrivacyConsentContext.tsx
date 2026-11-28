@@ -145,7 +145,7 @@ export const PrivacyConsentProvider: React.FC<{ children: React.ReactNode }> = (
           if (error || !data?.user) {
             return {
               ok: false,
-              error: formatالخادمErrorAr(error || new Error('تعذر إنشاء جلسة مجهولة')),
+              error: formatSupabaseErrorAr(error || new Error('تعذر إنشاء جلسة مجهولة')),
             };
           }
           currentUser = data.user;
