@@ -156,8 +156,8 @@ export const ConsentGateModal: React.FC = () => {
           <ul className="list-disc list-inside space-y-1.5">
             <li>
               {isRtl
-                ? <>تُحفظ قراءاتك المنزلية، ومسودات الشكاوى، وملاحظاتك في قاعدة بيانات MoEco على <strong>الخادم</strong> بحيث تقتصر قراءتها وتعديلها وحذفها على جلستك فقط (RLS).</>
-                : <>Your home readings, complaint drafts, and notes are saved in the MoEco database on the <strong>server</strong>, readable, editable, and deletable only by your session (RLS).</>}
+                ? <>تُحفظ قراءاتك المنزلية، ومسودات الشكاوى، وملاحظاتك في قاعدة بيانات MoEco على <strong>الخادم</strong> بحيث تقتصر قراءتها وتعديلها وحذفها على جلستك فقط.</>
+                : <>Your home readings, complaint drafts, and notes are saved in the MoEco database on the <strong>server</strong>, readable, editable, and deletable only by your session.</>}
             </li>
             <li>
               {isRtl
