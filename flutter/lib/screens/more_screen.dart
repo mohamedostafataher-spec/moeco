@@ -8,6 +8,7 @@ import 'climate_screen.dart';
 import 'fuel_screen.dart';
 import 'utilities_screen.dart';
 import 'news_screen.dart';
+import 'trips_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -131,6 +132,10 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.article_outlined, s.newsHeroTitle,
                   s.newsHeroSub, NewsScreen(s: s)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.directions_walk, s.tripsHeroTitle,
+                  s.tripsHeroSub,
+                  TripsScreen(s: s, store: store, onChanged: onChanged)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
