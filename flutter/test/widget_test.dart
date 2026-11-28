@@ -4,6 +4,7 @@ import 'package:moeco/screens/metro_screen.dart';
 import 'package:moeco/services/air_quality.dart';
 import 'package:moeco/services/recycling_service.dart';
 import 'package:moeco/services/metro_data.dart';
+import 'package:moeco/services/weather_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -60,6 +61,48 @@ void main() {
     expect(pts[1].name, 'container');
   });
 
+  test('national weather alerts derive from forecasts with honest thresholds', () {
+    CityForecast fc(String city,
+            {double temp = 30,
+            double maxT = 33,
+            double minT = 18,
+            double wind = 10,
+            int code = 1}) =>
+        CityForecast(
+            cityAr: city,
+            cityEn: city,
+            temp: temp,
+            maxTemp: maxT,
+            minTemp: minT,
+            windKmh: wind,
+            code: code);
+    // Calm day: no alerts at all.
+    expect(NationalWeatherAlerts.deriveAlerts([fc('Cairo')]), isEmpty);
+    // Extreme heat threshold and ordering: storm first, then heat, then cold.
+    final alerts = NationalWeatherAlerts.deriveAlerts([
+      fc('Aswan', maxT: 43),
+      fc('Cairo', code: 95),
+      fc('Alexandria', minT: 3),
+      fc('Luxor', maxT: 38),
+      fc('Suez', wind: 55),
+      fc('Tanta', code: 63),
+    ]);
+    expect(alerts.map((a) => a.kind).toList(), [
+      WeatherAlertKind.storm,
+      WeatherAlertKind.extremeHeat,
+      WeatherAlertKind.heat,
+      WeatherAlertKind.wind,
+      WeatherAlertKind.rain,
+      WeatherAlertKind.cold,
+    ]);
+    expect(alerts.first.cityEn, 'Cairo');
+    expect(alerts[1].value, 43);
+    // 41 degrees is heat, not extreme; 37 is no alert.
+    final mid = NationalWeatherAlerts.deriveAlerts(
+        [fc('Giza', maxT: 41), fc('Mansoura', maxT: 37)]);
+    expect(mid.single.kind, WeatherAlertKind.heat);
+  });
+
   test('metro trip planner counts stops and fares, with transfers', () {
     // Same line: Helwan (L1 #0) to Sadat (L1 #8) = 8 stops -> 10 EGP.
     final direct = planMetroTrip(0, 0, 0, 8);
@@ -72,8 +115,9 @@ void main() {
     expect(transfer.stops, 12);
     expect(transfer.fare, 12.0);
     expect(transfer.transferEn, 'Nasser');
-    // Fare bands: 24 stops crosses into the 15 EGP band.
-    expect(metroFareForStops(24), 15.0);
+    // Fare bands: 23 stops is the top of the 15 EGP band, 24 crosses into 20.
+    expect(metroFareForStops(23), 15.0);
+    expect(metroFareForStops(24), 20.0);
     expect(metroFareForStops(40), 20.0);
   });
 
