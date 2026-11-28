@@ -137,7 +137,7 @@ const DigitalGov: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-colors"
                 >
                   <FileText className="w-4 h-4" />
-                  <span>الانتقال إلى «شكواي ما تضيعش»</span>
+                  <span>{isRtl ? 'الانتقال إلى «شكواي ما تضيعش»' : 'Go to the complaint assistant'}</span>
                 </Link>
               </div>
             </div>
@@ -205,7 +205,7 @@ const DigitalGov: React.FC = () => {
               className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-colors"
             >
               <Building2 className="w-4 h-4" />
-              <span>فتح «مشروعي في منطقتي»</span>
+              <span>{isRtl ? 'فتح «مشروعي في منطقتي»' : 'Open My Local Project'}</span>
             </Link>
           </div>
 
@@ -226,7 +226,7 @@ const DigitalGov: React.FC = () => {
                     {req.service?.name_ar || req.service_id || 'طلب خدمة'}
                   </span>
                   <span className="px-2.5 py-1 rounded-md bg-white border border-slate-200 font-bold text-slate-700">
-                    {req.status || 'محفوظ'}
+                    {req.status || (isRtl ? 'محفوظ' : 'Saved')}
                   </span>
                 </div>
               ))}
@@ -259,7 +259,7 @@ const DigitalGov: React.FC = () => {
                 to="/methodology"
                 className="min-h-[40px] inline-flex items-center gap-1.5 text-emerald-700 font-bold underline"
               >
-                <span>مراجعة صفحة المنهجية والشفافية</span>
+                <span>{isRtl ? 'مراجعة صفحة المنهجية والشفافية' : 'Review the methodology & transparency page'}</span>
               </Link>
             </div>
           </div>
