@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Login: React.FC = () => {
   const { setUser, language, theme, t } = useApp();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'forgot'>('login');
+  const [mode, setMode] = useState<'login' | 'forgot' | 'recovery'>('login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,6 +36,19 @@ const Login: React.FC = () => {
     checkSupabase();
   }, []);
 
+  // Supabase puts the recovery token in the URL hash; the client emits
+  // PASSWORD_RECOVERY once it consumes it. Land the user on the reset form.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('recovery');
+        setError('');
+        setSuccess('');
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -51,6 +64,16 @@ const Login: React.FC = () => {
           setSuccess(isRtl ? "تم تسجيل الدخول بنجاح!" : "Logged in successfully!");
           setTimeout(() => navigate('/dashboard'), 800);
         }
+      } else if (mode === 'recovery') {
+        if (password.trim().length < 6) {
+          throw new Error(isRtl ? 'كلمة المرور لازم تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+        }
+        const { error: updateError } = await supabase.auth.updateUser({ password: password.trim() });
+        if (updateError) throw updateError;
+        notificationService.success(isRtl ? 'تم تحديث كلمة المرور!' : 'Password updated!');
+        setSuccess(isRtl ? 'تم تحديث كلمة المرور! سجّل دخولك بها الآن.' : 'Password updated! Log in with it now.');
+        setPassword('');
+        setTimeout(() => setMode('login'), 2500);
       } else {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/login`,
@@ -154,12 +177,14 @@ const Login: React.FC = () => {
 
             <div className="mb-10 text-center lg:text-start">
               <h2 className="text-3xl lg:text-4xl font-black mb-3 text-slate-800 dark:text-white font-arabic">
-                {mode === 'login' ? t('welcomeBack') : (isRtl ? 'استعادة الحساب' : 'Reset Access')}
+                {mode === 'login' ? t('welcomeBack') : mode === 'recovery' ? (isRtl ? 'كلمة مرور جديدة' : 'New Password') : (isRtl ? 'استعادة الحساب' : 'Reset Access')}
               </h2>
               <p className="text-slate-500 font-bold">
                 {mode === 'login' 
                   ? (isRtl ? 'قم بتسجيل الدخول للوصول إلى لوحة التحكم الخاصة بك.' : 'Log in to access your intelligent eco-dashboard.') 
-                  : (isRtl ? 'أدخل بريدك الإلكتروني وسنرسل لك رابط الاستعادة.' : 'Enter your email to receive recovery instructions.')}
+                  : mode === 'recovery'
+                    ? (isRtl ? 'اكتب كلمة المرور الجديدة لحسابك.' : 'Type the new password for your account.')
+                    : (isRtl ? 'أدخل بريدك الإلكتروني وسنرسل لك رابط الاستعادة.' : 'Enter your email to receive recovery instructions.')}
               </p>
             </div>
 
@@ -189,6 +214,7 @@ const Login: React.FC = () => {
                 )}
               </AnimatePresence>
 
+              {mode !== 'recovery' && (
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">{t('email')}</label>
                 <div className="relative group">
@@ -203,14 +229,17 @@ const Login: React.FC = () => {
                   />
                 </div>
               </div>
+              )}
 
               {mode !== 'forgot' && (
                 <div className="space-y-2">
                   <div className="flex justify-between items-end px-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('password')}</label>
+                    {mode === 'login' && (
                     <button type="button" onClick={() => setMode('forgot')} className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:underline decoration-emerald-500/30 underline-offset-4">
                       {isRtl ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
                     </button>
+                    )}
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
@@ -236,7 +265,7 @@ const Login: React.FC = () => {
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <>
-                    <span className="font-arabic text-lg tracking-tight">{mode === 'login' ? t('login') : (isRtl ? 'إرسال رابط الاستعادة' : 'Send Recovery Link')}</span>
+                    <span className="font-arabic text-lg tracking-tight">{mode === 'login' ? t('login') : mode === 'recovery' ? (isRtl ? 'تعيين كلمة المرور الجديدة' : 'Set New Password') : (isRtl ? 'إرسال رابط الاستعادة' : 'Send Recovery Link')}</span>
                     <ArrowRight className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
                   </>
                 )}
