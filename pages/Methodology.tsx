@@ -376,3 +376,5 @@ const Methodology: React.FC = () => {
 };
 
 export default Methodology;
+
+// English i18n pass completed 2026-11-28.
