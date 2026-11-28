@@ -243,16 +243,11 @@ const GreenInvestment: React.FC = () => {
                 ? 'قم بشراء أرصدة كربونية لتعويض بصمتك البيئية مباشرة عبر دعم مشاريع الطاقة المتجددة المعتمدة.' 
                 : 'Purchase carbon credits to offset your environmental footprint directly by supporting certified renewable energy projects.'}
             </p>
-            <div className="flex gap-4">
-              <button className="px-8 py-4 bg-egypt-gold text-egypt-black font-black rounded-2xl shadow-xl flex items-center gap-2">
-                {isRtl ? 'تصفح السوق' : 'Browse Market'} <ExternalLink className="w-4 h-4" />
-              </button>
-            </div>
           </div>
           <div className="p-10 bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-md text-center">
-            <p className="text-[10px] font-black text-egypt-gold uppercase tracking-widest mb-2">Current Price</p>
+            <p className="text-[10px] font-black text-egypt-gold uppercase tracking-widest mb-2">{isRtl ? 'سعر توضيحي' : 'Illustrative Price'}</p>
             <h4 className="text-5xl font-black tabular-nums text-white">24.50 <span className="text-sm">EGP / t</span></h4>
-            <p className="text-[8px] text-white/40 mt-2 uppercase tracking-widest">Per Ton of CO2 Verified</p>
+            <p className="text-[8px] text-white/40 mt-2 uppercase tracking-widest">{isRtl ? 'ليس سعر سوق مباشر' : 'Not a live market price'}</p>
           </div>
         </div>
         <Leaf className="absolute top-[-40px] left-[-40px] w-64 h-64 text-egypt-gold/5 -rotate-45" />
