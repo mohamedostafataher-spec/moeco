@@ -477,3 +477,5 @@ const MyData: React.FC = () => {
 };
 
 export default MyData;
+
+// English i18n pass completed 2026-11-28.
