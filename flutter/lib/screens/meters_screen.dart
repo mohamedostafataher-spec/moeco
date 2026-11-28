@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import 'utilities_screen.dart' show estimateElectricityBill;
 
 /// Monthly utility meter readings, stored on-device only.
 /// Factors match the web app: 0.42 kg CO2e/kWh, 0.298 kg CO2e/m3.
@@ -23,12 +24,46 @@ class MetersScreen extends StatefulWidget {
 class _MetersScreenState extends State<MetersScreen> {
   final _kwhCtrl = TextEditingController();
   final _m3Ctrl = TextEditingController();
+  final _prevCtrl = TextEditingController();
+  final _nowCtrl = TextEditingController();
+  final _daysCtrl = TextEditingController();
+  bool _prefilled = false;
+  double? _pKwh;
+  double? _pBill;
+  double? _pCo2;
+  bool _pHigh = false;
+  bool _pInvalid = false;
 
   @override
   void dispose() {
     _kwhCtrl.dispose();
     _m3Ctrl.dispose();
+    _prevCtrl.dispose();
+    _nowCtrl.dispose();
+    _daysCtrl.dispose();
     super.dispose();
+  }
+
+  /// Project the coming month's electricity bill from the current meter
+  /// reading: (current - cycleStart) scaled to 30 days, priced with the
+  /// official 2026 tier function shared with the utilities screen.
+  void _predict() {
+    final prev = double.tryParse(_prevCtrl.text.trim());
+    final now = double.tryParse(_nowCtrl.text.trim());
+    final days = int.tryParse(_daysCtrl.text.trim()) ?? 0;
+    setState(() {
+      _pInvalid = false;
+      if (prev == null || now == null || now <= prev || days <= 0) {
+        _pInvalid = true;
+        _pKwh = _pBill = _pCo2 = null;
+        return;
+      }
+      final projected = (now - prev) * 30 / days;
+      _pKwh = projected;
+      _pBill = estimateElectricityBill(projected);
+      _pCo2 = projected * 0.42;
+      _pHigh = projected > 300;
+    });
   }
 
   String get _currentMonth => DateTime.now().toIso8601String().substring(0, 7);
@@ -111,6 +146,8 @@ class _MetersScreenState extends State<MetersScreen> {
                 ),
               ),
               const SizedBox(height: 14),
+              _predictCard(readings),
+              const SizedBox(height: 14),
               if (readings.isEmpty)
                 Card(
                   child: Padding(
@@ -140,6 +177,119 @@ class _MetersScreenState extends State<MetersScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _predictCard(List<Map<String, dynamic>> readings) {
+    final s = widget.s;
+    // Prefill the cycle-start reading from the newest stored reading of a
+    // previous month, and default the days to how far we are into this month.
+    if (!_prefilled) {
+      _prefilled = true;
+      final past = readings.where((r) => r['month'] != _currentMonth).toList();
+      if (past.isNotEmpty) {
+        _prevCtrl.text = (past.last['kwh'] as num).toStringAsFixed(0);
+      }
+      final d = DateTime.now().day - 1;
+      _daysCtrl.text = (d < 1 ? 1 : d).toString();
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.online_prediction_outlined,
+                    color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(s.metersPredictTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(s.metersPredictSub,
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _prevCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: s.metersPredictPrev,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _nowCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: s.metersPredictNow,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _daysCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: s.metersPredictDays,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _predict,
+                icon: const Icon(Icons.calculate_outlined),
+                label: Text(s.metersPredictBtn),
+              ),
+            ),
+            if (_pInvalid) ...[
+              const SizedBox(height: 10),
+              Text(s.metersPredictInvalid,
+                  style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 12.5)),
+            ],
+            if (_pKwh != null && _pBill != null && _pCo2 != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: MoEcoTheme.primary.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(s.metersPredictUsage(_pKwh!.toStringAsFixed(0)),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                    const SizedBox(height: 4),
+                    Text(s.metersPredictBill(_pBill!.toStringAsFixed(0)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: MoEcoTheme.primaryDark)),
+                    const SizedBox(height: 4),
+                    Text(s.metersPredictCo2(_pCo2!.toStringAsFixed(1)),
+                        style: const TextStyle(fontSize: 12.5)),
+                    const SizedBox(height: 8),
+                    Text(_pHigh ? s.metersPredictHigh : s.metersPredictGood,
+                        style: const TextStyle(fontSize: 12, height: 1.5)),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(s.metersPredictNote,
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11, height: 1.5)),
+          ],
+        ),
+      ),
     );
   }
 
