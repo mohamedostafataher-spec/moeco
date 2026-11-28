@@ -351,6 +351,17 @@ class S {
       ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
       : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
 
+  // F4: tier-nearing alert + savings tips (estimates, EGP)
+  String svTierNow(String price) => ar ? 'شريحتك الحالية: $price جنيه لكل ك.و.س' : 'Your current slab: $price EGP/kWh';
+  String svTierFar(String n) => ar ? 'باقي $n ك.و.س للشريحة التالية — أنت في المنطقة الآمنة' : '$n kWh to the next slab - you are in the safe zone';
+  String svTierNear(String n, String jump) => ar
+      ? 'تنبيه: باقي $n ك.و.س بس للشريحة الأعلى! لو عدّيتها، كل الكيلوواطات هتتحاسب بسعر أغلى (~$jump جنيه زيادة على الفاتورة).'
+      : 'Warning: only $n kWh left before the higher slab! Crossing it re-rates ALL kWh at the higher price (~$jump EGP extra).';
+  String get svTierTop => ar ? 'أنت على أعلى شريحة — أي توفير يرجعك لشريحة أرخص' : 'You are on the top slab - any saving drops you to a cheaper one';
+  String get svTipTitle => ar ? 'نصيحة الأسبوع للتوفير' : 'Savings tip of the week';
+  String svTipSave(String egp) => ar ? 'توفير تقديري: ~$egp جنيه في الشهر' : 'Estimated saving: ~$egp EGP/month';
+  String get svTipNote => ar ? 'تقديرات تقريبية لمتوسط بيت مصري — التوفير الفعلي يختلف حسب الاستخدام' : 'Rough estimates for an average Egyptian home - actual savings vary with usage';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
