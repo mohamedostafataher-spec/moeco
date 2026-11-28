@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../strings.dart';
+import '../services/complaint_templates.dart';
 import '../services/footprint_store.dart';
 
 class ComplaintsScreen extends StatefulWidget {
@@ -106,6 +107,26 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                 onChanged: (v) => setSheet(() => category = v ?? category),
               ),
+              // F10: pre-written templates for the selected category
+              if (complaintTemplates[_categories.indexOf(category)] != null) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: complaintTemplates[_categories.indexOf(category)]!
+                      .map((t) => ActionChip(
+                            label: Text(t.labelAr,
+                                style: const TextStyle(fontSize: 12)),
+                            onPressed: () {
+                              if (titleCtrl.text.trim().isEmpty) {
+                                titleCtrl.text = t.labelAr;
+                              }
+                              notesCtrl.text = t.bodyAr;
+                            },
+                          ))
+                      .toList(),
+                ),
+              ],
               const SizedBox(height: 12),
               TextField(
                 controller: notesCtrl,
