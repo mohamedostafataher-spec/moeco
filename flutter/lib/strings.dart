@@ -419,6 +419,10 @@ class S {
       ? 'تقليلك لحد دلوقتي: $cur% من هدف $target%. سجّل قراءة الشهر عشان يتحسب.'
       : 'Your reduction so far: $cur% of the $target% goal. Log this month\'s reading to update it.';
   String get chCancel => ar ? 'إلغاء التحدي' : 'Cancel challenge';
+
+  String metersCrossWarn(int cap, String extraEgp, String kwhToSave) => ar
+      ? 'تنبيه: لو كملت بنفس المعدل هتعدي شريحة الـ $cap ك.و.س، والفاتورة كلها هتتسعّر أغلى - العدية هتكلّفك حوالي $extraEgp جنيه زيادة. وفّر $kwhToSave ك.و.س قبل آخر الشهر عشان تفضل في الشريحة الأرخص.'
+      : 'Warning: at this rate you will cross the $cap kWh slab and the WHOLE bill gets re-rated higher - crossing costs about EGP $extraEgp extra. Save $kwhToSave kWh before month end to stay in the cheaper slab.';
   String offLastSync(String t) => ar ? 'آخر مزامنة: $t' : 'Last sync: $t';
 
   // F5: shareable achievement card (real on-device numbers only)
