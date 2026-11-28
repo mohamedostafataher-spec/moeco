@@ -525,7 +525,7 @@ const GovServices: React.FC = () => {
                     : 'bg-white/5 border-white/5 text-zinc-500 hover:text-white hover:border-white/10'
                 }`}
               >
-                {cat}
+                {cat === 'الكل' ? (isRtl ? 'الكل' : 'All') : cat}
               </button>
             ))}
           </div>
