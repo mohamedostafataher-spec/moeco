@@ -80,6 +80,29 @@ class S {
       ? 'اطفي الموتور لو هتقف أكتر من دقيقة.'
       : 'Turn the engine off when stopping for more than a minute.';
 
+  // Utility tariffs (official 2026 residential prices)
+  String get utilHeroTitle => ar ? 'تعريفة المرافق ٢٠٢٦' : 'Utility Tariffs 2026';
+  String get utilHeroSub => ar
+      ? 'شرائح الكهرباء والمياه والغاز الرسمية وحاسبة فاتورة الكهرباء.'
+      : 'Official electricity, water and gas tiers plus an electricity bill estimator.';
+  String get utilCalcTitle => ar ? 'حاسبة فاتورة الكهرباء' : 'Electricity bill estimator';
+  String get utilKwhLabel => ar ? 'استهلاك الشهر (كيلووات ساعة)' : 'Monthly consumption (kWh)';
+  String utilBillResult(String egp) => ar ? 'فاتورتك التقديرية: $egp جنيه' : 'Estimated bill: $egp EGP';
+  String get utilBillNote => ar
+      ? 'تقدير حسب الشرائح الرسمية (الشريحة بتتحسب على كل الاستهلاك + رسوم الشريحة) — مش بديل للفاتورة.'
+      : 'Estimate per official tiers (one tier rate applies to all kWh plus its fee), not a bill substitute.';
+  String get utilElecTitle => ar ? 'شرائح الكهرباء (سكني)' : 'Electricity tiers (residential)';
+  String get utilWaterTitle => ar ? 'شرائح المياه (سكني)' : 'Water tiers (residential)';
+  String get utilGasTitle => ar ? 'شرائح الغاز المنزلي' : 'Household gas tiers';
+  String get utilKwhUnit => ar ? 'ك.و.س' : 'kWh';
+  String get utilM3Unit => ar ? 'م³' : 'm3';
+  String get utilEgpPerUnit => ar ? 'جنيه' : 'EGP';
+  String get utilFeeUnit => ar ? 'جنيه رسوم' : 'EGP fee';
+  String get utilSourceTitle => ar ? 'المصدر' : 'Source';
+  String get utilSourceBody => ar
+      ? 'أسعار ٢٠٢٦ الرسمية: الكهرباء (وزارة الكهرباء)، المياه (وزارة الإسكان)، الغاز (وزارة البترول). الأسعار ممكن تتغير بقرارات رسمية جديدة.'
+      : 'Official 2026 prices: electricity (Ministry of Electricity), water (Ministry of Housing), gas (Ministry of Petroleum). Prices may change by new official decisions.';
+
   String ptName(String key) {
     if (!ar) return key;
     switch (key) {
