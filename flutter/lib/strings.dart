@@ -53,6 +53,34 @@ class S {
   String aqAlertMore(int n) =>
       ar ? '+$n محافظات تانية بنفس المستوى' : '+$n more governorates at this level';
 
+  // Recycling (Bekia + OpenStreetMap collection points).
+  String get recHeroTitle => ar ? 'إعادة التدوير' : 'Recycling';
+  String get recHeroSub =>
+      ar ? 'بيكيا ونقاط تجميع قريبة منك' : 'Bekia and collection points near you';
+  String get recBekiaTitle =>
+      ar ? 'بيكيا — حوّل مخلفاتك لفلوس' : 'Bekia: turn waste into money';
+  String get recBekiaBody => ar
+      ? 'بيكيا بيجمعوا بلاستيك وورق ومعدن وإلكترونيات وزيت طعام من البيت أو من نقاط التسليم، وبياخدوا منك المخلفات بفلوس أو بقالة. خدمة مصرية مستقلة.'
+      : 'Bekia collects plastic, paper, metal, electronics and cooking oil from your home or at drop-off points, and pays you in cash or groceries. An independent Egyptian service.';
+  String get recBekiaOpen => ar ? 'افتح بيكيا' : 'Open Bekia';
+  String get recBekiaNote => ar
+      ? 'خدمة خارجية، MoEco مش طرف فيها ولا بيضمنها.'
+      : 'An external service; MoEco is not a party to it and does not guarantee it.';
+  String get recPointsTitle => ar ? 'نقاط تجميع على الخريطة' : 'Mapped collection points';
+  String get recPickCity => ar ? 'اختار المحافظة' : 'Pick your governorate';
+  String get recLoading =>
+      ar ? 'بندور على نقاط التجميع...' : 'Looking for collection points...';
+  String get recEmpty => ar
+      ? 'مفيش نقاط متسجلة في المنطقة دي على الخريطة لسه. جرّب محافظة تانية أو بيكيا.'
+      : 'No mapped points in this area yet. Try another governorate or Bekia.';
+  String get recError => ar
+      ? 'تعذّر تحميل النقاط دلوقتي. هنحاول تاني لما تفتح الصفحة.'
+      : 'Could not load points right now. We retry when you reopen the page.';
+  String get recDirections => ar ? 'الاتجاهات' : 'Directions';
+  String get recSource => ar
+      ? 'مصدر النقاط: خريطة OpenStreetMap المجتمعية — ممكن تكون ناقصة أو قديمة.'
+      : 'Points from the OpenStreetMap community map; may be incomplete or outdated.';
+
   // Prayer times (live, Aladhan — Egyptian General Authority of Survey)
   String get ptTitle => ar ? 'مواقيت الصلاة — القاهرة' : 'Prayer times — Cairo';
   String get ptLoading => ar ? 'بنجيب مواقيت الصلاة...' : 'Fetching prayer times...';
