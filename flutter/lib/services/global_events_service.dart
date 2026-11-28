@@ -218,10 +218,24 @@ class GlobalEventsService {
     final all = results.expand((e) => e).toList()
       ..sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
 
-    await prefs.setString(
-        _cacheKey, jsonEncode(all.map((e) => e.toJson()).toList()));
-    await prefs.setInt(_cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
-    return all;
+    if (all.isNotEmpty) {
+      await prefs.setString(
+          _cacheKey, jsonEncode(all.map((e) => e.toJson()).toList()));
+      await prefs.setInt(_cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
+      return all;
+    }
+
+    // Offline (or every source failed): serve the stale cache instead of
+    // an empty list, so the screen keeps its last real data (F7).
+    if (cachedRaw != null) {
+      try {
+        final list = jsonDecode(cachedRaw) as List;
+        return list
+            .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      } catch (_) {}
+    }
+    return [];
   }
 
   static Future<List<GlobalEvent>> _fetchGdacs() async {
