@@ -113,6 +113,24 @@ class S {
       ? 'القراءة الحالية لازم تكون أكبر من قراءة أول الشهر.'
       : 'The current reading must be higher than the cycle-start reading.';
 
+  // Metro trip planner (offline, official lines + March 2026 fare bands).
+  String get metroPlanTitle => ar ? 'خطط رحلتك في المترو' : 'Plan your metro trip';
+  String get metroPlanFrom => ar ? 'من محطة' : 'From station';
+  String get metroPlanTo => ar ? 'إلى محطة' : 'To station';
+  String metroPlanStops(int n) => ar ? '$n محطات' : '$n stops';
+  String metroPlanFare(String egp) =>
+      ar ? 'التذكرة: $egp جنيه' : 'Fare: $egp EGP';
+  String metroPlanSenior(String egp) =>
+      ar ? 'كبار السن (60+): $egp جنيه' : 'Seniors (60+): $egp EGP';
+  String metroPlanTransfer(String station) =>
+      ar ? 'هتبدل في $station' : 'Change at $station';
+  String get metroPlanDirect => ar ? 'مباشر من غير تبديل' : 'Direct, no change';
+  String get metroPlanSame =>
+      ar ? 'اختار محطتين مختلفتين' : 'Pick two different stations';
+  String get metroPlanNote => ar
+      ? 'عدد المحطات على خطوط المترو الرسمية، والتذكرة بشرايح مارس 2026.'
+      : 'Stops counted on the official metro lines; fares per the March 2026 bands.';
+
   // Prayer times (live, Aladhan — Egyptian General Authority of Survey)
   String get ptTitle => ar ? 'مواقيت الصلاة — القاهرة' : 'Prayer times — Cairo';
   String get ptLoading => ar ? 'بنجيب مواقيت الصلاة...' : 'Fetching prayer times...';
