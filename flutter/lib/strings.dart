@@ -223,6 +223,25 @@ class S {
       ? 'مصدر: Open-Meteo، آخر تحديث $time'
       : 'Source: Open-Meteo, updated $time';
 
+  // National weather alerts (forecast-derived, honest label)
+  String get wxAlertTitle => ar ? 'تنبيهات طقس اليوم' : "Today's weather alerts";
+  String wxAlertHeat(String city, String t) =>
+      ar ? 'حرارة مرتفعة في $city: تصل $t°' : 'High heat in $city: up to $t°';
+  String wxAlertExtreme(String city, String t) =>
+      ar ? 'حرارة شديدة في $city: تصل $t°' : 'Extreme heat in $city: up to $t°';
+  String wxAlertCold(String city, String t) =>
+      ar ? 'برودة في $city: تنخفض إلى $t°' : 'Cold in $city: down to $t°';
+  String wxAlertWind(String city, String k) =>
+      ar ? 'رياح قوية في $city: $k كم/س' : 'Strong wind in $city: $k km/h';
+  String wxAlertRain(String city) =>
+      ar ? 'أمطار متوقعة في $city' : 'Rain expected in $city';
+  String wxAlertStorm(String city) =>
+      ar ? 'عواصف رعدية متوقعة في $city' : 'Thunderstorms expected in $city';
+  String wxAlertMore(String n) => ar ? '+$n تنبيهات أخرى' : '+$n more alerts';
+  String get wxAlertNote => ar
+      ? 'تنبيهات مشتقة من بيانات التوقعات (Open-Meteo) — مش تحذيرات رسمية من هيئة الأرصاد.'
+      : 'Alerts derived from Open-Meteo forecast data, not official EMA warnings.';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
