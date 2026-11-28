@@ -395,7 +395,7 @@ const ComplaintAssistant: React.FC = () => {
           <div className="space-y-1">
             <p className="font-bold">{T('تنبيه شفافية مهم:', 'Important transparency note:')}</p>
             <p>
-              {T('MoEco لا يرسل شكاوى لأي جهة حكومية تلقائيًا، بل ينظم بياناتك في مسودتك الخاصة على الخادم (معزولة بسياسات RLS) ويحيلك للروابط الرسمية الموثقة لتقديمها ومتابعتها بنفسك.', 'MoEco never sends complaints to any government body automatically. It organizes your data in your own private draft on your account (isolated by RLS policies) and refers you to verified official links to submit and follow up yourself.')}
+              {T('MoEco لا يرسل شكاوى لأي جهة حكومية تلقائيًا، بل ينظم بياناتك في مسودتك الخاصة على الخادم (معزولة بسياسات خصوصية صارمة) ويحيلك للروابط الرسمية الموثقة لتقديمها ومتابعتها بنفسك.', 'MoEco never sends complaints to any government body automatically. It organizes your data in your own private draft on your account (isolated by strict privacy policies) and refers you to verified official links to submit and follow up yourself.')}
             </p>
           </div>
         </div>
