@@ -19,8 +19,17 @@ import {
   RecyclingLog,
 } from '../services/civicActionService';
 
+const MATERIAL_LABEL_EN: Record<RecyclingLog['material'], string> = {
+  pet_plastic: 'Plastic (PET / bottles)',
+  cardboard_paper: 'Cardboard & paper',
+  aluminum_metal: 'Aluminum & metals',
+  glass: 'Glass',
+  ewaste: 'Small e-waste',
+};
+
 const WasteToIncome: React.FC = () => {
-  const { user } = useApp();
+  const { user, language } = useApp();
+  const ar = language === 'ar';
   const [govFilter, setGovFilter] = useState('all');
   const [logs, setLogs] = useState<RecyclingLog[]>([]);
 
@@ -48,7 +57,7 @@ const WasteToIncome: React.FC = () => {
     setFormError('');
     const w = parseFloat(weightKg);
     if (Number.isNaN(w) || w <= 0 || w > 500) {
-      setFormError('يرجى إدخال وزن صالح بين 0.1 و 500 كجم.');
+      setFormError(ar ? 'يرجى إدخال وزن صالح بين 0.1 و 500 كجم.' : 'Please enter a valid weight between 0.1 and 500 kg.');
       return;
     }
     const point = DEMO_RECYCLING_POINTS.find((p) => p.id === pointId) || DEMO_RECYCLING_POINTS[0];
@@ -66,13 +75,13 @@ const WasteToIncome: React.FC = () => {
     setReceiptNote('');
     notificationService.success(
       created.verificationStatus === 'needs_review'
-        ? 'تم تسجيل عملية التسليم مع الملاحظة وهي بانتظار المراجعة (أثر تقديري).'
-        : 'تم تسجيل الوزن ذاتياً في السجل كأثر تقديري غير موثق.'
+        ? (ar ? 'تم تسجيل عملية التسليم مع الملاحظة وهي بانتظار المراجعة (أثر تقديري).' : 'Handover logged with your note and pending review (estimated impact).')
+        : (ar ? 'تم تسجيل الوزن ذاتياً في السجل كأثر تقديري غير موثق.' : 'Weight self-logged as an estimated, unverified impact.')
     );
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir="rtl">
+    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir={ar ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -82,13 +91,15 @@ const WasteToIncome: React.FC = () => {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-black text-white">المخلفات إلى دخل</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-white">{ar ? 'المخلفات إلى دخل' : 'Waste to income'}</h1>
                 <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/40">
-                  نقاط تجريبية للعرض
+                  {ar ? 'نقاط تجريبية للعرض' : 'Demo points for display'}
                 </span>
               </div>
               <p className="text-sm text-slate-300 mt-1">
-                دليل نقاط فرز وتجميع المواد القابلة للتدوير، مع تسجيل اختياري للكميات المسلّمة وبيان معامل الأثر بوضوح.
+                {ar
+                  ? 'دليل نقاط فرز وتجميع المواد القابلة للتدوير، مع تسجيل اختياري للكميات المسلّمة وبيان معامل الأثر بوضوح.'
+                  : 'A directory of sorting and collection points for recyclables, with optional logging of delivered quantities and a clearly stated impact factor.'}
               </p>
             </div>
           </div>
@@ -97,7 +108,10 @@ const WasteToIncome: React.FC = () => {
         <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex items-start gap-3">
           <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <p className="text-xs md:text-sm text-amber-100 leading-relaxed">
-            <strong>توضيح مهم:</strong> النقاط المعروضة هنا نماذج تجريبية لبيان الخدمة وليست شراكات تعاقدية نشطة أو وعوداً بعائد مالي مضمون. يتم تمييز أي وزن يُسجل ذاتياً كـ <strong>«أثر تقديري غير موثق»</strong> ما لم يرتبط بتوثيق من نقطة جمع معتمدة.
+            <strong>{ar ? 'توضيح مهم:' : 'Important note:'}</strong>{' '}
+            {ar
+              ? 'النقاط المعروضة هنا نماذج تجريبية لبيان الخدمة وليست شراكات تعاقدية نشطة أو وعوداً بعائد مالي مضمون. يتم تمييز أي وزن يُسجل ذاتياً كـ «أثر تقديري غير موثق» ما لم يرتبط بتوثيق من نقطة جمع معتمدة.'
+              : 'The points shown here are demo samples illustrating the service, not active contractual partnerships or a promise of guaranteed income. Any self-logged weight is marked as "estimated, unverified impact" unless linked to documentation from an accredited collection point.'}
           </p>
         </div>
       </header>
@@ -105,7 +119,7 @@ const WasteToIncome: React.FC = () => {
       {/* Recycling Points Directory */}
       <section className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-black text-white">دليل نقاط الفرز والتجميع</h2>
+          <h2 className="text-xl font-black text-white">{ar ? 'دليل نقاط الفرز والتجميع' : 'Sorting & collection points directory'}</h2>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -116,7 +130,7 @@ const WasteToIncome: React.FC = () => {
                   : 'bg-slate-950/60 text-slate-300 border-white/10'
               }`}
             >
-              كل المحافظات
+              {ar ? 'كل المحافظات' : 'All governorates'}
             </button>
             {governorates.map((g) => (
               <button
@@ -144,7 +158,7 @@ const WasteToIncome: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-base font-black text-white">{pt.name}</h3>
                 <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
-                  {pt.isVerifiedPartner ? 'نقطة معتمدة' : 'نقطة تجريبية'}
+                  {pt.isVerifiedPartner ? (ar ? 'نقطة معتمدة' : 'Verified point') : (ar ? 'نقطة تجريبية' : 'Demo point')}
                 </span>
               </div>
 
@@ -170,7 +184,7 @@ const WasteToIncome: React.FC = () => {
                 </p>
                 <p className="flex items-center gap-2 text-slate-400">
                   <Phone className="w-4 h-4 shrink-0" />
-                  <span>{pt.contactInfo || 'غير متاح حالياً'}</span>
+                  <span>{pt.contactInfo || (ar ? 'غير متاح حالياً' : 'Not available yet')}</span>
                 </p>
               </div>
             </article>
@@ -183,7 +197,7 @@ const WasteToIncome: React.FC = () => {
         <section className="lg:col-span-5 bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4">
           <h2 className="text-lg font-black text-white flex items-center gap-2">
             <Plus className="w-5 h-5 text-emerald-400" />
-            تسجيل كمية مواد مسلّمة (اختياري)
+            {ar ? 'تسجيل كمية مواد مسلّمة (اختياري)' : 'Log delivered materials (optional)'}
           </h2>
 
           {formError && (
@@ -195,7 +209,7 @@ const WasteToIncome: React.FC = () => {
           <form onSubmit={handleLogHandover} className="space-y-3.5">
             <div className="space-y-1">
               <label htmlFor="rec-point" className="block text-xs font-bold text-slate-300">
-                نقطة التجميع
+                {ar ? 'نقطة التجميع' : 'Collection point'}
               </label>
               <select
                 id="rec-point"
@@ -214,7 +228,7 @@ const WasteToIncome: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label htmlFor="rec-mat" className="block text-xs font-bold text-slate-300">
-                  نوع المادة
+                  {ar ? 'نوع المادة' : 'Material type'}
                 </label>
                 <select
                   id="rec-mat"
@@ -224,14 +238,14 @@ const WasteToIncome: React.FC = () => {
                 >
                   {(Object.keys(RECYCLING_MATERIAL_META) as RecyclingLog['material'][]).map((k) => (
                     <option key={k} value={k}>
-                      {RECYCLING_MATERIAL_META[k].labelAr}
+                      {ar ? RECYCLING_MATERIAL_META[k].labelAr : MATERIAL_LABEL_EN[k]}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1">
                 <label htmlFor="rec-weight" className="block text-xs font-bold text-slate-300">
-                  الوزن (كجم)
+                  {ar ? 'الوزن (كجم)' : 'Weight (kg)'}
                 </label>
                 <input
                   id="rec-weight"
@@ -248,10 +262,10 @@ const WasteToIncome: React.FC = () => {
             <div className="bg-slate-950/60 border border-white/10 rounded-xl p-3 text-[11px] text-slate-300 space-y-1">
               <p className="flex items-center gap-1.5 font-bold text-emerald-300">
                 <Scale className="w-3.5 h-3.5" />
-                معامل الحساب التقديري للمادة المختارة:
+                {ar ? 'معامل الحساب التقديري للمادة المختارة:' : 'Estimated factor for the selected material:'}
               </p>
               <p>
-                {RECYCLING_MATERIAL_META[material].factorKgCo2PerKg} كجم CO₂e لكل 1 كجم —{' '}
+                {RECYCLING_MATERIAL_META[material].factorKgCo2PerKg} {ar ? 'كجم CO₂e لكل 1 كجم' : 'kg CO₂e per 1 kg'} —{' '}
                 {RECYCLING_MATERIAL_META[material].source}
               </p>
             </div>
@@ -264,21 +278,23 @@ const WasteToIncome: React.FC = () => {
                 className="accent-emerald-500 w-4 h-4 mt-0.5"
               />
               <span className="text-xs text-slate-200 leading-relaxed">
-                لدي إيصال وزن أو مرجع استلام من النقطة (يُحال للمراجعة بدلاً من التسجيل الذاتي غير الموثق)
+                {ar
+                  ? 'لدي إيصال وزن أو مرجع استلام من النقطة (يُحال للمراجعة بدلاً من التسجيل الذاتي غير الموثق)'
+                  : 'I have a weight receipt or handover reference from the point (sent for review instead of unverified self-logging)'}
               </span>
             </label>
 
             {isDocumented && (
               <div className="space-y-1">
                 <label htmlFor="rec-note" className="block text-xs font-bold text-slate-300">
-                  رقم الإيصال أو ملاحظة التوثيق
+                  {ar ? 'رقم الإيصال أو ملاحظة التوثيق' : 'Receipt number or documentation note'}
                 </label>
                 <input
                   id="rec-note"
                   type="text"
                   value={receiptNote}
                   onChange={(e) => setReceiptNote(e.target.value)}
-                  placeholder="مثال: إيصال رقم 412 - نقطة المعادي"
+                  placeholder={ar ? 'مثال: إيصال رقم 412 - نقطة المعادي' : 'e.g. Receipt #412 - Maadi point'}
                   className="w-full min-h-[44px] bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none"
                 />
               </div>
@@ -288,19 +304,21 @@ const WasteToIncome: React.FC = () => {
               type="submit"
               className="w-full min-h-[44px] bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl py-3 transition focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
             >
-              تسجيل التسليم (تقديري)
+              {ar ? 'تسجيل التسليم (تقديري)' : 'Log handover (estimated)'}
             </button>
           </form>
         </section>
 
         <section className="lg:col-span-7 bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4">
-          <h2 className="text-lg font-black text-white">سجل الكميات المسجلة</h2>
+          <h2 className="text-lg font-black text-white">{ar ? 'سجل الكميات المسجلة' : 'Logged quantities history'}</h2>
           {logs.length === 0 ? (
             <div className="py-12 text-center space-y-2 border border-dashed border-white/10 rounded-2xl">
               <Recycle className="w-10 h-10 text-slate-500 mx-auto" />
-              <p className="text-sm font-bold text-slate-300">لم تسجل أي تسليمات تدوير بعد</p>
+              <p className="text-sm font-bold text-slate-300">{ar ? 'لم تسجل أي تسليمات تدوير بعد' : 'No recycling handovers logged yet'}</p>
               <p className="text-xs text-slate-400">
-                سجّل كمية من النموذج المجاور؛ ستظهر كل عملية مع حالة توثيقها ومعامل حسابها.
+                {ar
+                  ? 'سجّل كمية من النموذج المجاور؛ ستظهر كل عملية مع حالة توثيقها ومعامل حسابها.'
+                  : 'Log a quantity using the adjacent form; each entry shows its verification status and calculation factor.'}
               </p>
             </div>
           ) : (
@@ -313,23 +331,23 @@ const WasteToIncome: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-black text-white">
-                        {RECYCLING_MATERIAL_META[log.material].labelAr} — {log.weightKg} كجم
+                        {ar ? RECYCLING_MATERIAL_META[log.material].labelAr : MATERIAL_LABEL_EN[log.material]} — {log.weightKg} {ar ? 'كجم' : 'kg'}
                       </span>
                       {log.verificationStatus === 'needs_review' ? (
                         <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-sky-500/15 text-sky-300 border border-sky-400/40 inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" />
-                          بحاجة إلى مراجعة (تقديري)
+                          {ar ? 'بحاجة إلى مراجعة (تقديري)' : 'Needs review (estimated)'}
                         </span>
                       ) : (
                         <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/40 inline-flex items-center gap-1">
                           <AlertTriangle className="w-3 h-3" />
-                          أثر تقديري غير موثق
+                          {ar ? 'أثر تقديري غير موثق' : 'Estimated, unverified impact'}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-slate-400">{log.pointName}</p>
                     {log.receiptNote && (
-                      <p className="text-[11px] text-sky-300">مرجع التوثيق: {log.receiptNote}</p>
+                      <p className="text-[11px] text-sky-300">{ar ? 'مرجع التوثيق' : 'Documentation ref'}: {log.receiptNote}</p>
                     )}
                     <p className="text-[10px] text-slate-500">{log.factorSource}</p>
                   </div>
@@ -339,7 +357,7 @@ const WasteToIncome: React.FC = () => {
                       ~{log.estimatedCo2SavedKg} kg CO₂e
                     </p>
                     <p className="text-[10px] text-slate-400">
-                      تقديري (معامل {log.factorUsed})
+                      {ar ? `تقديري (معامل ${log.factorUsed})` : `Estimated (factor ${log.factorUsed})`}
                     </p>
                   </div>
                 </div>
