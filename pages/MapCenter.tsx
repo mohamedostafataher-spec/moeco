@@ -443,12 +443,9 @@ const SmartEcoMap: React.FC = () => {
 
             <div className="mt-8 pt-8 border-t border-white/5">
               <div className="flex justify-between items-center mb-6">
-                <p className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Safety Index</p>
+                <p className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{language === 'ar' ? 'مؤشر الأمان (توضيحي)' : 'Safety Index (illustrative)'}</p>
                 <p className="text-xl font-black text-emerald-500">98.2%</p>
               </div>
-              <button className="w-full py-5 bg-egypt-gold text-egypt-black rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl">
-                {language === 'ar' ? 'تحميل التقرير' : 'Download Report'}
-              </button>
             </div>
           </motion.div>
         )}
