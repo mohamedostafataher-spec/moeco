@@ -394,6 +394,31 @@ class S {
   String get offBanner => ar
       ? 'أنت غير متصل — المعروض آخر بيانات محفوظة على جهازك'
       : 'You are offline - showing the last data saved on your device';
+
+  String get chTitle => ar ? 'تحدي المحافظة' : 'Governorate challenge';
+  String get chSub => ar
+      ? 'تحدي شخصي ليك في محافظتك - كله على موبايلك'
+      : 'A personal challenge in your governorate - all on your device';
+  String get chPersonalNote => ar
+      ? 'ده تحدي شخصي بينك وبين نفسك، بيتسجل على موبايلك بس. ترتيب المحافظات بين الناس محتاج سيرفر ومش متاح دلوقتي.'
+      : 'This is a personal challenge between you and yourself, stored on your device only. A cross-governorate leaderboard needs a server and is not available right now.';
+  String get chPickGov => ar ? 'محافظتك' : 'Your governorate';
+  String get chGoal => ar ? 'اختار التحدي' : 'Pick your challenge';
+  String get chGoalTrips => ar ? 'مشاوير خضرا الأسبوع ده' : 'Green trips this week';
+  String get chGoalKwh => ar ? 'قلل استهلاك الكهربا الشهر ده' : 'Cut electricity use this month';
+  String chTripsUnit(int n) => ar ? '$n مشاوير' : '$n trips';
+  String get chStart => ar ? 'ابدأ التحدي' : 'Start the challenge';
+  String chActiveTrips(String gov, int target) =>
+      ar ? 'تحدي $gov: $target مشاوير خضرا الأسبوع ده' : '$gov challenge: $target green trips this week';
+  String chActiveKwh(String gov, int target) =>
+      ar ? 'تحدي $gov: قلل الكهربا $target% عن الشهر اللي فات' : '$gov challenge: cut electricity $target% vs last month';
+  String get chDone => ar ? 'برافو! خلصت التحدي 🎉' : 'Well done! Challenge complete 🎉';
+  String chProgressTrips(int cur, int target) =>
+      ar ? 'عملت $cur من $target مشاوير. كمّل!' : '$cur of $target trips done. Keep going!';
+  String chProgressKwh(int cur, int target) => ar
+      ? 'تقليلك لحد دلوقتي: $cur% من هدف $target%. سجّل قراءة الشهر عشان يتحسب.'
+      : 'Your reduction so far: $cur% of the $target% goal. Log this month\'s reading to update it.';
+  String get chCancel => ar ? 'إلغاء التحدي' : 'Cancel challenge';
   String offLastSync(String t) => ar ? 'آخر مزامنة: $t' : 'Last sync: $t';
 
   // F5: shareable achievement card (real on-device numbers only)
