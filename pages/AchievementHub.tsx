@@ -22,14 +22,38 @@ import { Link } from 'react-router-dom';
 
 type HubTab = 'real_impact' | 'missions' | 'challenges' | 'leaderboard' | 'wars';
 
-const VERIF_STATUS_BADGE: Record<VerificationStatus, { label: string; cls: string }> = {
-  logged: { label: 'مُسجّل', cls: 'bg-slate-700/60 text-slate-200 border-slate-500/40' },
-  needs_review: { label: 'بحاجة إلى مراجعة', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
-  verified: { label: 'تم التحقق', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
+const VERIF_STATUS_BADGE: Record<VerificationStatus, { label: string; labelEn: string; cls: string }> = {
+  logged: { label: 'مُسجّل', labelEn: 'Logged', cls: 'bg-slate-700/60 text-slate-200 border-slate-500/40' },
+  needs_review: { label: 'بحاجة إلى مراجعة', labelEn: 'Needs review', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
+  verified: { label: 'تم التحقق', labelEn: 'Verified', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
+};
+
+const CHALLENGE_EN: Record<string, { title: string; description: string; verificationRule: string }> = {
+  'chg-verified-report': {
+    title: 'Document a real environmental issue and pass review',
+    description: 'Submit an environmental report with a precise description and a clear area. Verified points are not granted on submission, only after the report is reviewed and verified.',
+    verificationRule: 'Moves from "Needs review" to "Verified" once the report is reviewed and approved.',
+  },
+  'chg-recycling-handover': {
+    title: 'Deliver recyclable materials to a collection point',
+    description: 'Log the weight of sorted materials handed to a collection point. Without a receipt or documented weight, only a symbolic participation badge is granted.',
+    verificationRule: 'Requires a documented delivery with a real weight and a known impact factor to count verified points.',
+  },
+  'chg-local-campaign': {
+    title: 'Join a local initiative or campaign',
+    description: 'Join a local water-saving, shading or cleanup initiative in your area and document your participation.',
+    verificationRule: 'Attendance or participation confirmed by the initiative coordinator.',
+  },
+  'chg-initiative-followup': {
+    title: 'Follow an initiative through closure and verified resolution',
+    description: 'Follow a report or initiative from the proposal/review stage until its closure is documented.',
+    verificationRule: 'Linked to the "Solution verified" status on a followed report or initiative.',
+  },
 };
 
 const AchievementHub: React.FC = () => {
   const { language, theme, user, isRtl } = useApp();
+  const ar = language === 'ar';
   const [activeTab, setActiveTab] = useState<HubTab>('real_impact');
   const [loading, setLoading] = useState(true);
 
@@ -151,7 +175,7 @@ const AchievementHub: React.FC = () => {
     const uid = user?.id || 'guest-user-2026';
     const evidence = (evidenceInputs[challenge.id] || '').trim();
     if (evidence.length < 5) {
-      notificationService.error('يرجى كتابة وصف موجز أو رقم مرجعي يوضح الإجراء المنفذ (5 أحرف على الأقل).');
+      notificationService.error(ar ? 'يرجى كتابة وصف موجز أو رقم مرجعي يوضح الإجراء المنفذ (5 أحرف على الأقل).' : 'Please write a brief description or a reference number for the completed action (at least 5 characters).');
       return;
     }
     setSubmittingChallengeId(challenge.id);
@@ -247,23 +271,23 @@ const AchievementHub: React.FC = () => {
 
         <AnimatePresence mode="wait">
           {activeTab === 'real_impact' && (
-            <motion.div key="real_impact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6" dir="rtl">
+            <motion.div key="real_impact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6" dir={ar ? 'rtl' : 'ltr'}>
               {/* Separation of Verified vs Symbolic Points + No Cash Redemption Disclaimer */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-5">
-                  <p className="text-xs font-bold text-slate-400">نقاط الأثر المؤكدة (تم التحقق)</p>
-                  <p className="text-3xl font-black text-emerald-400 mt-1 tabular-nums">{totalVerifiedPoints} نقطة</p>
-                  <p className="text-[11px] text-slate-400 mt-1">لا تُحتسب إلا عند تحقق الشرط ومراجعته فعلياً.</p>
+                  <p className="text-xs font-bold text-slate-400">{ar ? 'نقاط الأثر المؤكدة (تم التحقق)' : 'Verified impact points'}</p>
+                  <p className="text-3xl font-black text-emerald-400 mt-1 tabular-nums">{totalVerifiedPoints} {ar ? 'نقطة' : 'pts'}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">{ar ? 'لا تُحتسب إلا عند تحقق الشرط ومراجعته فعلياً.' : 'Counted only when the condition is actually met and reviewed.'}</p>
                 </div>
                 <div className="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5">
-                  <p className="text-xs font-bold text-slate-400">نقاط مشاركة رمزية (قيد المراجعة)</p>
-                  <p className="text-3xl font-black text-amber-300 mt-1 tabular-nums">{totalSymbolicPoints} نقطة</p>
-                  <p className="text-[11px] text-slate-400 mt-1">تُمنح لتوثيق خطوة المشاركة دون ادعاء أثر مؤكد.</p>
+                  <p className="text-xs font-bold text-slate-400">{ar ? 'نقاط مشاركة رمزية (قيد المراجعة)' : 'Symbolic participation points (under review)'}</p>
+                  <p className="text-3xl font-black text-amber-300 mt-1 tabular-nums">{totalSymbolicPoints} {ar ? 'نقطة' : 'pts'}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">{ar ? 'تُمنح لتوثيق خطوة المشاركة دون ادعاء أثر مؤكد.' : 'Granted for documenting a participation step without claiming verified impact.'}</p>
                 </div>
                 <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-5 flex items-start gap-2.5">
                   <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    <strong>ضوابط النقاط ومنع التلاعب:</strong> جميع النقاط للتقدير المجتمعي فقط ولا تُحوّل إلى أموال نقدية. توجد فترة انتظار بين المطالبات ويشترط وجود سجل فعلي داعم (بلاغ / تسليم تدوير / مبادرة).
+                    {ar ? <><strong>ضوابط النقاط ومنع التلاعب:</strong> جميع النقاط للتقدير المجتمعي فقط ولا تُحوّل إلى أموال نقدية. توجد فترة انتظار بين المطالبات ويشترط وجود سجل فعلي داعم (بلاغ / تسليم تدوير / مبادرة).</> : <><strong>Points rules and anti-abuse:</strong> All points are for community recognition only and cannot be converted to cash. A cooldown applies between claims and a supporting real record is required (report / recycling delivery / initiative).</>}
                   </p>
                 </div>
               </div>
@@ -276,48 +300,48 @@ const AchievementHub: React.FC = () => {
                   const verifBadge = latestSub ? VERIF_STATUS_BADGE[latestSub.status] : null;
                   const actionLink =
                     chg.actionType === 'verified_report' || chg.actionType === 'initiative_followup'
-                      ? { to: '/eco-watch', label: 'افتح «بلاغ بيئي»' }
+                      ? { to: '/eco-watch', label: ar ? 'افتح «بلاغ بيئي»' : 'Open Environmental Report' }
                       : chg.actionType === 'recycling_delivery'
-                        ? { to: '/waste-to-income', label: 'افتح «المخلفات إلى دخل»' }
-                        : { to: '/local-monitor', label: 'افتح «لوحة المتابعة والمبادرات»' };
+                        ? { to: '/waste-to-income', label: ar ? 'افتح «المخلفات إلى دخل»' : 'Open Waste to Income' }
+                        : { to: '/local-monitor', label: ar ? 'افتح «لوحة المتابعة والمبادرات»' : 'Open the Monitoring & Initiatives dashboard' };
 
                   return (
                     <article key={chg.id} className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 space-y-4">
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <h2 className="text-lg font-black text-white">{chg.title}</h2>
+                        <h2 className="text-lg font-black text-white">{ar ? chg.title : CHALLENGE_EN[chg.id]?.title || chg.title}</h2>
                         {verifBadge && (
                           <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${verifBadge.cls}`}>
-                            {verifBadge.label}
+                            {ar ? verifBadge.label : verifBadge.labelEn}
                           </span>
                         )}
                       </div>
 
-                      <p className="text-xs text-slate-300 leading-relaxed">{chg.description}</p>
+                      <p className="text-xs text-slate-300 leading-relaxed">{ar ? chg.description : CHALLENGE_EN[chg.id]?.description || chg.description}</p>
 
                       <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3.5 text-xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">نقاط المشاركة الرمزية:</span>
-                          <span className="font-black text-amber-300">+{chg.symbolicPoints} نقطة رمزية</span>
+                          <span className="text-slate-400">{ar ? 'نقاط المشاركة الرمزية:' : 'Symbolic participation points:'}</span>
+                          <span className="font-black text-amber-300">+{chg.symbolicPoints} {ar ? 'نقطة رمزية' : 'symbolic pts'}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">نقاط بعد التحقق:</span>
-                          <span className="font-black text-emerald-300">+{chg.verifiedPoints} نقطة مؤكدة</span>
+                          <span className="text-slate-400">{ar ? 'نقاط بعد التحقق:' : 'Points after verification:'}</span>
+                          <span className="font-black text-emerald-300">+{chg.verifiedPoints} {ar ? 'نقطة مؤكدة' : 'verified pts'}</span>
                         </div>
                         <p className="text-[11px] text-slate-400 pt-1 border-t border-white/10">
-                          شرط التحقق: {chg.verificationRule} (فترة انتظار: {chg.cooldownHours} ساعة)
+                          {ar ? 'شرط التحقق' : 'Verification rule'}: {ar ? chg.verificationRule : CHALLENGE_EN[chg.id]?.verificationRule || chg.verificationRule} ({ar ? 'فترة انتظار' : 'cooldown'}: {chg.cooldownHours} {ar ? 'ساعة' : 'h'})
                         </p>
                       </div>
 
                       <div className="space-y-2">
                         <label htmlFor={`ev-${chg.id}`} className="block text-xs font-bold text-slate-300">
-                          وصف التوثيق أو الإجراء المنفذ
+                          {ar ? 'وصف التوثيق أو الإجراء المنفذ' : 'Description of the evidence or completed action'}
                         </label>
                         <input
                           id={`ev-${chg.id}`}
                           type="text"
                           value={evidenceInputs[chg.id] || ''}
                           onChange={(e) => setEvidenceInputs((prev) => ({ ...prev, [chg.id]: e.target.value }))}
-                          placeholder="مثال: تم تقديم بلاغ تسريب بالمعادي أو تسليم 3 كجم بلاستيك"
+                          placeholder={ar ? 'مثال: تم تقديم بلاغ تسريب بالمعادي أو تسليم 3 كجم بلاستيك' : 'Example: filed a leak report in Maadi or delivered 3 kg of plastic'}
                           className="w-full min-h-[44px] bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none"
                         />
                       </div>
@@ -335,7 +359,7 @@ const AchievementHub: React.FC = () => {
                           onClick={() => handleSubmitCivicChallenge(chg)}
                           className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition disabled:opacity-50"
                         >
-                          {submittingChallengeId === chg.id ? 'جاري الفحص...' : 'إرسال للمراجعة والتحقق'}
+                          {submittingChallengeId === chg.id ? (ar ? 'جاري الفحص...' : 'Checking...') : (ar ? 'إرسال للمراجعة والتحقق' : 'Submit for review and verification')}
                         </button>
                       </div>
                     </article>
@@ -346,7 +370,7 @@ const AchievementHub: React.FC = () => {
               {/* Submission History */}
               {civicSubmissions.length > 0 && (
                 <div className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-3">
-                  <h3 className="text-base font-black text-white">سجل مطالبات التحقق</h3>
+                  <h3 className="text-base font-black text-white">{ar ? 'سجل مطالبات التحقق' : 'Verification claims log'}</h3>
                   <div className="space-y-2.5">
                     {civicSubmissions.map((sub) => {
                       const badge = VERIF_STATUS_BADGE[sub.status];
@@ -356,13 +380,13 @@ const AchievementHub: React.FC = () => {
                           <div>
                             <p className="text-sm font-black text-white">{chg?.title || sub.challengeId}</p>
                             <p className="text-xs text-slate-300 mt-0.5">{sub.evidenceSummary}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{new Date(sub.submittedAt).toLocaleString('ar-EG')}</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">{new Date(sub.submittedAt).toLocaleString(ar ? 'ar-EG' : 'en-GB')}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${badge.cls}`}>{badge.label}</span>
-                            <span className="text-xs font-bold text-amber-300">+{sub.symbolicPointsAwarded} رمزية</span>
+                            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${badge.cls}`}>{ar ? badge.label : badge.labelEn}</span>
+                            <span className="text-xs font-bold text-amber-300">+{sub.symbolicPointsAwarded} {ar ? 'رمزية' : 'symbolic'}</span>
                             {sub.verifiedPointsAwarded > 0 && (
-                              <span className="text-xs font-black text-emerald-300">+{sub.verifiedPointsAwarded} مؤكدة</span>
+                              <span className="text-xs font-black text-emerald-300">+{sub.verifiedPointsAwarded} {ar ? 'مؤكدة' : 'verified'}</span>
                             )}
                           </div>
                         </div>
