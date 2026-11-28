@@ -19,16 +19,12 @@ void main() {
 
   test('metro bands match the official March 2026 tariff', () {
     expect(metroBands.length, 4);
-    expect(metroBands.map((b) => b.price).toList(), [10, 12, 15, 20]);
-    expect(metroBands.map((b) => b.seniorPrice).toList(), [5, 6, 8, 10]);
-    // Senior fare is always half the regular fare.
-    for (final b in metroBands) {
-      expect(b.seniorPrice, b.price / 2);
-    }
+    expect(metroBands.map((b) => b.price).toList(), [10.0, 12.0, 15.0, 20.0]);
+    expect(metroBands.map((b) => b.seniorPrice).toList(), [5.0, 6.0, 8.0, 10.0]);
   });
 
   test('metro subscriptions are zone-based and ascending', () {
-    expect(metroSubscriptions, [390, 440, 510, 600]);
+    expect(metroSubscriptions, [390.0, 440.0, 510.0, 600.0]);
     expect(metroSubZones.length, metroSubscriptions.length);
     for (var i = 1; i < metroSubscriptions.length; i++) {
       expect(metroSubscriptions[i], greaterThan(metroSubscriptions[i - 1]));
