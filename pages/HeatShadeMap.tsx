@@ -11,6 +11,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import {
   civicActionService,
@@ -26,6 +27,13 @@ const ISSUE_TYPE_AR: Record<HeatIssueType, string> = {
   low_greenery: 'انخفاض الغطاء النباتي',
 };
 
+const ISSUE_TYPE_EN: Record<HeatIssueType, string> = {
+  extreme_heat: 'Extreme heat zone',
+  lack_of_shade: 'Clear lack of shade',
+  exposed_waiting_area: 'Sun-exposed waiting area',
+  low_greenery: 'Low greenery cover',
+};
+
 const INTERVENTION_AR: Record<HeatShadePoint['suggestedIntervention'], string> = {
   add_canopy: 'اقتراح: إضافة مظلة انتظار',
   improve_waiting_station: 'اقتراح: تحسين محطة/مكان الانتظار',
@@ -33,14 +41,23 @@ const INTERVENTION_AR: Record<HeatShadePoint['suggestedIntervention'], string> =
   reflective_surface: 'اقتراح: أسطح/دهانات مخففة للحرارة',
 };
 
-const STATUS_AR: Record<InitiativeStatus, { label: string; cls: string }> = {
-  proposed: { label: 'مقترحة', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
-  coordinating: { label: 'قيد التنسيق', cls: 'bg-sky-500/15 text-sky-300 border-sky-400/40' },
-  in_progress: { label: 'قيد التنفيذ', cls: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/40' },
-  verified: { label: 'تم التحقق', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
+const INTERVENTION_EN: Record<HeatShadePoint['suggestedIntervention'], string> = {
+  add_canopy: 'Suggestion: add a waiting canopy',
+  improve_waiting_station: 'Suggestion: improve the stop/waiting area',
+  conditional_tree_planting: 'Suggestion: conditional tree planting (after soil & utilities check)',
+  reflective_surface: 'Suggestion: heat-reducing surfaces/coatings',
+};
+
+const STATUS_AR: Record<InitiativeStatus, { label: string; labelEn: string; cls: string }> = {
+  proposed: { label: 'مقترحة', labelEn: 'Proposed', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/40' },
+  coordinating: { label: 'قيد التنسيق', labelEn: 'Coordinating', cls: 'bg-sky-500/15 text-sky-300 border-sky-400/40' },
+  in_progress: { label: 'قيد التنفيذ', labelEn: 'In progress', cls: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/40' },
+  verified: { label: 'تم التحقق', labelEn: 'Verified', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' },
 };
 
 const HeatShadeMap: React.FC = () => {
+  const { language } = useApp();
+  const ar = language === 'ar';
   const [points, setPoints] = useState<HeatShadePoint[]>([]);
   const [govFilter, setGovFilter] = useState<string>('all');
   const [issueFilter, setIssueFilter] = useState<'all' | HeatIssueType>('all');
@@ -58,7 +75,7 @@ const HeatShadeMap: React.FC = () => {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir="rtl">
+    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir={ar ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -68,13 +85,15 @@ const HeatShadeMap: React.FC = () => {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-black text-white">خريطة الحر والظل</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-white">{ar ? 'خريطة الحر والظل' : 'Heat & shade map'}</h1>
                 <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/40">
-                  تشمل مواقع تجريبية + بلاغات المواطنين
+                  {ar ? 'تشمل مواقع تجريبية + بلاغات المواطنين' : 'Includes demo sites + citizen reports'}
                 </span>
               </div>
               <p className="text-sm text-slate-300 mt-1">
-                رصد المواقع شديدة الحرارة أو التي تفتقر إلى الظل مع اقتراح تدخلات ملائمة لطبيعة كل موقع.
+                {ar
+                  ? 'رصد المواقع شديدة الحرارة أو التي تفتقر إلى الظل مع اقتراح تدخلات ملائمة لطبيعة كل موقع.'
+                  : 'Tracking very hot or shade-lacking locations, with interventions suited to each site.'}
               </p>
             </div>
           </div>
@@ -84,7 +103,7 @@ const HeatShadeMap: React.FC = () => {
             className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 text-slate-950 font-black text-xs hover:bg-orange-400 transition focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:outline-none"
           >
             <Plus className="w-4 h-4" />
-            <span>أبلغ عن موقع بلا ظل</span>
+            <span>{ar ? 'أبلغ عن موقع بلا ظل' : 'Report a shadeless spot'}</span>
           </Link>
         </div>
 
@@ -93,13 +112,19 @@ const HeatShadeMap: React.FC = () => {
           <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex items-start gap-3">
             <Trees className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-100 leading-relaxed">
-              <strong>ملاحظة علمية مهمة:</strong> التشجير ليس مناسباً في كل مكان؛ الأرصفة الضيقة، مسارات الكابلات والمرافق الأرضية، والجزر المرورية قد تتطلب <strong>تركيب مظلة أو تحسين نقطة انتظار</strong> بدلاً من غرس أشجار لا تعيش أو تعيق الحركة.
+              <strong>{ar ? 'ملاحظة علمية مهمة:' : 'Important scientific note:'}</strong>{' '}
+              {ar
+                ? 'التشجير ليس مناسباً في كل مكان؛ الأرصفة الضيقة، مسارات الكابلات والمرافق الأرضية، والجزر المرورية قد تتطلب تركيب مظلة أو تحسين نقطة انتظار بدلاً من غرس أشجار لا تعيش أو تعيق الحركة.'
+                : 'Tree planting does not fit everywhere; narrow sidewalks, cable and utility routes, and traffic islands may need a canopy or an improved waiting spot instead of trees that will not survive or will block movement.'}
             </p>
           </div>
           <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong>الخصوصية ودقة الحالة:</strong> تُعرض الإحداثيات على مستوى النطاق العام (~1 كم) فقط، ولا تتغير حالة المبادرات إلى «قيد التنفيذ» أو «تم التحقق» إلا بتوثيق فعلي من الجهة المنفذة.
+              <strong>{ar ? 'الخصوصية ودقة الحالة:' : 'Privacy & status accuracy:'}</strong>{' '}
+              {ar
+                ? 'تُعرض الإحداثيات على مستوى النطاق العام (~1 كم) فقط، ولا تتغير حالة المبادرات إلى «قيد التنفيذ» أو «تم التحقق» إلا بتوثيق فعلي من الجهة المنفذة.'
+                : 'Coordinates are shown at general-zone level (~1 km) only, and initiative statuses move to "in progress" or "verified" only with actual documentation from the implementing body.'}
             </p>
           </div>
         </div>
@@ -110,7 +135,7 @@ const HeatShadeMap: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-slate-400 inline-flex items-center gap-1 ml-1">
             <Filter className="w-3.5 h-3.5" />
-            المحافظة:
+            {ar ? 'المحافظة:' : 'Governorate:'}
           </span>
           <button
             type="button"
@@ -121,7 +146,7 @@ const HeatShadeMap: React.FC = () => {
                 : 'bg-slate-950/60 text-slate-300 border-white/10'
             }`}
           >
-            الكل
+            {ar ? 'الكل' : 'All'}
           </button>
           {governorates.map((g) => (
             <button
@@ -140,15 +165,15 @@ const HeatShadeMap: React.FC = () => {
         </div>
 
         <select
-          aria-label="تصفية حسب نوع مشكلة الحرارة"
+          aria-label={ar ? 'تصفية حسب نوع مشكلة الحرارة' : 'Filter by heat issue type'}
           value={issueFilter}
           onChange={(e) => setIssueFilter(e.target.value as any)}
           className="min-h-[44px] bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:border-orange-400 focus:outline-none"
         >
-          <option value="all">كل أنواع المشكلات</option>
+          <option value="all">{ar ? 'كل أنواع المشكلات' : 'All issue types'}</option>
           {(Object.keys(ISSUE_TYPE_AR) as HeatIssueType[]).map((k) => (
             <option key={k} value={k}>
-              {ISSUE_TYPE_AR[k]}
+              {ar ? ISSUE_TYPE_AR[k] : ISSUE_TYPE_EN[k]}
             </option>
           ))}
         </select>
@@ -157,8 +182,8 @@ const HeatShadeMap: React.FC = () => {
       {/* Interactive Map */}
       <section className="bg-slate-900/75 border border-white/10 rounded-3xl p-4 space-y-3">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-base font-black text-white">الخريطة التفاعلية للنطاقات المرصودة</h2>
-          <span className="text-[11px] text-slate-400">مواقع تقريبية على مستوى النطاق</span>
+          <h2 className="text-base font-black text-white">{ar ? 'الخريطة التفاعلية للنطاقات المرصودة' : 'Interactive map of tracked zones'}</h2>
+          <span className="text-[11px] text-slate-400">{ar ? 'مواقع تقريبية على مستوى النطاق' : 'Approximate zone-level locations'}</span>
         </div>
         <div className="h-[320px] md:h-[380px] rounded-2xl overflow-hidden border border-white/10">
           <MapContainer center={[30.04, 31.23]} zoom={6} className="w-full h-full">
@@ -169,11 +194,11 @@ const HeatShadeMap: React.FC = () => {
             {filtered.map((pt) => (
               <Marker key={pt.id} position={[pt.zoneLat, pt.zoneLng]}>
                 <Popup>
-                  <div className="text-right space-y-1 min-w-[180px]" dir="rtl">
+                  <div className="text-right space-y-1 min-w-[180px]" dir={ar ? 'rtl' : 'ltr'}>
                     <p className="font-black text-slate-900 text-xs">{pt.area}</p>
-                    <p className="text-[11px] font-bold text-orange-600">{ISSUE_TYPE_AR[pt.issueType]}</p>
-                    <p className="text-[11px] text-slate-700">{INTERVENTION_AR[pt.suggestedIntervention]}</p>
-                    <p className="text-[10px] text-slate-500">الحالة: {STATUS_AR[pt.initiativeStatus].label}</p>
+                    <p className="text-[11px] font-bold text-orange-600">{ar ? ISSUE_TYPE_AR[pt.issueType] : ISSUE_TYPE_EN[pt.issueType]}</p>
+                    <p className="text-[11px] text-slate-700">{ar ? INTERVENTION_AR[pt.suggestedIntervention] : INTERVENTION_EN[pt.suggestedIntervention]}</p>
+                    <p className="text-[10px] text-slate-500">{ar ? 'الحالة' : 'Status'}: {ar ? STATUS_AR[pt.initiativeStatus].label : STATUS_AR[pt.initiativeStatus].labelEn}</p>
                   </div>
                 </Popup>
               </Marker>
@@ -186,7 +211,7 @@ const HeatShadeMap: React.FC = () => {
       {filtered.length === 0 ? (
         <div className="bg-slate-900/70 border border-white/10 rounded-3xl p-10 text-center space-y-2">
           <Info className="w-10 h-10 text-slate-500 mx-auto" />
-          <h2 className="text-lg font-black text-white">لا توجد مواقع مطابقة للتصفية</h2>
+          <h2 className="text-lg font-black text-white">{ar ? 'لا توجد مواقع مطابقة للتصفية' : 'No locations match the filter'}</h2>
         </div>
       ) : (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -200,10 +225,10 @@ const HeatShadeMap: React.FC = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-300 bg-orange-500/15 border border-orange-400/30 px-2.5 py-1 rounded-lg">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    {ISSUE_TYPE_AR[pt.issueType]}
+                    {ar ? ISSUE_TYPE_AR[pt.issueType] : ISSUE_TYPE_EN[pt.issueType]}
                   </span>
                   <span className={`px-3 py-1 rounded-lg text-xs font-black border ${st.cls}`}>
-                    {st.label}
+                    {ar ? st.label : st.labelEn}
                   </span>
                 </div>
 
@@ -216,15 +241,15 @@ const HeatShadeMap: React.FC = () => {
                 <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3.5 space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-black text-emerald-300">
                     <Umbrella className="w-4 h-4 shrink-0" />
-                    <span>{INTERVENTION_AR[pt.suggestedIntervention]}</span>
+                    <span>{ar ? INTERVENTION_AR[pt.suggestedIntervention] : INTERVENTION_EN[pt.suggestedIntervention]}</span>
                   </div>
                   <p className="text-[11px] text-slate-300 leading-relaxed">{pt.suitabilityNote}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 pt-1">
-                  <span>عدد الإشارات المسجلة: {pt.reportsCount}</span>
+                  <span>{ar ? 'عدد الإشارات المسجلة' : 'Recorded signals'}: {pt.reportsCount}</span>
                   <span>
-                    {pt.isDemo ? 'بيانات تجريبية' : 'بلاغ مجتمعي'} · أُضيف: {pt.createdAt}
+                    {pt.isDemo ? (ar ? 'بيانات تجريبية' : 'Demo data') : (ar ? 'بلاغ مجتمعي' : 'Community report')} · {ar ? 'أُضيف' : 'Added'}: {pt.createdAt}
                   </span>
                 </div>
               </article>
