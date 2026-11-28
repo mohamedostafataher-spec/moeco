@@ -13,6 +13,7 @@ import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/bill_compare_service.dart';
 import 'package:moeco/services/challenge_service.dart';
 import 'package:moeco/services/notification_service.dart';
+import 'package:moeco/services/action_plan_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/screens/utilities_screen.dart' show estimateElectricityBill;
@@ -537,5 +538,27 @@ void main() {
     expect(GreenTrips.tripEgpSaved({'km': 5.0, 'instead': 'microbus'}), 10.0);
     // Trips logged before the field existed count as car trips
     expect(GreenTrips.tripEgpSaved({'km': 4.0}), closeTo(12.0, 0.001));
+  });
+
+  test('Weekly action plan: deterministic 3 actions, rotates weekly', () {
+    final w1 = ActionPlanService.planForWeek(DateTime(2026, 11, 28));
+    expect(w1.length, 3);
+    // Same week, same plan
+    expect(ActionPlanService.planForWeek(DateTime(2026, 11, 29))
+        .map((t) => t.id), w1.map((t) => t.id));
+    // Next week rotates to a different set
+    final w2 = ActionPlanService.planForWeek(DateTime(2026, 12, 5));
+    expect(w2.map((t) => t.id).toSet() == w1.map((t) => t.id).toSet(), isFalse);
+    // Every action is a real documented tip
+    for (final tip in w1) {
+      expect(tip.kwhSavedMonthly, greaterThan(0));
+    }
+    // Plan EGP total adds up at the marginal price
+    final total = ActionPlanService.planEgpSaved(w1, 1.0);
+    expect(total,
+        closeTo(w1.fold<double>(0, (s, t) => s + t.kwhSavedMonthly), 0.001));
+    // Week key is stable within a Saturday-start week
+    expect(ActionPlanService.weekKey(DateTime(2026, 11, 28)),
+        ActionPlanService.weekKey(DateTime(2026, 11, 29)));
   });
 }
