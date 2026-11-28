@@ -502,9 +502,9 @@ void main() {
     final extra = estimateElectricityBill(210) - estimateElectricityBill(200);
     // The extra is far more than the 10 kWh marginal usage: whole-bill re-rate.
     expect(extra, greaterThan(10 * 0.95));
-    // 80 kWh used mid-month, projected 190 => same slab, no warning condition
+    // 150 kWh used mid-month, projected 190 => same slab, no warning condition
     expect(SavingsTipsService.tierIndexForKwh(190) >
-        SavingsTipsService.tierIndexForKwh(80), isFalse);
+        SavingsTipsService.tierIndexForKwh(150), isFalse);
     // 190 used, projected 210 => warning fires
     expect(SavingsTipsService.tierIndexForKwh(210) >
         SavingsTipsService.tierIndexForKwh(190), isTrue);
