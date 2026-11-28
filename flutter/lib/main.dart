@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme.dart';
 import 'strings.dart';
 import 'services/footprint_store.dart';
+import 'services/error_log_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/complaints_screen.dart';
@@ -11,6 +12,9 @@ import 'screens/more_screen.dart';
 import 'screens/onboarding_screen.dart';
 
 void main() {
+  // F15 (on-device): record crashes and errors locally; nothing is
+  // uploaded - the user can share the log manually from More.
+  ErrorLogService.install();
   runApp(const MoEcoApp());
 }
 
