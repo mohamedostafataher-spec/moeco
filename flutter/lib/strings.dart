@@ -490,6 +490,18 @@ class S {
   String get sgIntro => ar
       ? 'الفرز من البيت بيخلي ٨٠٪ من الزبالة صالحة للتدوير. دي إرشادات عامة ثابتة؛ أماكن التسليم وأسعار الشراء هتلاقيها في صفحة إعادة التدوير.'
       : 'Sorting at home keeps 80% of waste recyclable. This is fixed general guidance; drop-off points and buy prices are on the recycling page.';
+
+  String get sugTitle => ar ? 'صندوق الاقتراحات' : 'Suggestion box';
+  String get sugSub => ar
+      ? 'قولنا إيه اللي ناقص التطبيق - بيتسجل عندك وبتبعته بنفسك'
+      : 'Tell us what the app is missing - saved on your device, you send it yourself';
+  String get sugIntro => ar
+      ? 'اكتب اقتراحك هنا وهيتسجل على موبايلك. لما تحب تبعتهولنا، دوس "شارك الاقتراحات" وابعته بأي طريقة (واتساب، إيميل...).'
+      : 'Write your suggestion here and it stays on your device. When you want to send it, tap "Share suggestions" and use any app (WhatsApp, email...).';
+  String get sugHint => ar ? 'اكتب اقتراحك...' : 'Write your suggestion...';
+  String get sugAdd => ar ? 'سجّل الاقتراح' : 'Save suggestion';
+  String get sugSaved => ar ? 'اتسجل ✅ ابعتهولنا لما تحب' : 'Saved ✅ Send it whenever you like';
+  String get sugShare => ar ? 'شارك الاقتراحات' : 'Share suggestions';
   String get shGreenKm => ar ? 'كم مواصلات نظيفة' : 'green km';
   String get shCo2 => ar ? 'كجم كربون موفّر' : 'kg CO2 saved';
   String get shCardFooter => ar
