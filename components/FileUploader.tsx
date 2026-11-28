@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { carbonDataService, CarbonDataPoint } from '../services/carbonDataService';
+import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 
 interface FileUploaderProps {
@@ -10,6 +11,8 @@ interface FileUploaderProps {
 }
 
 export const FileUploader: React.FC<FileUploaderProps> = ({ onComplete }) => {
+  const { language } = useApp();
+  const ar = language === 'ar';
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -114,7 +117,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onComplete }) => {
       </div>
       
       <div>
-        <h3 className="text-xl font-black text-white font-arabic">تحديث البيانات</h3>
+        <h3 className="text-xl font-black text-white font-arabic">{ar ? 'تحديث البيانات' : 'Update data'}</h3>
         <p className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Upload Excel or PDF</p>
       </div>
 
