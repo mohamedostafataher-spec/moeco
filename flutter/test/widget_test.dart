@@ -361,7 +361,7 @@ void main() {
     expect(stats.totalLoggedDays, 1);
     expect(stats.streakDays, 1);
     expect(stats.greenKm, 12.0);
-    expect(stats.co2SavedKg, closeTo(12.0 * FootprintStore.co2PerCarKm, 0.001));
+    expect(stats.co2SavedKg, closeTo(12.0 * GreenTrips.co2PerCarKm, 0.001));
   });
 
 
