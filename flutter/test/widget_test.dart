@@ -11,6 +11,7 @@ import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/error_log_service.dart';
 import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/bill_compare_service.dart';
+import 'package:moeco/services/challenge_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
@@ -428,5 +429,67 @@ void main() {
       {'month': '2026-10', 'kwh': 300.0, 'm3': 10.0},
     ]);
     expect(cmp.hasEnoughData, isFalse);
+  });
+
+  test('F9: challenge progress for weekly green trips', () {
+    final now = DateTime(2026, 11, 28, 12); // Saturday
+    expect(ChallengeService.weekStart(now), DateTime(2026, 11, 28));
+    final sunday = DateTime(2026, 11, 29, 9);
+    expect(ChallengeService.weekStart(sunday), DateTime(2026, 11, 28));
+    final trips = [
+      {'createdAt': '2026-11-28T08:00:00.000'},
+      {'createdAt': '2026-11-25T08:00:00.000'}, // last week
+    ];
+    expect(ChallengeService.tripsThisWeek(trips, now), 1);
+    final c = Challenge(
+      governorateAr: 'القاهرة',
+      goalType: ChallengeGoalType.weeklyGreenTrips,
+      target: 2,
+      createdAt: now,
+    );
+    final p = ChallengeService.progress(
+        challenge: c, trips: trips, readings: const [], now: now);
+    expect(p.current, 1);
+    expect(p.done, isFalse);
+    expect(p.fraction, closeTo(0.5, 0.001));
+    // Round-trip
+    final back = Challenge.fromJson(c.toJson());
+    expect(back.governorateAr, 'القاهرة');
+    expect(back.target, 2);
+  });
+
+  test('F9: monthly reduction needs two readings and clamps at zero', () {
+    expect(ChallengeService.monthlyReductionPct([
+      {'month': '2026-10', 'kwh': 300.0},
+    ]), isNull);
+    expect(
+        ChallengeService.monthlyReductionPct([
+          {'month': '2026-10', 'kwh': 300.0},
+          {'month': '2026-11', 'kwh': 270.0},
+        ]),
+        10);
+    // An increase never shows as negative progress
+    expect(
+        ChallengeService.monthlyReductionPct([
+          {'month': '2026-10', 'kwh': 200.0},
+          {'month': '2026-11', 'kwh': 300.0},
+        ]),
+        -50);
+    final c = Challenge(
+      governorateAr: 'الجيزة',
+      goalType: ChallengeGoalType.monthlyKwhReduction,
+      target: 10,
+      createdAt: DateTime(2026, 11, 1),
+    );
+    final p = ChallengeService.progress(
+        challenge: c,
+        trips: const [],
+        readings: [
+          {'month': '2026-10', 'kwh': 200.0},
+          {'month': '2026-11', 'kwh': 300.0},
+        ],
+        now: DateTime(2026, 11, 28));
+    expect(p.current, 0);
+    expect(p.done, isFalse);
   });
 }
