@@ -61,7 +61,7 @@ class _MetersScreenState extends State<MetersScreen> {
       if (photo == null) return;
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(s.ocrScanning)));
+            .showSnackBar(SnackBar(content: Text(widget.s.ocrScanning)));
       }
       final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
       try {
@@ -70,11 +70,11 @@ class _MetersScreenState extends State<MetersScreen> {
         if (!mounted) return;
         if (reading == null) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(s.ocrFailed)));
+              .showSnackBar(SnackBar(content: Text(widget.s.ocrFailed)));
         } else {
           setState(() => _kwhCtrl.text = reading.toStringAsFixed(0));
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(s.ocrConfirmHint)));
+              .showSnackBar(SnackBar(content: Text(widget.s.ocrConfirmHint)));
         }
       } finally {
         recognizer.close();
@@ -82,7 +82,7 @@ class _MetersScreenState extends State<MetersScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(s.ocrFailed)));
+            .showSnackBar(SnackBar(content: Text(widget.s.ocrFailed)));
       }
     } finally {
       if (mounted) setState(() => _ocrBusy = false);
