@@ -21,6 +21,26 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _food;
   List<AirQualityReading>? _aq;
   bool _aqLoading = true;
+  final TextEditingController _kwhCtrl = TextEditingController();
+  double? _billKg;
+
+  // Rough awareness estimates (per-person daily averages), same spirit as the web app.
+  static const _transportKg = {
+    'مشي/عجلة': 0.0, 'Walk/Bike': 0.0,
+    'مترو/قطار': 1.5, 'Metro/Train': 1.5,
+    'أتوبيس/ميكروباص': 2.5, 'Bus/Microbus': 2.5,
+    'عربية/تاكسي': 6.0, 'Car/Taxi': 6.0,
+  };
+  static const _elecKg = {
+    'قليل': 1.5, 'Low': 1.5,
+    'متوسط': 3.0, 'Medium': 3.0,
+    'عالي (تكييف)': 6.0, 'High (A/C)': 6.0,
+  };
+  static const _foodKg = {
+    'نباتي أغلبه': 1.9, 'Mostly veg': 1.9,
+    'مشكل': 2.8, 'Mixed': 2.8,
+    'لحوم كتير': 4.6, 'Meat-heavy': 4.6,
+  };
 
   @override
   void initState() {
@@ -32,6 +52,37 @@ class _HomeScreenState extends State<HomeScreen> {
         _aqLoading = false;
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _kwhCtrl.dispose();
+    super.dispose();
+  }
+
+  S get s => widget.s;
+
+  double _dayKg(Map<String, dynamic> log) {
+    return (_transportKg[log['transport']] ?? 0) +
+        (_elecKg[log['electricity']] ?? 0) +
+        (_foodKg[log['food']] ?? 0);
+  }
+
+  /// Last 7 days (oldest first): (dayLabel, kg or null when not logged).
+  List<(String, double?)> _week() {
+    final byDate = {for (final e in widget.store.logs) e['date'] as String: e};
+    final arDays = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
+    final enDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    final out = <(String, double?)>[];
+    for (var i = 6; i >= 0; i--) {
+      final d = DateTime.now().subtract(Duration(days: i));
+      final key = d.toIso8601String().substring(0, 10);
+      final wd = d.weekday % 7; // Sat=0 .. Fri=6
+      final label = s.ar ? arDays[wd] : enDays[wd];
+      final log = byDate[key];
+      out.add((label, log == null ? null : _dayKg(log)));
+    }
+    return out;
   }
 
   Widget _aqCard() {
@@ -93,7 +144,122 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  S get s => widget.s;
+  Widget _weekCard() {
+    final week = _week();
+    final vals = week.map((e) => e.$2).whereType<double>().toList();
+    final maxV = vals.isEmpty ? 1.0 : vals.reduce((a, b) => a > b ? a : b);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bar_chart_rounded, color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(s.weeklyTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (vals.isEmpty)
+              Text(s.weeklyEmpty, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else
+              SizedBox(
+                height: 110,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: week.map((day) {
+                    final kg = day.$2;
+                    final h = kg == null ? 4.0 : (8.0 + 72.0 * (kg / (maxV <= 0 ? 1 : maxV)));
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (kg != null)
+                              Text(kg.toStringAsFixed(1),
+                                  style: const TextStyle(fontSize: 9.5, color: MoEcoTheme.textMuted)),
+                            const SizedBox(height: 3),
+                            Container(
+                              height: h,
+                              decoration: BoxDecoration(
+                                color: kg == null
+                                    ? MoEcoTheme.cardBorder
+                                    : MoEcoTheme.primary.withOpacity(0.75),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(day.$1,
+                                style: const TextStyle(fontSize: 11, color: MoEcoTheme.textMuted)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _billCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bolt, color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(s.billTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _kwhCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: s.billHint,
+                      isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onChanged: (_) => setState(() => _billKg = null),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    final v = double.tryParse(_kwhCtrl.text.replaceAll(',', '.'));
+                    setState(() => _billKg = v == null ? null : v * 0.42);
+                  },
+                  child: Text(s.billCalc),
+                ),
+              ],
+            ),
+            if (_billKg != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                s.billResult(_billKg!.toStringAsFixed(1)),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: MoEcoTheme.primaryDark),
+              ),
+            ],
+            const SizedBox(height: 6),
+            Text(s.billNote, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _logDay() async {
     if (_transport == null || _electricity == null || _food == null) return;
@@ -160,6 +326,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _aqCard(),
         ),
         Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _weekCard(),
+        ),
+        Padding(
           padding: const EdgeInsets.all(16),
           child: Card(
             child: Padding(
@@ -203,14 +373,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: _billCard(),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20),
           child: Text(
             s.savedLocalNote,
             textAlign: TextAlign.center,
             style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11.5),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
       ],
     );
   }
