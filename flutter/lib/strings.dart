@@ -81,6 +81,38 @@ class S {
       ? 'مصدر النقاط: خريطة OpenStreetMap المجتمعية — ممكن تكون ناقصة أو قديمة.'
       : 'Points from the OpenStreetMap community map; may be incomplete or outdated.';
 
+  // Bill prediction (meters screen): project the coming electricity bill
+  // from the current meter reading, official 2026 tiers, honest estimate.
+  String get metersPredictTitle =>
+      ar ? 'توقّع فاتورة الشهر الجاي' : 'Predict the coming bill';
+  String get metersPredictSub => ar
+      ? 'من قراءة العدّاد دلوقتي، من غير ما تستنى أول الشهر.'
+      : 'From the meter reading right now, no waiting for month end.';
+  String get metersPredictPrev =>
+      ar ? 'قراءة أول الشهر (ك.و.س)' : 'Cycle-start reading (kWh)';
+  String get metersPredictNow =>
+      ar ? 'القراءة الحالية (ك.و.س)' : 'Current reading (kWh)';
+  String get metersPredictDays =>
+      ar ? 'الأيام من قراءة أول الشهر' : 'Days since the first reading';
+  String get metersPredictBtn => ar ? 'احسب التوقع' : 'Estimate';
+  String metersPredictUsage(String kwh) =>
+      ar ? 'استهلاك الشهر المتوقع: $kwh كيلوواط ساعة' : 'Projected month usage: $kwh kWh';
+  String metersPredictBill(String egp) =>
+      ar ? 'الفاتورة المتوقعة: $egp جنيه' : 'Projected bill: $egp EGP';
+  String metersPredictCo2(String kg) =>
+      ar ? 'انبعاثات متوقعة: $kg كجم CO2' : 'Projected emissions: $kg kg CO2';
+  String get metersPredictHigh => ar
+      ? 'استهلاكك رايح لفوق — قلّل التكييف والأجهزة الشغالة على الفاضي وممكن توفّر لحد 20%.'
+      : 'Usage is trending high - trimming AC and idle devices can save up to 20%.';
+  String get metersPredictGood =>
+      ar ? 'ماشي كويس — استهلاكك في المعدل الطبيعي.' : 'On track - usage is within the normal range.';
+  String get metersPredictNote => ar
+      ? 'تقدير من استهلاكك لحد دلوقتي بالتعريفة الرسمية 2026 — مش فاتورة رسمية.'
+      : 'An estimate from your usage so far at the official 2026 tariff - not an official bill.';
+  String get metersPredictInvalid => ar
+      ? 'القراءة الحالية لازم تكون أكبر من قراءة أول الشهر.'
+      : 'The current reading must be higher than the cycle-start reading.';
+
   // Prayer times (live, Aladhan — Egyptian General Authority of Survey)
   String get ptTitle => ar ? 'مواقيت الصلاة — القاهرة' : 'Prayer times — Cairo';
   String get ptLoading => ar ? 'بنجيب مواقيت الصلاة...' : 'Fetching prayer times...';
