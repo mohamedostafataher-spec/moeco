@@ -6,6 +6,7 @@ import 'meters_screen.dart';
 import 'achievements_screen.dart';
 import 'climate_screen.dart';
 import 'fuel_screen.dart';
+import 'utilities_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -123,6 +124,9 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.local_gas_station_outlined, s.fuelHeroTitle,
                   s.fuelHeroSub, FuelScreen(s: s)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.receipt_long_outlined, s.utilHeroTitle,
+                  s.utilHeroSub, UtilitiesScreen(s: s)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
