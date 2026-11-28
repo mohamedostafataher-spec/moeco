@@ -530,4 +530,12 @@ void main() {
     expect(NotificationService.nextWeeklyTip(DateTime(2026, 11, 28, 8)),
         DateTime(2026, 11, 28, 10));
   });
+
+  test('Transport EGP saved: mode-aware rough estimates, honest defaults', () {
+    expect(GreenTrips.tripEgpSaved({'km': 5.0, 'instead': 'car'}), 15.0);
+    expect(GreenTrips.tripEgpSaved({'km': 5.0, 'instead': 'metro'}), 12.0);
+    expect(GreenTrips.tripEgpSaved({'km': 5.0, 'instead': 'microbus'}), 10.0);
+    // Trips logged before the field existed count as car trips
+    expect(GreenTrips.tripEgpSaved({'km': 4.0}), closeTo(12.0, 0.001));
+  });
 }
