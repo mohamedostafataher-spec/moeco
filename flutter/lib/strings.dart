@@ -372,6 +372,24 @@ class S {
   String get errLogClear => ar ? 'امسح' : 'Clear';
   String get errLogCleared => ar ? 'اتمسح السجل' : 'Log cleared';
 
+  String get bcTitle => ar ? 'قارن فواتيرك' : 'Compare your bills';
+  String get bcSub => ar
+      ? 'شوف استهلاكك بيزيد ولا بيقل شهر ورا شهر'
+      : 'See whether your usage goes up or down month by month';
+  String get bcEmpty => ar
+      ? 'سجّل قراءة العدّاد لشهرين على الأقل من صفحة العدّادات، وهنا هتشوف المقارنة بينهم.'
+      : 'Log at least two monthly meter readings from the meters page, and the comparison will show up here.';
+  String get bcEstimateNote => ar
+      ? 'الفواتير هنا تقديرية على أسعار ٢٠٢٦ الرسمية، مش قيمة الفاتورة اللي بتيجيلك بالظبط.'
+      : 'Bills here are estimates on the official 2026 tariff, not your exact invoice amount.';
+  String bcMore(int kwh) => ar ? '+$kwh ك.و.س' : '+$kwh kWh';
+  String bcLess(int kwh) => ar ? '-$kwh ك.و.س' : '-$kwh kWh';
+  String bcRow(int kwh, int egp) =>
+      ar ? '$kwh ك.و.س - حوالي $egp جنيه' : '$kwh kWh - about EGP $egp';
+  String bcSummary(int avg, String lowMonth, String highMonth) => ar
+      ? 'متوسط استهلاكك: $avg ك.و.س في الشهر. أقل شهر: $lowMonth - أعلى شهر: $highMonth.'
+      : 'Your average usage: $avg kWh/month. Lowest month: $lowMonth - highest: $highMonth.';
+
   // F7: offline mode (local-first, last-sync honesty)
   String get offBanner => ar
       ? 'أنت غير متصل — المعروض آخر بيانات محفوظة على جهازك'
