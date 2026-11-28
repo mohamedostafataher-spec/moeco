@@ -94,3 +94,36 @@ class FootprintStore {
     await _writeList(_kDrafts, items);
   }
 }
+
+// ---- Meter readings (monthly utility tracking) ----
+extension MeterReadings on FootprintStore {
+  static const _kMeters = 'meter_readings_v1';
+
+  /// Readings: {month: 'YYYY-MM', kwh: num, m3: num, createdAt: iso}
+  List<Map<String, dynamic>> get meterReadings {
+    final items = _readList(_kMeters);
+    items.sort((a, b) => (a['month'] as String).compareTo(b['month'] as String));
+    return items;
+  }
+
+  Future<void> addMeterReading({
+    required String month,
+    required double kwh,
+    required double m3,
+  }) async {
+    final items = _readList(_kMeters);
+    items.removeWhere((e) => e['month'] == month);
+    items.add({
+      'month': month,
+      'kwh': kwh,
+      'm3': m3,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+    await _writeList(_kMeters, items);
+  }
+
+  Future<void> deleteMeterReading(String month) async {
+    final items = _readList(_kMeters)..removeWhere((e) => e['month'] == month);
+    await _writeList(_kMeters, items);
+  }
+}
