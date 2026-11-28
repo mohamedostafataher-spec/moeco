@@ -74,7 +74,7 @@ const ClimateTrends: React.FC = () => {
           <Globe className="w-12 h-12 text-white" />
         </div>
         <div>
-          <h1 className="text-4xl font-black text-white font-arabic">مركز تحليل المناخ العالمي</h1>
+          <h1 className="text-4xl font-black text-white font-arabic">{isRtl ? 'مركز تحليل المناخ العالمي' : 'Global Climate Analysis Hub'}</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Global Climate Intelligence Hub</p>
         </div>
       </div>
@@ -167,16 +167,18 @@ const ClimateTrends: React.FC = () => {
           <div className="p-8 bg-zinc-900/50 border border-white/5 rounded-[3rem] space-y-6">
             <h3 className="text-xl font-black text-white font-arabic flex items-center gap-3">
               <ShieldCheck className="w-6 h-6 text-emerald-500" />
-              أهداف اتفاقية باريس
+              {isRtl ? 'أهداف اتفاقية باريس' : 'Paris Agreement Goals'}
             </h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              تهدف الاتفاقية إلى الحد من الاحتباس الحراري إلى أقل من 2 درجة مئوية، ويفضل أن يكون 1.5 درجة مئوية، مقارنة بمستويات ما قبل الصناعة.
+              {isRtl
+                ? 'تهدف الاتفاقية إلى الحد من الاحتباس الحراري إلى أقل من 2 درجة مئوية، ويفضل أن يكون 1.5 درجة مئوية، مقارنة بمستويات ما قبل الصناعة.'
+                : 'The agreement aims to limit global warming to well below 2°C, preferably 1.5°C, compared to pre-industrial levels.'}
             </p>
             <div className="space-y-4">
               <div className="p-4 bg-black/20 rounded-2xl border border-white/5">
                 <div className="flex justify-between text-[10px] font-black uppercase mb-2">
-                  <span className="text-zinc-500">التقدم الحالي</span>
-                  <span className="text-red-500">خطر</span>
+                  <span className="text-zinc-500">{isRtl ? 'التقدم الحالي' : 'Current progress'}</span>
+                  <span className="text-red-500">{isRtl ? 'خطر' : 'At risk'}</span>
                 </div>
                 <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
                   <div className="w-[85%] h-full bg-red-500" />
@@ -187,12 +189,14 @@ const ClimateTrends: React.FC = () => {
 
           <div className="p-8 bg-emerald-600 rounded-[3rem] text-white space-y-4 relative overflow-hidden group">
             <Zap className="w-12 h-12 text-emerald-200 mb-2" />
-            <h3 className="text-2xl font-black font-arabic">كيف تساهم؟</h3>
+            <h3 className="text-2xl font-black font-arabic">{isRtl ? 'كيف تساهم؟' : 'How can you help?'}</h3>
             <p className="text-sm text-emerald-100/80 leading-relaxed">
-              كل تقليل في استهلاكك اليومي يساهم في كسر هذا المنحنى التصاعدي. ابدأ الآن بحساب بصمتك.
+              {isRtl
+                ? 'كل تقليل في استهلاكك اليومي يساهم في كسر هذا المنحنى التصاعدي. ابدأ الآن بحساب بصمتك.'
+                : 'Every reduction in your daily consumption helps break this rising curve. Start by calculating your footprint now.'}
             </p>
             <button className="flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-white text-emerald-600 px-6 py-3 rounded-xl shadow-xl group-hover:gap-4 transition-all">
-              ابدأ الحساب <ArrowRight className="w-4 h-4" />
+              {isRtl ? 'ابدأ الحساب' : 'Start calculating'} <ArrowRight className="w-4 h-4" />
             </button>
             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           </div>
@@ -202,19 +206,23 @@ const ClimateTrends: React.FC = () => {
       <div className="p-10 bg-zinc-900/80 rounded-[4rem] border border-white/10">
         <div className="flex items-center gap-4 mb-8">
           <Info className="w-8 h-8 text-blue-500" />
-          <h3 className="text-2xl font-black text-white font-arabic">منهجية البيانات (Methodology)</h3>
+          <h3 className="text-2xl font-black text-white font-arabic">{isRtl ? 'منهجية البيانات' : 'Data Methodology'}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-4">
-            <h4 className="text-lg font-bold text-emerald-400 font-arabic">مصادر القياسات</h4>
+            <h4 className="text-lg font-bold text-emerald-400 font-arabic">{isRtl ? 'مصادر القياسات' : 'Measurement sources'}</h4>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              تعتمد أرقام الكربون في التطبيق على معاملات الانبعاثات القياسية (Standard Emission Factors) الصادرة عن الهيئة الحكومية الدولية المعنية بتغير المناخ (IPCC) ووكالة الطاقة الدولية (IEA).
+              {isRtl
+                ? 'تعتمد أرقام الكربون في التطبيق على معاملات الانبعاثات القياسية (Standard Emission Factors) الصادرة عن الهيئة الحكومية الدولية المعنية بتغير المناخ (IPCC) ووكالة الطاقة الدولية (IEA).'
+                : 'The app carbon figures rely on standard emission factors published by the IPCC and the International Energy Agency (IEA).'}
             </p>
           </div>
           <div className="space-y-4">
-            <h4 className="text-lg font-bold text-emerald-400 font-arabic">التوقعات المستقبلية</h4>
+            <h4 className="text-lg font-bold text-emerald-400 font-arabic">{isRtl ? 'التوقعات المستقبلية' : 'Future projections'}</h4>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              يتم حساب التوقعات باستخدام نماذج الانحدار الخطي (Linear Regression) بناءً على متوسط النمو السنوي للانبعاثات في العقد الأخير، مع مراعاة التغيرات الكبرى مثل جائحة كورونا.
+              {isRtl
+                ? 'يتم حساب التوقعات باستخدام نماذج الانحدار الخطي (Linear Regression) بناءً على متوسط النمو السنوي للانبعاثات في العقد الأخير، مع مراعاة التغيرات الكبرى مثل جائحة كورونا.'
+                : 'Projections are computed with linear regression models based on the average annual emissions growth over the last decade, accounting for major shifts such as the COVID-19 pandemic.'}
             </p>
           </div>
         </div>
