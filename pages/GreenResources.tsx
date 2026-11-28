@@ -10,11 +10,13 @@ import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { supabase } from '../services/supabaseClient';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const GreenResources: React.FC = () => {
   const { language, theme, user, isRtl } = useApp();
-  const [activeTab, setActiveTab] = useState<'utility' | 'food' | 'agri' | 'waste'>('utility');
+  const [searchParams] = useSearchParams();
+  const initialTab = (['utility', 'food', 'agri', 'waste'].includes(searchParams.get('tab') || '') ? searchParams.get('tab') : 'utility') as 'utility' | 'food' | 'agri' | 'waste';
+  const [activeTab, setActiveTab] = useState<'utility' | 'food' | 'agri' | 'waste'>(initialTab);
   const [loading, setLoading] = useState(true);
 
   // States
@@ -82,6 +84,16 @@ const GreenResources: React.FC = () => {
       <AnimatePresence mode="wait">
         {activeTab === 'utility' && (
            <motion.div key="utility" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {meters.length === 0 && !loading && (
+                 <div className="md:col-span-3 p-10 bg-white dark:bg-zinc-900 rounded-[3rem] border border-stone-100 dark:border-white/5 shadow-xl text-center space-y-4">
+                    <Zap className="w-10 h-10 mx-auto text-egypt-gold" />
+                    <h4 className="text-lg font-black">{isRtl ? 'لا توجد عدادات مسجلة بعد' : 'No meters registered yet'}</h4>
+                    <p className="text-xs font-bold text-stone-500 max-w-md mx-auto">{isRtl ? 'أضف عداد الكهرباء أو المياه من صفحة «منزلي» لتتبع قراءاتك هنا.' : 'Add your electricity or water meter from the My Home page to track your readings here.'}</p>
+                    <Link to="/my-home" className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest">
+                      {isRtl ? 'افتح «منزلي»' : 'Open My Home'} <ArrowRight size={14} className={isRtl ? 'rotate-180' : ''} />
+                    </Link>
+                 </div>
+              )}
               {meters.map(m => (
                  <div key={m.id} className="p-8 bg-white dark:bg-zinc-900 rounded-[3rem] border border-stone-100 dark:border-white/5 shadow-xl">
                     <div className="flex justify-between items-start mb-8">
@@ -95,7 +107,6 @@ const GreenResources: React.FC = () => {
                     </div>
                     <h4 className="text-xl font-black capitalize mb-1">{m.type}</h4>
                     <p className="text-xs font-bold text-stone-500 mb-8">{m.governorate}</p>
-                    <button className="w-full py-4 bg-stone-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Update Meter</button>
                  </div>
               ))}
            </motion.div>
@@ -103,13 +114,19 @@ const GreenResources: React.FC = () => {
 
         {activeTab === 'food' && (
            <motion.div key="food" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {foods.length === 0 && !loading && (
+                 <div className="md:col-span-2 lg:col-span-3 p-10 bg-white dark:bg-zinc-900 rounded-[3rem] border border-stone-100 dark:border-white/5 shadow-xl text-center space-y-4">
+                    <Utensils className="w-10 h-10 mx-auto text-emerald-500" />
+                    <h4 className="text-lg font-black">{isRtl ? 'لا توجد منتجات غذائية متاحة حالياً' : 'No food listings available right now'}</h4>
+                    <p className="text-xs font-bold text-stone-500 max-w-md mx-auto">{isRtl ? 'قائمة المنتجات الغذائية غير متاحة في الوقت الحالي. جرّب مرة أخرى لاحقاً.' : 'The food listings are unavailable at the moment. Please check again later.'}</p>
+                 </div>
+              )}
               {foods.map(f => (
                  <div key={f.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-stone-100 dark:border-white/5 shadow-xl overflow-hidden group">
                     <img src={f.image_url} className="h-48 w-full object-cover group-hover:scale-105 transition-transform" />
                     <div className="p-6">
                        <h4 className="text-xl font-black mb-1">{isRtl ? (f.name_ar || f.name) : (f.name_en || f.name)}</h4>
                        <p className="text-xs font-bold text-emerald-500 mb-4">{f.type === 'organic' ? '100% Organic' : 'Fresh Produce'}</p>
-                       <button className="w-full py-3 bg-egypt-gold text-white rounded-xl font-black text-xs">Buy Now</button>
                     </div>
                  </div>
               ))}
@@ -120,9 +137,24 @@ const GreenResources: React.FC = () => {
            <motion.div key="agri" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="p-12 bg-emerald-950 text-white rounded-[4rem] text-center border border-white/10 relative overflow-hidden">
                  <div className="absolute inset-0 opacity-10"><Sprout className="w-full h-full" /></div>
-                 <h3 className="text-3xl font-black italic mb-2">Egypt Agriculture Pulse</h3>
-                 <p className="text-sm font-bold opacity-60 max-w-md mx-auto">Real-time monitoring of crop health and irrigation across the Nile Delta.</p>
+                 <h3 className="text-3xl font-black italic mb-2">{isRtl ? 'نبض الزراعة المصرية' : 'Egypt Agriculture Pulse'}</h3>
+                 <p className="text-sm font-bold opacity-60 max-w-md mx-auto">{isRtl ? 'إرشادات موسمية للمحاصيل والري في مصر.' : 'Seasonal crop and irrigation guidance for Egypt.'}</p>
               </div>
+              {crops.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {crops.map((c: any) => (
+                       <div key={c.id || c.name} className="p-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-stone-100 dark:border-white/5 shadow-xl">
+                          <Sprout className="w-8 h-8 text-emerald-500 mb-3" />
+                          <h4 className="text-lg font-black mb-1">{isRtl ? (c.name_ar || c.name) : (c.name_en || c.name)}</h4>
+                          {c.season && <p className="text-xs font-bold text-stone-500">{c.season}</p>}
+                       </div>
+                    ))}
+                 </div>
+              ) : (
+                 !loading && (
+                   <p className="text-center text-xs font-bold text-stone-500">{isRtl ? 'دليل المحاصيل التفصيلي غير متاح حالياً.' : 'The detailed crop directory is unavailable at the moment.'}</p>
+                 )
+              )}
            </motion.div>
         )}
 
