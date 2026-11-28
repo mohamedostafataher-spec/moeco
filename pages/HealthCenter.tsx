@@ -9,11 +9,13 @@ import {
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { dailyServices } from '../services/dailyServices';
+import { weatherService, WeatherData } from '../services/weatherService';
 
 const HealthCenter: React.FC = () => {
   const { language, isRtl, theme } = useApp();
   const navigate = useNavigate();
   const [facilities, setFacilities] = useState<any[]>([]);
+  const [air, setAir] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -26,13 +28,19 @@ const HealthCenter: React.FC = () => {
       setLoading(false);
     };
 
+    const fetchAir = async (lat: number, lng: number) => {
+      const w = await weatherService.getWeather(lat, lng, language === 'ar' ? 'ar' : 'en');
+      setAir(w);
+    };
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => fetchHealth(pos.coords.latitude, pos.coords.longitude),
-        () => fetchHealth(30.0444, 31.2357) // Fallback to Cairo
+        (pos) => { fetchHealth(pos.coords.latitude, pos.coords.longitude); fetchAir(pos.coords.latitude, pos.coords.longitude); },
+        () => { fetchHealth(30.0444, 31.2357); fetchAir(30.0444, 31.2357); } // Fallback to Cairo
       );
     } else {
       fetchHealth(30.0444, 31.2357);
+      fetchAir(30.0444, 31.2357);
     }
   }, []);
 
@@ -175,20 +183,44 @@ const HealthCenter: React.FC = () => {
           </div>
         )}
 
-        {/* Health Alert */}
-        <div className="mt-12 p-8 bg-amber-500/10 border border-amber-500/20 rounded-[3rem] flex items-start gap-6">
-          <div className="p-4 bg-amber-500/20 rounded-2xl shrink-0">
-            <AlertCircle className="w-8 h-8 text-amber-500" />
-          </div>
-          <div>
-            <h4 className="text-lg font-black font-arabic text-amber-500 mb-2">{language === 'ar' ? 'تنبيه صحي' : 'Health Alert'}</h4>
-            <p className="text-sm font-bold text-zinc-500 leading-relaxed">
-              {language === 'ar' 
-                ? 'توجد موجة غبار كثيفة اليوم. ننصح مرضى الحساسية والجيوب الأنفية بارتداء الكمامة وتجنب الخروج إلا للضرورة.' 
-                : 'There is a heavy dust wave today. We advise allergy and sinus patients to wear a mask and avoid going out unless necessary.'}
-            </p>
-          </div>
-        </div>
+        {/* Air Quality Advisory — live data (Open-Meteo), hidden when unavailable */}
+        {air && !air.isFallback && (() => {
+          const severe = air.aqi >= 151 || air.pm10 >= 155;
+          const sensitive = air.aqi >= 101 || air.pm10 >= 55;
+          const tone = severe ? 'red' : sensitive ? 'amber' : 'emerald';
+          const toneClasses = {
+            red: { wrap: 'bg-red-500/10 border-red-500/20', chip: 'bg-red-500/20', icon: 'text-red-500', title: 'text-red-500' },
+            amber: { wrap: 'bg-amber-500/10 border-amber-500/20', chip: 'bg-amber-500/20', icon: 'text-amber-500', title: 'text-amber-500' },
+            emerald: { wrap: 'bg-emerald-500/10 border-emerald-500/20', chip: 'bg-emerald-500/20', icon: 'text-emerald-500', title: 'text-emerald-500' },
+          }[tone] as { wrap: string; chip: string; icon: string; title: string };
+          const title = severe
+            ? (language === 'ar' ? 'تنبيه: موجة غبار كثيفة الآن' : 'Alert: Heavy dust levels right now')
+            : sensitive
+              ? (language === 'ar' ? 'جودة الهواء قد تؤثر على الفئات الحساسة' : 'Air quality may affect sensitive groups')
+              : (language === 'ar' ? 'جودة الهواء جيدة اليوم' : 'Air quality is good today');
+          const body = severe
+            ? (language === 'ar'
+                ? `مستويات الغبار مرتفعة حالياً (PM10: ${air.pm10} µg/m³، مؤشر جودة الهواء: ${air.aqi}). ننصح مرضى الحساسية والجيوب الأنفية بارتداء الكمامة وتجنب الخروج إلا للضرورة.`
+                : `Dust levels are high right now (PM10: ${air.pm10} µg/m³, AQI: ${air.aqi}). We advise allergy and sinus patients to wear a mask and avoid going out unless necessary.`)
+            : sensitive
+              ? (language === 'ar'
+                  ? `مؤشر جودة الهواء الحالي ${air.aqi} (PM10: ${air.pm10} µg/m³). إذا كنت تعاني من الحساسية أو أمراض الصدر، يُفضل تقليل المجهود الخارجي.`
+                  : `Current AQI is ${air.aqi} (PM10: ${air.pm10} µg/m³). If you have allergies or respiratory conditions, consider reducing outdoor exertion.`)
+              : (language === 'ar'
+                  ? `مؤشر جودة الهواء الحالي ${air.aqi}. لا توجد تحذيرات صحية متعلقة بالهواء الآن.`
+                  : `Current AQI is ${air.aqi}. No air-related health warnings right now.`);
+          return (
+            <div className={`mt-12 p-8 border ${toneClasses.wrap} rounded-[3rem] flex items-start gap-6`}>
+              <div className={`p-4 ${toneClasses.chip} rounded-2xl shrink-0`}>
+                <AlertCircle className={`w-8 h-8 ${toneClasses.icon}`} />
+              </div>
+              <div>
+                <h4 className={`text-lg font-black font-arabic ${toneClasses.title} mb-2`}>{title}</h4>
+                <p className="text-sm font-bold text-zinc-500 leading-relaxed">{body}</p>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
