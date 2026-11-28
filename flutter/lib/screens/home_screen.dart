@@ -4,6 +4,7 @@ import '../strings.dart';
 import '../services/footprint_store.dart';
 import '../services/air_quality.dart';
 import '../services/prayer_times.dart';
+import '../services/weather_service.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _aqLoading = true;
   PrayerTimes? _pt;
   bool _ptLoading = true;
+  WeatherReading? _wx;
+  bool _wxLoading = true;
   final TextEditingController _kwhCtrl = TextEditingController();
   double? _billKg;
 
@@ -62,6 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _ptLoading = false;
       });
     });
+    WeatherService.getCurrent().then((w) {
+      if (!mounted) return;
+      setState(() {
+        _wx = w;
+        _wxLoading = false;
+      });
+    });
   }
 
   @override
@@ -93,6 +103,60 @@ class _HomeScreenState extends State<HomeScreen> {
       out.add((label, log == null ? null : _dayKg(log)));
     }
     return out;
+  }
+
+  Widget _weatherCard() {
+    final timeFmt = DateFormat.Hm();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.wb_sunny_outlined, color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(s.wxTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_wxLoading)
+              Text(s.wxLoading, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else if (_wx == null)
+              Text(s.wxUnavailable, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else ...[
+              Text(
+                s.wxLine(
+                  _wx!.temp.toStringAsFixed(0),
+                  WeatherService.label(_wx!.code, s.ar),
+                  _wx!.humidity.toString(),
+                  _wx!.windKmh.toStringAsFixed(0),
+                ),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.eco_outlined, color: MoEcoTheme.accent, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(WeatherService.tip(_wx!, s.ar),
+                        style: const TextStyle(fontSize: 12.5, height: 1.5)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.wxSource(timeFmt.format(_wx!.fetchedAt)),
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _prayerCard() {
@@ -403,6 +467,10 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: s.homeHeroSub,
           icon: Icons.spa_outlined,
           chip: streak > 0 ? s.streakDays(streak) : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _weatherCard(),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
