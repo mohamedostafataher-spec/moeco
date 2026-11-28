@@ -11,6 +11,7 @@ import {
   Building2, ShieldAlert, Newspaper, HandHelping
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { Link } from 'react-router-dom';
 
 const Presentation: React.FC = () => {
   const { language, theme } = useApp();
@@ -82,26 +83,19 @@ const Presentation: React.FC = () => {
                     ? 'فيديو توضيحي يشرح كيفية استخدام المميزات، تتبع الاستهلاك، وحجز التذاكر.'
                     : 'A demo video explaining how to use features, track consumption, and book tickets.'}
                 </p>
-                <button className="px-8 py-4 bg-white text-egypt-black rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all">
-                  {isAr ? 'تشغيل العرض الكامل' : 'Play Full Demo'}
-                </button>
+                <Link to="/dashboard" className="inline-block px-8 py-4 bg-white text-egypt-black rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all">
+                  {isAr ? 'جرّب التطبيق مباشرة' : 'Try the App Live'}
+                </Link>
               </div>
             </div>
           </div>
           <div className="flex justify-center gap-4">
              <button 
-              onClick={() => window.open('https://github.com', '_blank')}
+              onClick={() => window.open('https://github.com/mohamedostafataher-spec/moeco/releases', '_blank')}
               className="px-8 py-4 bg-egypt-black text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-egypt-gold hover:text-egypt-black transition-all"
             >
               <Smartphone className="w-5 h-5" />
               {isAr ? 'تحميل نسخة الأندرويد (APK)' : 'Download Android (APK)'}
-            </button>
-            <button 
-              onClick={() => window.open('https://apple.com', '_blank')}
-              className="px-8 py-4 bg-stone-100 dark:bg-white/5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:scale-105 transition-all"
-            >
-              <Smartphone className="w-5 h-5" />
-              {isAr ? 'تحميل من App Store' : 'Download on App Store'}
             </button>
           </div>
         </div>
@@ -393,14 +387,14 @@ const Presentation: React.FC = () => {
           </p>
           <div className="flex justify-center gap-6 pt-6 relative z-10">
             <button 
-              onClick={() => window.open('https://github.com', '_blank')}
+              onClick={() => window.open('https://github.com/mohamedostafataher-spec/moeco/releases', '_blank')}
               className="px-10 py-5 bg-white text-emerald-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-110 transition-all shadow-2xl"
             >
               {isAr ? 'تحميل التطبيق' : 'Download App'}
             </button>
-            <button className="px-10 py-5 bg-egypt-gold text-egypt-black rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-110 transition-all shadow-2xl">
+            <Link to="/about" className="px-10 py-5 bg-egypt-gold text-egypt-black rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-110 transition-all shadow-2xl">
               {isAr ? 'تواصل معنا' : 'Contact Us'}
-            </button>
+            </Link>
           </div>
         </motion.div>
       )}
