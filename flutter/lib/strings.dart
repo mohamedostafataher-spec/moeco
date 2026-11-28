@@ -47,6 +47,41 @@ class S {
       ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
       : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
   String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  // Cairo Metro fares (Ministry of Transport, effective 2026-03-27)
+  String get metroHeroTitle => ar ? 'أسعار المترو' : 'Metro Fares';
+  String get metroHeroSub => ar
+      ? 'تعريفة المترو الرسمية وحاسبة الاشتراك.'
+      : 'Official metro tariff plus a subscription calculator.';
+  String get metroFaresTitle => ar ? 'سعر التذكرة حسب المحطات' : 'Ticket price by stations';
+  String get metroEgp => ar ? 'جنيه' : 'EGP';
+  String get metroReducedTitle => ar ? 'تذاكر مخفضة' : 'Reduced tickets';
+  String get metroReducedBody => ar
+      ? 'كبار السن (فوق ٦٠ سنة): نصف السعر تقريبًا (٥/٦/٨/١٠ جنيه حسب المحطات). ذوو الإعاقة: ٥ جنيه لأي مسافة. فوق ٧٠ سنة: اشتراك مجاني لكل الخطوط.'
+      : 'Seniors (60+): roughly half price (5/6/8/10 EGP by stations). People with disabilities: 5 EGP for any distance. Over 70: free subscription for all lines.';
+  String get metroSource => ar
+      ? 'المصدر: وزارة النقل — التعريفة المطبقة منذ ٢٧ مارس ٢٠٢٦ (ثابتة حتى نوفمبر ٢٠٢٦).'
+      : 'Source: Ministry of Transport — tariff effective 27 Mar 2026 (unchanged as of Nov 2026).';
+  String get metroCalcTitle => ar ? 'هل الاشتراك أوفر ليك؟' : 'Is a subscription worth it?';
+  String get metroYourTicket => ar ? 'تذكرتك العادية' : 'Your usual ticket';
+  String get metroRidesLabel => ar ? 'عدد المشاوير في الشهر' : 'Rides per month';
+  String get metroSubLabel => ar ? 'الاشتراك الشهري' : 'Monthly subscription';
+  String get metroZones => ar ? 'مناطق' : 'zones';
+  String metroSinglesCost(String egp) => ar
+      ? 'تذاكر مفردة هتكلفك: $egp جنيه في الشهر'
+      : 'Single tickets would cost you: $egp EGP per month';
+  String metroVerdictSave(String egp) => ar
+      ? 'الاشتراك أوفر بحوالي $egp جنيه في الشهر'
+      : 'The subscription saves you about $egp EGP per month';
+  String metroVerdictNoSave(String egp) => ar
+      ? 'التذاكر المفردة أوفر بحوالي $egp جنيه في الشهر'
+      : 'Single tickets are cheaper by about $egp EGP per month';
+  String get metroCalcNote => ar
+      ? 'مقارنة مبسطة: الاشتراكات بتتحسب بالمناطق مش بالمحطات — التقدير تقريبي.'
+      : 'Simplified comparison: subscriptions are zone-based, not station-based; this is approximate.';
+  String get metroEcoNote => ar
+      ? 'المترو كهربا: مشوارك فيه أقل كربون بكتير من العربية — وبيوفرك من الزحمة.'
+      : 'The metro is electric: your ride emits far less carbon than a car, and skips the traffic.';
+
   // Green trips (walk / bike vs car)
   String get tripsHeroTitle => ar ? 'مشاوير خضرا' : 'Green Trips';
   String get tripsHeroSub => ar
