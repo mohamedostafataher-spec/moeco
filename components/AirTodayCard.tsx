@@ -1,32 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { Wind, Thermometer, Sun } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
-const CITIES: { id: string; ar: string; lat: number; lon: number }[] = [
-  { id: 'cairo', ar: 'القاهرة', lat: 30.0444, lon: 31.2357 },
-  { id: 'giza', ar: 'الجيزة', lat: 30.0131, lon: 31.2089 },
-  { id: 'alex', ar: 'الإسكندرية', lat: 31.2001, lon: 29.9187 },
-  { id: 'mansoura', ar: 'المنصورة', lat: 31.0409, lon: 31.3785 },
-  { id: 'tanta', ar: 'طنطا', lat: 30.7865, lon: 31.0004 },
-  { id: 'portsaid', ar: 'بورسعيد', lat: 31.2653, lon: 32.3019 },
-  { id: 'suez', ar: 'السويس', lat: 29.9668, lon: 32.5498 },
-  { id: 'asyut', ar: 'أسيوط', lat: 27.1809, lon: 31.1837 },
-  { id: 'luxor', ar: 'الأقصر', lat: 25.6872, lon: 32.6396 },
-  { id: 'aswan', ar: 'أسوان', lat: 24.0889, lon: 32.8998 },
-  { id: 'hurghada', ar: 'الغردقة', lat: 27.2579, lon: 33.8116 },
+const CITIES: { id: string; ar: string; en: string; lat: number; lon: number }[] = [
+  { id: 'cairo', ar: 'القاهرة', en: 'Cairo', lat: 30.0444, lon: 31.2357 },
+  { id: 'giza', ar: 'الجيزة', en: 'Giza', lat: 30.0131, lon: 31.2089 },
+  { id: 'alex', ar: 'الإسكندرية', en: 'Alexandria', lat: 31.2001, lon: 29.9187 },
+  { id: 'mansoura', ar: 'المنصورة', en: 'Mansoura', lat: 31.0409, lon: 31.3785 },
+  { id: 'tanta', ar: 'طنطا', en: 'Tanta', lat: 30.7865, lon: 31.0004 },
+  { id: 'portsaid', ar: 'بورسعيد', en: 'Port Said', lat: 31.2653, lon: 32.3019 },
+  { id: 'suez', ar: 'السويس', en: 'Suez', lat: 29.9668, lon: 32.5498 },
+  { id: 'asyut', ar: 'أسيوط', en: 'Asyut', lat: 27.1809, lon: 31.1837 },
+  { id: 'luxor', ar: 'الأقصر', en: 'Luxor', lat: 25.6872, lon: 32.6396 },
+  { id: 'aswan', ar: 'أسوان', en: 'Aswan', lat: 24.0889, lon: 32.8998 },
+  { id: 'hurghada', ar: 'الغردقة', en: 'Hurghada', lat: 27.2579, lon: 33.8116 },
 ];
 
 // US EPA AQI bands
-const band = (aqi: number) => {
-  if (aqi <= 50) return { t: 'هواء نضيف', c: '#16a34a', tip: 'يوم كويس للمشي أو العجلة بدل العربية.' };
-  if (aqi <= 100) return { t: 'مقبول', c: '#ca8a04', tip: 'الحساسين يقللوا المجهود بره البيت.' };
-  if (aqi <= 150) return { t: 'مش كويس للحساسين', c: '#ea580c', tip: 'لو عندك حساسية صدر قلل الخروج.' };
-  if (aqi <= 200) return { t: 'مش صحي', c: '#dc2626', tip: 'قلل المجهود بره البيت وقفل الشبابيك.' };
-  return { t: 'خطر', c: '#7f1d1d', tip: 'ابعد عن الخروج لو تقدر.' };
+const band = (aqi: number, ar: boolean) => {
+  if (aqi <= 50) return { t: ar ? 'هواء نضيف' : 'Clean air', c: '#16a34a', tip: ar ? 'يوم كويس للمشي أو العجلة بدل العربية.' : 'A good day to walk or bike instead of driving.' };
+  if (aqi <= 100) return { t: ar ? 'مقبول' : 'Moderate', c: '#ca8a04', tip: ar ? 'الحساسين يقللوا المجهود بره البيت.' : 'Sensitive people should reduce outdoor exertion.' };
+  if (aqi <= 150) return { t: ar ? 'مش كويس للحساسين' : 'Unhealthy for sensitive', c: '#ea580c', tip: ar ? 'لو عندك حساسية صدر قلل الخروج.' : 'If you have respiratory sensitivity, stay in more.' };
+  if (aqi <= 200) return { t: ar ? 'مش صحي' : 'Unhealthy', c: '#dc2626', tip: ar ? 'قلل المجهود بره البيت وقفل الشبابيك.' : 'Reduce outdoor exertion and keep windows closed.' };
+  return { t: ar ? 'خطر' : 'Hazardous', c: '#7f1d1d', tip: ar ? 'ابعد عن الخروج لو تقدر.' : 'Avoid going out if you can.' };
 };
 
 interface Data { aqi: number | null; pm25: number | null; temp: number | null; uv: number | null; time: string }
 
 const AirTodayCard: React.FC = () => {
+  const { language } = useApp();
+  const ar = language === 'ar';
   const [cityId, setCityId] = useState<string>(() => localStorage.getItem('moeco_city') || 'cairo');
   const [data, setData] = useState<Data | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -54,27 +57,27 @@ const AirTodayCard: React.FC = () => {
     return () => { alive = false; };
   }, [city.id]);
 
-  const b = data?.aqi != null ? band(data.aqi) : null;
+  const b = data?.aqi != null ? band(data.aqi, ar) : null;
 
   return (
     <section className="rounded-[28px] bg-white border border-emerald-100 p-5 shadow-[0_8px_30px_rgba(6,78,59,.07)] space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center" style={{ color: '#0b6b54' }}><Wind className="w-5 h-5" /></span>
-          <h2 className="text-base font-extrabold text-slate-900">هواء النهارده</h2>
+          <h2 className="text-base font-extrabold text-slate-900">{ar ? 'هواء النهارده' : "Today's air"}</h2>
         </div>
         <select
-          aria-label="المدينة"
+          aria-label={ar ? 'المدينة' : 'City'}
           value={cityId}
           onChange={(e) => { setCityId(e.target.value); localStorage.setItem('moeco_city', e.target.value); }}
           className="text-sm font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-slate-800"
         >
-          {CITIES.map((c) => <option key={c.id} value={c.id}>{c.ar}</option>)}
+          {CITIES.map((c) => <option key={c.id} value={c.id}>{ar ? c.ar : c.en}</option>)}
         </select>
       </div>
 
       {state === 'loading' && <div className="h-24 rounded-2xl bg-slate-100 animate-pulse" />}
-      {state === 'error' && <p className="text-sm text-slate-500">مقدرناش نجيب بيانات الهواء دلوقتي. جرّب بعد شوية.</p>}
+      {state === 'error' && <p className="text-sm text-slate-500">{ar ? 'مقدرناش نجيب بيانات الهواء دلوقتي. جرّب بعد شوية.' : 'Could not fetch air data right now. Try again later.'}</p>}
       {state === 'ok' && data && (
         <>
           <div className="flex items-center gap-4">
@@ -83,16 +86,16 @@ const AirTodayCard: React.FC = () => {
               <span className="text-[10px] font-bold mt-1" style={{ color: 'rgba(255,255,255,.9)' }}>AQI</span>
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-extrabold" style={{ color: b?.c }}>{b ? b.t : 'غير متاح'}</p>
+              <p className="text-lg font-extrabold" style={{ color: b?.c }}>{b ? b.t : (ar ? 'غير متاح' : 'Unavailable')}</p>
               <p className="text-sm text-slate-600 leading-relaxed">{b?.tip}</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="rounded-2xl bg-slate-50 p-3"><Wind className="w-4 h-4 mx-auto text-slate-500" /><p className="text-sm font-extrabold mt-1 num-ltr">{data.pm25 != null ? data.pm25.toFixed(0) : '—'}</p><p className="text-[10px] text-slate-500">PM2.5 µg/m³</p></div>
-            <div className="rounded-2xl bg-slate-50 p-3"><Thermometer className="w-4 h-4 mx-auto text-slate-500" /><p className="text-sm font-extrabold mt-1 num-ltr">{data.temp != null ? data.temp.toFixed(0) + '°' : '—'}</p><p className="text-[10px] text-slate-500">الإحساس</p></div>
-            <div className="rounded-2xl bg-slate-50 p-3"><Sun className="w-4 h-4 mx-auto text-slate-500" /><p className="text-sm font-extrabold mt-1 num-ltr">{data.uv != null ? data.uv.toFixed(0) : '—'}</p><p className="text-[10px] text-slate-500">الأشعة UV</p></div>
+            <div className="rounded-2xl bg-slate-50 p-3"><Thermometer className="w-4 h-4 mx-auto text-slate-500" /><p className="text-sm font-extrabold mt-1 num-ltr">{data.temp != null ? data.temp.toFixed(0) + '°' : '—'}</p><p className="text-[10px] text-slate-500">{ar ? 'الإحساس' : 'Feels like'}</p></div>
+            <div className="rounded-2xl bg-slate-50 p-3"><Sun className="w-4 h-4 mx-auto text-slate-500" /><p className="text-sm font-extrabold mt-1 num-ltr">{data.uv != null ? data.uv.toFixed(0) : '—'}</p><p className="text-[10px] text-slate-500">{ar ? 'الأشعة UV' : 'UV index'}</p></div>
           </div>
-          <p className="text-[11px] text-slate-400">المصدر: Open-Meteo (نموذج CAMS للهواء). تقدير بالنموذج مش قياس محطة.</p>
+          <p className="text-[11px] text-slate-400">{ar ? 'المصدر: Open-Meteo (نموذج CAMS للهواء). تقدير بالنموذج مش قياس محطة.' : 'Source: Open-Meteo (CAMS air model). Model estimate, not a station reading.'}</p>
         </>
       )}
     </section>
