@@ -231,7 +231,7 @@ class GlobalEventsService {
       try {
         final list = jsonDecode(cachedRaw) as List;
         return list
-            .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e)))
             .toList();
       } catch (_) {}
     }
