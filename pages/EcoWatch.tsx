@@ -503,7 +503,7 @@ const EcoWatch: React.FC = () => {
                   </button>
                   <div className="h-44 rounded-2xl overflow-hidden border border-white/10">
                     <MapContainer center={[lat, lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                      <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}" />
                       <LocationPicker />
                     </MapContainer>
                   </div>
@@ -831,7 +831,7 @@ const EcoWatch: React.FC = () => {
           {/* Simplified Map */}
           <div className="h-72 md:h-96 rounded-[2rem] overflow-hidden border border-white/10 bg-slate-900">
             <MapContainer center={[30.0444, 31.2357]} zoom={10} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+              <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}" />
               {publicReports
                 .filter((r) => typeof r.publicLat === 'number' && typeof r.publicLng === 'number')
                 .map((r) => (
