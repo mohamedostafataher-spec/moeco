@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import '../services/meter_ocr_service.dart';
 import 'utilities_screen.dart' show estimateElectricityBill;
 
 /// Monthly utility meter readings, stored on-device only.
@@ -42,6 +45,48 @@ class _MetersScreenState extends State<MetersScreen> {
     _nowCtrl.dispose();
     _daysCtrl.dispose();
     super.dispose();
+  }
+
+  bool _ocrBusy = false;
+
+  /// F6: photograph the meter, read the number on-device, pre-fill the
+  /// field. The user always reviews and saves manually - never auto-save.
+  Future<void> _scanMeter() async {
+    if (_ocrBusy) return;
+    setState(() => _ocrBusy = true);
+    try {
+      final picker = ImagePicker();
+      final photo = await picker.pickImage(
+          source: ImageSource.camera, maxWidth: 1600, imageQuality: 85);
+      if (photo == null) return;
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(s.ocrScanning)));
+      }
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      try {
+        final result = await recognizer.processImage(InputImage.fromFilePath(photo.path));
+        final reading = MeterOcrService.extractMeterReading(result.text);
+        if (!mounted) return;
+        if (reading == null) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(s.ocrFailed)));
+        } else {
+          setState(() => _kwhCtrl.text = reading.toStringAsFixed(0));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(s.ocrConfirmHint)));
+        }
+      } finally {
+        recognizer.close();
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(s.ocrFailed)));
+      }
+    } finally {
+      if (mounted) setState(() => _ocrBusy = false);
+    }
   }
 
   /// Project the coming month's electricity bill from the current meter
@@ -112,6 +157,15 @@ class _MetersScreenState extends State<MetersScreen> {
                             style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11.5)),
                       ],
                       const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _ocrBusy ? null : _scanMeter,
+                          icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                          label: Text(s.ocrScanButton),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: _kwhCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
