@@ -351,5 +351,11 @@ class S {
       ? 'سجلاتك ومسوداتك تُحفظ محليًا على هاتفك. لا حساب إجباري، ولا بيانات تخرج من جهازك في هذه النسخة.'
       : 'Your logs and drafts are stored locally on your phone. No mandatory account, and nothing leaves your device in this version.';
 
+  // Complaints: copy helpers
+  String get compCopy => ar ? 'نسخ الشكوى' : 'Copy complaint';
+  String get compCopied => ar
+      ? 'اتنسخت! الصقها في القناة الرسمية المناسبة'
+      : 'Copied! Paste it into the right official channel';
+
   String get version => '0.2.0';
 }
