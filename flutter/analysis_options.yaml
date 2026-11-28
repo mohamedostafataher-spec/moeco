@@ -1,0 +1,8 @@
+# MoEco Flutter analyzer configuration.
+# Activates the flutter_lints rule set (already a dev dependency).
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Keep CI green on style while surfacing real problems as errors.
+    avoid_print: ignore
