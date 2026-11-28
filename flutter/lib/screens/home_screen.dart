@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
@@ -31,6 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
   double? _billKg;
 
   // Rough awareness estimates (per-person daily averages), same spirit as the web app.
+  /// Rough per-day EGP cost per mode (awareness estimates, see weeklyEstimateNote).
+  static const _transportEgp = {
+    'مشي/عجلة': 0.0, 'Walk/Bike': 0.0,
+    'مترو/قطار': 24.0, 'Metro/Train': 24.0,
+    'أتوبيس/ميكروباص': 20.0, 'Bus/Microbus': 20.0,
+    'عربية/تاكسي': 45.0, 'Car/Taxi': 45.0,
+  };
   static const _transportKg = {
     'مشي/عجلة': 0.0, 'Walk/Bike': 0.0,
     'مترو/قطار': 1.5, 'Metro/Train': 1.5,
@@ -103,6 +111,46 @@ class _HomeScreenState extends State<HomeScreen> {
       out.add((label, log == null ? null : _dayKg(log)));
     }
     return out;
+  }
+
+  /// This week's logs (last 7 days): (daysLogged, totalKg, estCostEgp, allCarCostEgp, allCarKg).
+  (int, double, double, double, double) _weekStats() {
+    final byDate = {for (final e in widget.store.logs) e['date'] as String: e};
+    var days = 0;
+    var kg = 0.0, cost = 0.0, carCost = 0.0, carKg = 0.0;
+    const carDailyKg = 6.0, carDailyEgp = 45.0;
+    for (var i = 6; i >= 0; i--) {
+      final key = DateTime.now().subtract(Duration(days: i)).toIso8601String().substring(0, 10);
+      final log = byDate[key];
+      if (log == null) continue;
+      days++;
+      kg += _dayKg(log);
+      cost += _transportEgp[log['transport']] ?? 0;
+      carCost += carDailyEgp;
+      carKg += (_elecKg[log['electricity']] ?? 0) + (_foodKg[log['food']] ?? 0) + carDailyKg;
+    }
+    return (days, kg, cost, carCost, carKg);
+  }
+
+  String _weeklyShareText() {
+    final (days, kg, cost, carCost, carKg) = _weekStats();
+    final savedEgp = carCost - cost;
+    final savedKg = carKg - kg;
+    final vs = savedEgp > 0
+        ? s.weeklyVsCar(savedEgp.toStringAsFixed(0), savedKg.toStringAsFixed(1)) + '\n'
+        : '';
+    if (s.ar) {
+      return 'أسبوعي مع MoEco:\n'
+          '${s.weeklyDays(days)} — ${kg.toStringAsFixed(1)} كجم CO2 تقريبًا\n'
+          '${s.weeklyCost(cost.toStringAsFixed(0))}\n'
+          '$vs'
+          '${s.weeklyEstimateNote}';
+    }
+    return 'My week with MoEco:\n'
+        '${s.weeklyDays(days)} — ${kg.toStringAsFixed(1)} kg CO2 approx\n'
+        '${s.weeklyCost(cost.toStringAsFixed(0))}\n'
+        '$vs'
+        '${s.weeklyEstimateNote}';
   }
 
   Widget _weatherCard() {
@@ -311,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 14),
             if (vals.isEmpty)
               Text(s.weeklyEmpty, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
-            else
+            else ...[
               SizedBox(
                 height: 110,
                 child: Row(
@@ -348,6 +396,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   }).toList(),
                 ),
               ),
+              const Divider(height: 24),
+              Builder(builder: (ctx) {
+                final (days, kg, cost, carCost, carKg) = _weekStats();
+                final savedEgp = carCost - cost;
+                final savedKg = carKg - kg;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(s.weeklyCompareTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Text('${s.weeklyDays(days)} — ${kg.toStringAsFixed(1)} ${s.ar ? "كجم CO2 تقريبًا" : "kg CO2 approx"}',
+                        style: const TextStyle(fontSize: 12, color: MoEcoTheme.textMuted)),
+                    Text(s.weeklyCost(cost.toStringAsFixed(0)),
+                        style: const TextStyle(fontSize: 12, color: MoEcoTheme.textMuted)),
+                    if (savedEgp > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          s.weeklyVsCar(savedEgp.toStringAsFixed(0), savedKg.toStringAsFixed(1)),
+                          style: const TextStyle(
+                              fontSize: 12, height: 1.5, color: MoEcoTheme.primary,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () async {
+                            await Clipboard.setData(ClipboardData(text: _weeklyShareText()));
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(s.weeklyCopied),
+                                  duration: const Duration(seconds: 2)),
+                            );
+                          },
+                          icon: const Icon(Icons.copy_outlined, size: 15, color: MoEcoTheme.primary),
+                          label: Text(s.weeklyShareBtn,
+                              style: const TextStyle(fontSize: 11.5, color: MoEcoTheme.primary)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(s.weeklyEstimateNote,
+                              style: const TextStyle(fontSize: 10, color: MoEcoTheme.textMuted, height: 1.4)),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }),
+            ],
           ],
         ),
       ),
