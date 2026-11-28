@@ -4,6 +4,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import '../services/savings_tips_service.dart';
 import '../services/meter_ocr_service.dart';
 import 'utilities_screen.dart' show estimateElectricityBill;
 
@@ -36,6 +37,11 @@ class _MetersScreenState extends State<MetersScreen> {
   double? _pCo2;
   bool _pHigh = false;
   bool _pInvalid = false;
+  // Slab-crossing early warning (vs the slab of current consumption).
+  bool _pCross = false;
+  double _pCrossCost = 0;
+  double _pKwhToSave = 0;
+  int _pCurCap = 0;
 
   @override
   void dispose() {
@@ -101,6 +107,7 @@ class _MetersScreenState extends State<MetersScreen> {
       if (prev == null || now == null || now <= prev || days <= 0) {
         _pInvalid = true;
         _pKwh = _pBill = _pCo2 = null;
+        _pCross = false;
         return;
       }
       final projected = (now - prev) * 30 / days;
@@ -108,6 +115,23 @@ class _MetersScreenState extends State<MetersScreen> {
       _pBill = estimateElectricityBill(projected);
       _pCo2 = projected * 0.42;
       _pHigh = projected > 300;
+
+      // The differentiator: warn BEFORE the slab crosses. Egyptian slabs
+      // re-rate the whole bill, so crossing a boundary is expensive.
+      final used = now - prev;
+      final curIdx = SavingsTipsService.tierIndexForKwh(used);
+      final projIdx = SavingsTipsService.tierIndexForKwh(projected);
+      if (projIdx > curIdx) {
+        const caps = [50, 100, 200, 350, 650, 1000];
+        final cap = caps[curIdx];
+        _pCross = true;
+        _pCurCap = cap;
+        _pCrossCost =
+            estimateElectricityBill(projected) - estimateElectricityBill(cap.toDouble());
+        _pKwhToSave = projected - cap;
+      } else {
+        _pCross = false;
+      }
     });
   }
 
@@ -332,8 +356,32 @@ class _MetersScreenState extends State<MetersScreen> {
                     Text(s.metersPredictCo2(_pCo2!.toStringAsFixed(1)),
                         style: const TextStyle(fontSize: 12.5)),
                     const SizedBox(height: 8),
-                    Text(_pHigh ? s.metersPredictHigh : s.metersPredictGood,
-                        style: const TextStyle(fontSize: 12, height: 1.5)),
+                    if (_pCross) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          s.metersCrossWarn(
+                            _pCurCap,
+                            _pCrossCost.toStringAsFixed(0),
+                            _pKwhToSave.toStringAsFixed(0),
+                          ),
+                          style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.6,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange.shade900),
+                        ),
+                      ),
+                    ] else ...[
+                      Text(_pHigh ? s.metersPredictHigh : s.metersPredictGood,
+                          style: const TextStyle(fontSize: 12, height: 1.5)),
+                    ],
                   ],
                 ),
               ),
