@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import '../services/share_card_service.dart';
+import 'share_card_widget.dart';
 
 /// Achievements computed from on-device logs only. Nothing is awarded for
 /// data the user never entered, and thresholds are shown honestly.
@@ -57,6 +59,23 @@ class AchievementsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    final stats = ShareCardService.compute(store);
+                    if (!stats.hasAnything) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.shNothingYet)));
+                      return;
+                    }
+                    showShareCardDialog(context, s, stats);
+                  },
+                  icon: const Icon(Icons.share, size: 18),
+                  label: Text(s.shShareCard),
                 ),
               ),
               const SizedBox(height: 10),
