@@ -5,6 +5,7 @@ import 'package:moeco/services/air_quality.dart';
 import 'package:moeco/services/recycling_service.dart';
 import 'package:moeco/services/metro_data.dart';
 import 'package:moeco/services/weather_service.dart';
+import 'package:moeco/services/services_data.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -59,6 +60,47 @@ void main() {
     expect(pts.first.name, 'Green Point');
     expect(pts.first.materials, containsAll(['plastic', 'paper']));
     expect(pts[1].name, 'container');
+  });
+
+  test('gov services and hotlines are real and well-formed', () {
+    expect(govServices.length, greaterThan(40));
+    for (final g in govServices) {
+      expect(g.url.startsWith('https://'), isTrue, reason: g.nameAr);
+      expect(g.nameAr, isNotEmpty);
+    }
+    final nums = hotlines.map((h) => h.number).toList();
+    expect(nums, containsAll(['123', '122', '180', '121', '125', '129', '19808']));
+    for (final h in hotlines) {
+      expect(RegExp(r'^[0-9]{3,5}$').hasMatch(h.number), isTrue,
+          reason: h.labelEn);
+    }
+  });
+
+  test('water savings estimator matches the documented assumptions', () {
+    // Nothing selected: zero savings.
+    expect(
+        estimateMonthlyWaterSavings(
+            householdMembers: 4,
+            fixDrippingTap: false,
+            installAerator: false,
+            shorterShowerMinutes: 0),
+        0);
+    // Dripping tap alone: 15 L/day x 30.
+    expect(
+        estimateMonthlyWaterSavings(
+            householdMembers: 4,
+            fixDrippingTap: true,
+            installAerator: false,
+            shorterShowerMinutes: 0),
+        450);
+    // 2 members, aerator + 2 min shorter showers: (20*2 + 2*9*2) * 30.
+    final liters = estimateMonthlyWaterSavings(
+        householdMembers: 2,
+        fixDrippingTap: false,
+        installAerator: true,
+        shorterShowerMinutes: 2);
+    expect(liters, 2280);
+    expect(waterSavingsCo2Kg(1000), closeTo(0.298, 0.0001));
   });
 
   test('national weather alerts derive from forecasts with honest thresholds', () {
