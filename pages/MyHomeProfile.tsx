@@ -410,8 +410,8 @@ const MyHomeProfile: React.FC = () => {
             <p className="font-bold text-slate-900">{isRtl ? 'خصوصية سجلاتك:' : 'Your records privacy:'}</p>
             <p>
               {isRtl
-                ? 'تُحفظ السجلات التي تضيفها في قاعدة بيانات MoEco على الخادم بمعرّف جلستك فقط وتُحمى بسياسات RLS، ولا تُنشر للعامة. لا يُطلب رقم الحساب أو الرقم القومي.'
-                : 'Records you add are saved in the MoEco database on the server under your session ID only, protected by RLS policies, and never published. No account number or national ID is requested.'}
+                ? 'تُحفظ السجلات التي تضيفها في قاعدة بيانات MoEco على الخادم بمعرّف جلستك فقط وتُحمى بسياسات خصوصية صارمة، ولا تُنشر للعامة. لا يُطلب رقم الحساب أو الرقم القومي.'
+                : 'Records you add are saved in the MoEco database on the server under your session ID only, protected by strict privacy policies, and never published. No account number or national ID is requested.'}
             </p>
           </div>
         </div>
