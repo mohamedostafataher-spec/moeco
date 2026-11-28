@@ -15,6 +15,7 @@ import 'package:moeco/services/challenge_service.dart';
 import 'package:moeco/services/notification_service.dart';
 import 'package:moeco/services/action_plan_service.dart';
 import 'package:moeco/services/solar_service.dart';
+import 'package:moeco/services/sorting_guide_data.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/screens/utilities_screen.dart' show estimateElectricityBill;
@@ -578,5 +579,18 @@ void main() {
     // CO2 saved is positive and uses the app factor
     expect(e.co2SavedKgYearly,
         closeTo(e.monthlyKwhCovered * 12 * SolarService.co2PerKwh, 0.001));
+  });
+
+  test('Sorting guide covers the seven household streams, no empty fields', () {
+    expect(sortingGuide.length, 7);
+    final ids = sortingGuide.map((c) => c.id).toSet();
+    expect(ids, {
+      'plastic', 'paper', 'metal', 'glass', 'organic', 'ewaste', 'oil'
+    });
+    for (final c in sortingGuide) {
+      expect(c.nameAr.isNotEmpty, isTrue);
+      expect(c.prepAr.isNotEmpty, isTrue);
+      expect(c.examplesAr.isNotEmpty, isTrue);
+    }
   });
 }
