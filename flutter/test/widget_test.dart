@@ -14,6 +14,7 @@ import 'package:moeco/services/bill_compare_service.dart';
 import 'package:moeco/services/challenge_service.dart';
 import 'package:moeco/services/notification_service.dart';
 import 'package:moeco/services/action_plan_service.dart';
+import 'package:moeco/services/solar_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/screens/utilities_screen.dart' show estimateElectricityBill;
@@ -560,5 +561,22 @@ void main() {
     // Week key is stable within a Saturday-start week
     expect(ActionPlanService.weekKey(DateTime(2026, 11, 28)),
         ActionPlanService.weekKey(DateTime(2026, 11, 29)));
+  });
+
+  test('Solar estimator: sane sizes, honest ranges, capped at 10 kWp', () {
+    final e = SolarService.estimate(300, 1.55);
+    // 300 kWh/mo at ~132 kWh per kWp => about 2.5 kWp
+    expect(e.systemKwp, greaterThanOrEqualTo(2));
+    expect(e.systemKwp, lessThanOrEqualTo(3));
+    expect(e.costLow, lessThan(e.costHigh));
+    expect(e.paybackYearsLow, lessThan(e.paybackYearsHigh));
+    expect(e.paybackYearsLow, greaterThan(0));
+    // Huge consumption is capped at a residential 10 kWp
+    expect(SolarService.estimate(5000, 2.58).systemKwp, 10);
+    // Tiny consumption still gets a minimum 1 kWp system
+    expect(SolarService.estimate(20, 0.68).systemKwp, 1);
+    // CO2 saved is positive and uses the app factor
+    expect(e.co2SavedKgYearly,
+        closeTo(e.monthlyKwhCovered * 12 * SolarService.co2PerKwh, 0.001));
   });
 }
