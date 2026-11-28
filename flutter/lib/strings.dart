@@ -425,6 +425,17 @@ class S {
       : 'Warning: at this rate you will cross the $cap kWh slab and the WHOLE bill gets re-rated higher - crossing costs about EGP $extraEgp extra. Save $kwhToSave kWh before month end to stay in the cheaper slab.';
   String offLastSync(String t) => ar ? 'آخر مزامنة: $t' : 'Last sync: $t';
 
+  String get tripsInstead => ar ? 'المشوار ده بدل إيه؟' : 'What did this trip replace?';
+  String get tripsInsteadCar => ar ? 'عربية' : 'Car';
+  String get tripsInsteadMetro => ar ? 'مترو' : 'Metro';
+  String get tripsInsteadMicrobus => ar ? 'ميكروباص' : 'Microbus';
+  String tripsSavedEgpMonth(String egp) => ar
+      ? 'وفرت حوالي $egp جنيه الشهر ده'
+      : 'You saved about EGP $egp this month';
+  String get tripsEgpNote => ar
+      ? 'تقدير تقريبي: عربية ~٣ ج/كم (بنزين وصيانة)، مترو ~١٢ ج/مشوار، ميكروباص ~١٠ ج/مشوار.'
+      : 'Rough estimate: car ~EGP 3/km (fuel and wear), metro ~EGP 12/ride, microbus ~EGP 10/ride.';
+
   // F5: shareable achievement card (real on-device numbers only)
   String get shCardTitle => ar ? 'إنجازي مع MoEco' : 'My MoEco achievement';
   String get shStreak => ar ? 'أيام متتالية' : 'day streak';
