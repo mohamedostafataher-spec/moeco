@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
 import { storageService } from '../services/storageService';
 import { egyptEnergyService } from '../services/egyptEnergyService';
 import { carbonDataService } from '../services/carbonDataService';
@@ -596,6 +597,9 @@ export const GovDashboard: React.FC<GovDashboardProps> = ({ language, embeddedUs
                 <AlertTriangle className="w-6 h-6" />
                 Smart Government Alerts
               </h3>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                {language === 'ar' ? 'تنبيهات توضيحية - لا يوجد بث حي متصل حالياً' : 'Illustrative scenarios - no live feed connected'}
+              </p>
               <div className="space-y-4">
                 <div className="p-6 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -607,7 +611,6 @@ export const GovDashboard: React.FC<GovDashboardProps> = ({ language, embeddedUs
                       <p className="text-xs text-red-500/70">Industrial sector in {user.country === 'Egypt' ? 'Giza' : 'Zone B'} exceeded threshold by 15%</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-red-500 text-white text-[10px] font-black rounded-lg uppercase">Take Action</button>
                 </div>
                 <div className="p-6 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -619,7 +622,6 @@ export const GovDashboard: React.FC<GovDashboardProps> = ({ language, embeddedUs
                       <p className="text-xs text-amber-500/70">Reservoir levels in {user.country === 'Egypt' ? 'Aswan' : 'Region South'} dropping faster than forecast</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-amber-500 text-white text-[10px] font-black rounded-lg uppercase">View Details</button>
                 </div>
               </div>
             </div>
@@ -893,7 +895,29 @@ export const GovDashboard: React.FC<GovDashboardProps> = ({ language, embeddedUs
                   <div className="pt-8 border-t border-white/5">
                     <p className="text-zinc-400 leading-relaxed">{scenarioResult.description}</p>
                   </div>
-                  <button className="w-full py-4 bg-blue-600 text-white font-black rounded-xl uppercase tracking-widest text-xs">
+                  <button
+                    onClick={() => {
+                      try {
+                        const doc = new jsPDF();
+                        doc.setFontSize(18);
+                        doc.text('MoEco Strategic Scenario Report', 14, 20);
+                        doc.setFontSize(11);
+                        doc.text('Generated: ' + new Date().toLocaleString(), 14, 30);
+                        doc.setFontSize(13);
+                        doc.text('CO2 Reduction: ' + String(scenarioResult.co2Reduction ?? 'N/A'), 14, 45);
+                        doc.text('Energy Saving: ' + String(scenarioResult.energySaving ?? 'N/A'), 14, 55);
+                        doc.text('Cost Impact: ' + String(scenarioResult.costImpact ?? 'N/A'), 14, 65);
+                        const desc = doc.splitTextToSize('Scenario analysis: ' + String(scenarioResult.description ?? ''), 180);
+                        doc.setFontSize(11);
+                        doc.text(desc, 14, 80);
+                        doc.save('moeco-strategic-report-' + Date.now() + '.pdf');
+                        notificationService.success(language === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
+                      } catch (e) {
+                        notificationService.error(language === 'ar' ? 'فشل إنشاء التقرير' : 'Report generation failed');
+                      }
+                    }}
+                    className="w-full py-4 bg-blue-600 text-white font-black rounded-xl uppercase tracking-widest text-xs hover:bg-blue-700 transition-all"
+                  >
                     Generate Strategic Report (PDF)
                   </button>
                 </motion.div>
