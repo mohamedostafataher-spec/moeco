@@ -203,9 +203,6 @@ const GreenJobs: React.FC = () => {
                 >
                   {language === 'ar' ? 'قدم الآن' : 'Apply Now'}
                 </button>
-                <button className="p-4 bg-zinc-100 dark:bg-white/5 rounded-2xl text-zinc-400 hover:text-egypt-gold transition-all">
-                  <ArrowRight className="w-5 h-5" />
-                </button>
               </div>
             </motion.div>
           ))
