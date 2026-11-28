@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moeco/strings.dart';
 import 'package:moeco/screens/metro_screen.dart';
+import 'package:moeco/services/air_quality.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -21,6 +22,18 @@ void main() {
     expect(metroBands.length, 4);
     expect(metroBands.map((b) => b.price).toList(), [10.0, 12.0, 15.0, 20.0]);
     expect(metroBands.map((b) => b.seniorPrice).toList(), [5.0, 6.0, 8.0, 10.0]);
+  });
+
+  test('AQ alert picks the worst city and counts cities above the band', () {
+    AirQualityReading r(String c, int aqi) => AirQualityReading(
+        cityAr: c, cityEn: c, aqi: aqi, pm25: 0, fetchedAt: DateTime(2026));
+    final list = [r('Cairo', 80), r('Asyut', 167), r('Luxor', 120)];
+    expect(AirQualityService.worst(list)!.cityEn, 'Asyut');
+    expect(AirQualityService.countAbove(list, 150), 1);
+    expect(AirQualityService.countAbove(list, 100), 2);
+    expect(AirQualityService.worst(const []), isNull);
+    // No alert bands: worst at exactly 100 stays below the sensitive alert.
+    expect(AirQualityService.worst([r('Cairo', 100)])!.aqi, 100);
   });
 
   test('metro subscriptions are zone-based and ascending', () {
