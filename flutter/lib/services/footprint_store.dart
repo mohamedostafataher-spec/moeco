@@ -127,3 +127,45 @@ extension MeterReadings on FootprintStore {
     await _writeList(_kMeters, items);
   }
 }
+
+// ---- Green trips (walk / bike instead of car) ----
+extension GreenTrips on FootprintStore {
+  static const _kTrips = 'green_trips_v1';
+
+  /// CO2 avoided vs driving, using the app methodology factor
+  /// 0.192 kg CO2e per car-km (same as the calculator).
+  static const co2PerCarKm = 0.192;
+
+  /// Trips: {id, mode: 'walk'|'bike', km: num, createdAt: iso}
+  List<Map<String, dynamic>> get greenTrips {
+    final items = _readList(_kTrips);
+    items.sort((a, b) =>
+        (b['createdAt'] as String).compareTo(a['createdAt'] as String));
+    return items;
+  }
+
+  Future<void> addGreenTrip({
+    required String mode,
+    required double km,
+  }) async {
+    final items = _readList(_kTrips);
+    items.add({
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'mode': mode,
+      'km': km,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+    await _writeList(_kTrips, items);
+  }
+
+  Future<void> deleteGreenTrip(String id) async {
+    final items = _readList(_kTrips)..removeWhere((e) => e['id'] == id);
+    await _writeList(_kTrips, items);
+  }
+
+  double get greenTripTotalKm => greenTrips.fold<double>(
+      0, (sum, e) => sum + ((e['km'] as num?)?.toDouble() ?? 0));
+
+  double get greenTripCo2SavedKg => greenTripTotalKm * co2PerCarKm;
+}
+
