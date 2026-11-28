@@ -1137,7 +1137,7 @@ const TransportHub: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 top-16 bg-slate-950 font-sans text-slate-100 flex flex-col md:flex-row overflow-hidden"
+      className="relative w-full h-[calc(100dvh-8rem)] min-h-[500px] bg-slate-950 rounded-3xl font-sans text-slate-100 flex flex-col md:flex-row overflow-hidden"
       dir={isRtl ? "rtl" : "ltr"}
     >
       {/* LEFT COLUMN: HIGH-POLISH DUAL PANEL SIDEBAR */}
