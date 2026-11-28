@@ -29,6 +29,9 @@ jobs:
         run: |
           sed -i 's/applicationId = "com.example.moeco"/applicationId = "eg.moeco.app"/' android/app/build.gradle.kts
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/' android/app/build.gradle.kts
+          # google_mlkit trips R8 full mode (missing script recognizer classes);
+          # minification is off for release until a kept-rules file is maintained.
+          sed -i 's/signingConfig = signingConfigs.getByName("debug")/signingConfig = signingConfigs.getByName("debug")\n            isMinifyEnabled = false\n            isShrinkResources = false/' android/app/build.gradle.kts
           sed -i 's/android:label="moeco"/android:label="MoEco"/' android/app/src/main/AndroidManifest.xml
           sed -i 's|<manifest xmlns:android="http://schemas.android.com/apk/res/android">|<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>|' android/app/src/main/AndroidManifest.xml
           grep -n 'applicationId\|minSdk' android/app/build.gradle.kts
