@@ -63,9 +63,11 @@ export type ComplaintLocalStatus =
 export interface ComplaintCategoryConfig {
   id: ComplaintCategoryId;
   labelAr: string;
+  labelEn?: string;
   verifiedUrls: VerifiedChannelLink[];
-  verifiedHotlines: { label: string; number: string; sourceInRepo: string }[];
+  verifiedHotlines: { label: string; labelEn?: string; number: string; sourceInRepo: string }[];
   missingLinkNoticeAr?: string;
+  missingLinkNoticeEn?: string;
 }
 
 
