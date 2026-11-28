@@ -321,6 +321,32 @@ class S {
   String alUv(String c, String v) => ar ? 'أشعة فوق بنفسجية مرتفعة في $c (مؤشر $v)' : 'High UV in $c (index $v)';
   String alPoorAir(String c, String v) => ar ? 'جودة هواء سيئة في $c (مؤشر $v)' : 'Poor air quality in $c (AQI $v)';
   String alFireRisk(String c) => ar ? 'مؤشر خطر حرائق في $c (حرارة + رياح + جفاف)' : 'Fire-weather risk in $c (heat + wind + dry)';
+  // National & global events (wars, disasters, major world events)
+  String get geSectionTitle => ar ? 'أحداث وطنية وعالمية' : 'National & Global Events';
+  String get geSectionSub => ar
+      ? 'حروب وكوارث وأحداث كبرى مرتبطة بمصر أو مؤثرة عالميًا — كل بند بمصدره ووقته.'
+      : 'Wars, disasters and major events tied to Egypt or the world - each with its source and time.';
+  String get geAll => ar ? 'الكل' : 'All';
+  String get geEgyptOnly => ar ? 'مرتبطة بمصر' : 'Egypt-related';
+  String get geGlobal => ar ? 'عالمية' : 'Global';
+  String get geNone => ar ? 'مفيش أحداث كبرى من المصادر المتاحة دلوقتي' : 'No major events from available sources right now';
+  String get geLoading => ar ? 'بنجمع الأحداث من المصادر العالمية...' : 'Gathering events from global sources...';
+  String get geFeedTag => ar ? 'تغذية بيانات' : 'data feed';
+  String get geNewsTag => ar ? 'من الأخبار' : 'news-derived';
+  String get geKindEarthquake => ar ? 'زلزال' : 'Earthquake';
+  String get geKindDisaster => ar ? 'كارثة طبيعية' : 'Disaster';
+  String get geKindConflict => ar ? 'صراع / حرب' : 'Conflict / war';
+  String get geKindMajor => ar ? 'حدث كبير' : 'Major event';
+  String get geSourceGdacs => 'GDACS';
+  String get geSourceUsgs => 'USGS';
+  String get geSourceEonet => 'NASA EONET';
+  String get geSourceBbc => ar ? 'بي بي سي عربي' : 'BBC Arabic';
+  String geMinutesAgo(String m) => ar ? 'منذ $m دقيقة' : '$m min ago';
+  String geHoursAgo(String h) => ar ? 'منذ $h ساعة' : '$h h ago';
+  String geDaysAgo(String d) => ar ? 'منذ $d يوم' : '$d d ago';
+  String get geFootnote => ar
+      ? 'المصادر: GDACS (مرصد الكوارث العالمي التابع للأمم المتحدة والاتحاد الأوروبي)، USGS للزلازل، NASA EONET للأحداث الطبيعية، وبي بي سي عربي للأخبار الكبرى. بنود "تغذية بيانات" من أنظمة رصد آلية، وبنود "من الأخبار" عناوين منقولة كما هي بمصدرها. لا يوجد مصدر رسمي مصري مجاني مقروء آليًا لهذه الأحداث، ولا نضيف أي محتوى من عندنا.'
+      : 'Sources: GDACS (UN/EU global disaster observatory), USGS earthquakes, NASA EONET natural events, and BBC Arabic for major news. "Data feed" items come from monitoring systems; "news-derived" items are headlines shown as-is with their source. No free machine-readable official Egyptian feed exists for these events, and we add nothing ourselves.';
   String get alFootnote => ar
       ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
       : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
