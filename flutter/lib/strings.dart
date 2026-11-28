@@ -351,6 +351,16 @@ class S {
       ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
       : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
 
+  // F6: meter OCR (on-device, suggestion only, manual confirm)
+  String get ocrScanButton => ar ? 'صوّر العدّاد' : 'Scan the meter';
+  String get ocrScanning => ar ? 'بنقرا الرقم من الصورة...' : 'Reading the number from the photo...';
+  String get ocrConfirmHint => ar
+      ? 'قرأنا الرقم ده من الصورة — راجعه كويس قبل الحفظ (القراءة الآلية ممكن تغلط)'
+      : 'We read this number from the photo - review it carefully before saving (OCR can be wrong)';
+  String get ocrFailed => ar
+      ? 'مش قادرين نقرا رقم واضح من الصورة — اكتبه يدويًا لو سمحت'
+      : 'Could not read a clear number from the photo - please enter it manually';
+
   // F7: offline mode (local-first, last-sync honesty)
   String get offBanner => ar
       ? 'أنت غير متصل — المعروض آخر بيانات محفوظة على جهازك'
