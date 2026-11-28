@@ -20,11 +20,13 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   String _draftText(Map d) {
     final date = (d['createdAt'] ?? '').toString().split('T').first;
     final notes = (d['notes'] ?? '').toString();
+    final ch = _suggestedChannel(d);
+    final chLine = s.ar ? 'الجهة: ${ch['nameAr']} (${ch['ref']})' : 'To: ${ch['nameEn']} (${ch['ref']})';
     if (s.ar) {
-      return 'شكوى: ${d['title']}\nالتصنيف: ${d['category']}\nالتاريخ: $date'
+      return '$chLine\nشكوى: ${d['title']}\nالتصنيف: ${d['category']}\nالتاريخ: $date'
           + (notes.isEmpty ? '' : '\nالتفاصيل: $notes');
     }
-    return 'Complaint: ${d['title']}\nCategory: ${d['category']}\nDate: $date'
+    return '$chLine\nComplaint: ${d['title']}\nCategory: ${d['category']}\nDate: $date'
         + (notes.isEmpty ? '' : '\nDetails: $notes');
   }
 
@@ -34,6 +36,22 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(s.compCopied), duration: const Duration(seconds: 2)),
     );
+  }
+
+  /// Category -> most relevant verified channel (indices into _channels).
+  static const Map<int, int> _categoryChannel = {
+    0: 1, // electricity -> Cabinet complaints hotline 16528
+    1: 1, // water -> 16528
+    2: 1, // sewage -> 16528
+    3: 3, // waste -> Ministry of Environment 19808
+    4: 3, // air pollution -> 19808
+    5: 3, // noise -> 19808
+    6: 0, // other -> Unified portal
+  };
+
+  Map<String, String> _suggestedChannel(Map d) {
+    final idx = _categories.indexOf((d['category'] ?? '').toString());
+    return _channels[_categoryChannel[idx] ?? 0];
   }
 
   /// Verified official channels, same source as the web app's civic service.
@@ -119,6 +137,88 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     );
   }
 
+  Widget _statusChip(String status) {
+    final (bg, fg) = switch (status) {
+      'sent' => (const Color(0xFFEFF6FF), const Color(0xFF1D4ED8)),
+      'replied' => (const Color(0xFFECFDF5), const Color(0xFF047857)),
+      _ => (const Color(0xFFF1F5F9), const Color(0xFF475569)),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      child: Text(s.compStatusLabel(status),
+          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: fg)),
+    );
+  }
+
+  Widget _channelHint(Map<String, String> ch) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.account_balance_outlined, size: 16, color: MoEcoTheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${s.compSuggestedChannel}: ${s.ar ? ch['nameAr'] : ch['nameEn']} — ${ch['ref']}',
+              style: const TextStyle(fontSize: 11.5, height: 1.4, color: Color(0xFF166534)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusActions(Map d) {
+    final status = (d['status'] ?? 'draft').toString();
+    final id = (d['id'] ?? '').toString();
+    Future<void> set(String next) async {
+      await widget.store.updateDraftStatus(id, next);
+      widget.onChanged();
+    }
+
+    Widget action(String label, IconData icon, String next, bool filled) {
+      return filled
+          ? ElevatedButton.icon(
+              onPressed: () => set(next),
+              icon: Icon(icon, size: 15),
+              label: Text(label, style: const TextStyle(fontSize: 11.5)),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(0, 34),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+            )
+          : TextButton.icon(
+              onPressed: () => set(next),
+              icon: Icon(icon, size: 15, color: MoEcoTheme.textMuted),
+              label: Text(label,
+                  style: const TextStyle(fontSize: 11.5, color: MoEcoTheme.textMuted)),
+            );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (status == 'draft') action(s.compMarkSent, Icons.send_outlined, 'sent', true),
+        if (status == 'sent') action(s.compMarkReplied, Icons.mark_email_read_outlined, 'replied', true),
+        if (status != 'draft') action(s.compBackToDraft, Icons.undo, 'draft', false),
+        Tooltip(
+          message: s.compStatusNote,
+          triggerMode: TooltipTriggerMode.tap,
+          child: const Icon(Icons.info_outline, size: 16, color: MoEcoTheme.textMuted),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final drafts = widget.store.drafts;
@@ -185,27 +285,49 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 ...drafts.reversed.map((d) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Card(
-                        child: ListTile(
-                          title: Text(d['title'] ?? '',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                          subtitle: Text('${d['category'] ?? ''}\n${d['notes'] ?? ''}',
-                              style: const TextStyle(fontSize: 12, height: 1.4)),
-                          isThreeLine: (d['notes'] ?? '').toString().isNotEmpty,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IconButton(
-                                tooltip: s.compCopy,
-                                icon: const Icon(Icons.copy_outlined, color: MoEcoTheme.primary),
-                                onPressed: () => _copy(_draftText(d)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(d['title'] ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700, fontSize: 14)),
+                                  ),
+                                  _statusChip((d['status'] ?? 'draft').toString()),
+                                  IconButton(
+                                    tooltip: s.compCopy,
+                                    icon: const Icon(Icons.copy_outlined,
+                                        color: MoEcoTheme.primary),
+                                    onPressed: () => _copy(_draftText(d)),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.redAccent),
+                                    onPressed: () async {
+                                      await widget.store.deleteDraft(d['id'] ?? '');
+                                      widget.onChanged();
+                                    },
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                onPressed: () async {
-                                  await widget.store.deleteDraft(d['id'] ?? '');
-                                  widget.onChanged();
-                                },
-                              ),
+                              if ((d['category'] ?? '').toString().isNotEmpty ||
+                                  (d['notes'] ?? '').toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    '${d['category'] ?? ''}\n${d['notes'] ?? ''}'.trim(),
+                                    style: const TextStyle(
+                                        fontSize: 12, height: 1.4,
+                                        color: MoEcoTheme.textMuted),
+                                  ),
+                                ),
+                              _channelHint(_suggestedChannel(d)),
+                              const SizedBox(height: 8),
+                              _statusActions(d),
                             ],
                           ),
                         ),
