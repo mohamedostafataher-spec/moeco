@@ -9,6 +9,7 @@ import '../services/savings_tips_service.dart';
 import '../services/air_quality.dart';
 import '../services/prayer_times.dart';
 import '../services/weather_service.dart';
+import '../services/widget_bridge_service.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -85,6 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _wx = w;
         _wxLoading = false;
       });
+      // F8: refresh the home-screen widget (weather + bill + streak)
+      WidgetBridgeService.updateFromState(
+          arabic: widget.s.ar, weather: w, store: widget.store);
     });
     NationalWeatherAlerts.getAlerts().then((alerts) {
       if (!mounted) return;
