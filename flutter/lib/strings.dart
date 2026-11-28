@@ -361,6 +361,17 @@ class S {
       ? 'مش قادرين نقرا رقم واضح من الصورة — اكتبه يدويًا لو سمحت'
       : 'Could not read a clear number from the photo - please enter it manually';
 
+  String get errLogTitle => ar ? 'سجل الأعطال' : 'Error log';
+  String get errLogSub => ar
+      ? 'أي عطل بيتسجل على موبايلك بس، وتقدر تشاركه بنفسك'
+      : 'Errors are stored on your device only, and you share them yourself';
+  String get errLogEmpty => ar
+      ? 'مفيش أعطال متسجلة. لو حصلت مشكلة في التطبيق هتلاقيها هنا، وتقدر تشاركها معانا لو حابب.'
+      : 'No errors recorded. If the app hits a problem it will show up here, and you can share it with us if you like.';
+  String get errLogShare => ar ? 'شارك السجل' : 'Share log';
+  String get errLogClear => ar ? 'امسح' : 'Clear';
+  String get errLogCleared => ar ? 'اتمسح السجل' : 'Log cleared';
+
   // F7: offline mode (local-first, last-sync honesty)
   String get offBanner => ar
       ? 'أنت غير متصل — المعروض آخر بيانات محفوظة على جهازك'
