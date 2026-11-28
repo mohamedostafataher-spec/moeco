@@ -454,6 +454,33 @@ class S {
       ? 'برافو! خلصت خطة الأسبوع كلها 🎉'
       : 'Well done! You finished this week\'s plan 🎉';
   String get shStreak => ar ? 'أيام متتالية' : 'day streak';
+
+  String get solTitle => ar ? 'الطاقة الشمسية لسقف بيتك' : 'Rooftop solar for your home';
+  String get solSub => ar
+      ? 'حسبة تقريبية: سيستم شمسي قد إيه، بيكلف كام، ويرجّع فلوسه في قد إيه'
+      : 'A rough estimate: what size system, what it costs, and how fast it pays back';
+  String get solInputLabel => ar
+      ? 'استهلاكك الشهري من الكهربا (ك.و.س)'
+      : 'Your monthly electricity use (kWh)';
+  String get solKwhHint => ar ? 'مثال: 300' : 'e.g. 300';
+  String solSize(String kwp) => ar
+      ? 'السيستم المناسب: حوالي $kwp كيلوواط ذروة'
+      : 'Recommended system: about $kwp kWp';
+  String solCovers(String kwh) => ar
+      ? 'هينتج حوالي $kwh ك.و.س في الشهر'
+      : 'Produces about $kwh kWh per month';
+  String solSaves(String egp) => ar
+      ? 'هيوفّر حوالي $egp جنيه من فاتورتك كل شهر'
+      : 'Saves about EGP $egp off your bill every month';
+  String solCost(String low, String high) => ar
+      ? 'سعر التركيب التقريبي: من $low لـ $high جنيه'
+      : 'Rough install cost: EGP $low to $high';
+  String solPayback(String low, String high) => ar
+      ? 'فترة استرداد الفلوس: من $low لـ $high سنة'
+      : 'Payback period: $low to $high years';
+  String solCo2(String kg) => ar
+      ? 'بيقلل انبعاثات بحوالي $kg كجم CO2 في السنة'
+      : 'Cuts about $kg kg of CO2 per year';
   String get shDays => ar ? 'يوم مسجل' : 'days logged';
   String get shGreenKm => ar ? 'كم مواصلات نظيفة' : 'green km';
   String get shCo2 => ar ? 'كجم كربون موفّر' : 'kg CO2 saved';
