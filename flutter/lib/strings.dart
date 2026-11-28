@@ -242,6 +242,32 @@ class S {
       ? 'تنبيهات مشتقة من بيانات التوقعات (Open-Meteo) — مش تحذيرات رسمية من هيئة الأرصاد.'
       : 'Alerts derived from Open-Meteo forecast data, not official EMA warnings.';
 
+  // Services & emergency screen
+  String get svcHeroTitle => ar ? 'خدمات وطوارئ' : 'Services & Emergency';
+  String get svcHeroSub => ar
+      ? 'أرقام رسمية وروابط حكومية موثقة ونصائح ترشيد.'
+      : 'Official numbers, verified government links, and saving tips.';
+  String get svcHotlines => ar ? 'أرقام طوارئ رسمية' : 'Official emergency numbers';
+  String get svcHotlinesNote => ar
+      ? 'اتصل مباشرة بالرقم الرسمي عند الطوارئ.'
+      : 'Call the official number directly in an emergency.';
+  String get svcGovTitle => ar ? 'خدمات حكومية رقمية' : 'Digital government services';
+  String get svcGovNote => ar
+      ? 'روابط خارجية لمواقع حكومية رسمية، تفتح في المتصفح.'
+      : 'External links to official government sites, opened in the browser.';
+  String get svcWaterTitle => ar ? 'ترشيد المياه' : 'Saving water';
+  String get svcEstimator => ar ? 'مُقدّر الترشيد المنزلي' : 'Home savings estimator';
+  String get svcMembers => ar ? 'أفراد الأسرة' : 'Household members';
+  String get svcFixTap => ar ? 'إصلاح حنفية تقطر' : 'Fix a dripping tap';
+  String get svcAerator => ar ? 'تركيب مهوي للحنفيات' : 'Install faucet aerators';
+  String get svcShower => ar ? 'تقليل مدة الدش (دقائق)' : 'Shorter showers (minutes)';
+  String svcMonthlySave(String liters) =>
+      ar ? 'توفير تقديري: $liters لتر/شهر' : 'Estimated saving: $liters liters/month';
+  String svcCo2(String kg) => ar ? '≈ $kg كجم CO2e' : '≈ $kg kg CO2e';
+  String get svcFormulaNote => ar
+      ? 'افتراضات تقديرية: ١٥ لتر/يوم للحنفية، ٢٠ لتر/فرد/يوم للمهوي، ٩ لتر/دقيقة للدش. المعادلة: (اللترات اليومية × ٣٠) ÷ ١٠٠٠ × ٠٫٢٩٨ كجم CO2e/م³ (الشركة القابضة لمياه الشرب). أرقام إرشادية وليست قراءة عداد.'
+      : 'Assumptions: 15 L/day per dripping tap, 20 L/person/day with aerators, 9 L/min shower. Formula: (daily liters x 30) / 1000 x 0.298 kg CO2e/m3 (HCWW). Indicative estimates, not a meter reading.';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
