@@ -47,6 +47,27 @@ class S {
       ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
       : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
   String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  // Green trips (walk / bike vs car)
+  String get tripsHeroTitle => ar ? 'مشاوير خضرا' : 'Green Trips';
+  String get tripsHeroSub => ar
+      ? 'سجّل مشي وعجلة وشوف وفّرت كام كربون.'
+      : 'Log walks and bike rides, see the carbon you avoided.';
+  String get tripsAddTitle => ar ? 'سجّل مشوار' : 'Log a trip';
+  String get tripsWalk => ar ? 'مشي' : 'Walk';
+  String get tripsBike => ar ? 'عجلة' : 'Bike';
+  String get tripsKmLabel => ar ? 'المسافة (كم)' : 'Distance (km)';
+  String get tripsAdd => ar ? 'سجّل' : 'Log it';
+  String get tripsTotalsTitle => ar ? 'إجمالي توفيرك' : 'Your totals';
+  String get tripsTotalKm => ar ? 'كم مشي/عجلة' : 'km walked/cycled';
+  String get tripsSavedKg => ar ? 'كجم CO₂ اتوفرت' : 'kg CO2 avoided';
+  String get tripsFactorNote => ar
+      ? 'المقارنة بعربية بنزين: ٠.١٩٢ كجم CO₂ لكل كم (نفس معامل الحاسبة).'
+      : 'Compared to a petrol car: 0.192 kg CO2 per km (same factor as the calculator).';
+  String get tripsKmUnit => ar ? 'كم' : 'km';
+  String get tripsEmpty => ar
+      ? 'لسه مفيش مشاوير. أول مشوار مشي أو عجلة هيبان هنا.'
+      : 'No trips yet. Your first walk or bike ride will show here.';
+
   // Eco news (The Guardian environment RSS via rss2json)
   String get newsHeroTitle => ar ? 'أخبار البيئة' : 'Eco News';
   String get newsHeroSub => ar
