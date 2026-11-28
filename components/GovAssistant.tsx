@@ -183,7 +183,7 @@ export const GovAssistant: React.FC = () => {
           <h2 className="text-3xl font-black font-arabic dark:text-white mb-2">{selectedService.name}</h2>
           <div className="flex items-center gap-4 text-xs font-bold text-zinc-500">
             <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {selectedService.estimated_time}</span>
-            <span className="flex items-center gap-1 text-emerald-500"><CheckCircle2 className="w-4 h-4" /> {progress?.completed ? 'مكتمل' : 'قيد التنفيذ'}</span>
+            <span className="flex items-center gap-1 text-emerald-500"><CheckCircle2 className="w-4 h-4" /> {progress?.completed ? (isRtl ? 'مكتمل' : 'Completed') : (isRtl ? 'قيد التنفيذ' : 'In progress')}</span>
           </div>
         </div>
         
