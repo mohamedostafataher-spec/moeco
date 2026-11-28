@@ -37,6 +37,28 @@ class S {
       ? 'تعذّر تحميل بيانات الهواء دلوقتي. هنحاول تاني تلقائيًا.'
       : 'Could not load air data right now. We will retry automatically.';
 
+  // Prayer times (live, Aladhan — Egyptian General Authority of Survey)
+  String get ptTitle => ar ? 'مواقيت الصلاة — القاهرة' : 'Prayer times — Cairo';
+  String get ptLoading => ar ? 'بنجيب مواقيت الصلاة...' : 'Fetching prayer times...';
+  String get ptUnavailable => ar
+      ? 'مواقيت الصلاة مش متاحة دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'Prayer times are unavailable right now. We will retry automatically.';
+  String ptSource(String time) => ar
+      ? 'مصدر: Aladhan (الهيئة المصرية للمساحة)، آخر تحديث $time'
+      : 'Source: Aladhan (Egyptian Survey Authority), updated $time';
+  String ptNext(String name) => ar ? 'القادمة: $name' : 'Next: $name';
+  String ptName(String key) {
+    if (!ar) return key;
+    switch (key) {
+      case 'Fajr': return 'الفجر';
+      case 'Dhuhr': return 'الظهر';
+      case 'Asr': return 'العصر';
+      case 'Maghrib': return 'المغرب';
+      case 'Isha': return 'العشاء';
+      default: return key;
+    }
+  }
+
   // Weekly chart + bill converter (Home)
   String get weeklyTitle => ar ? 'أسبوعك بالكربون (تقدير)' : 'Your week in carbon (estimate)';
   String get weeklyEmpty => ar
