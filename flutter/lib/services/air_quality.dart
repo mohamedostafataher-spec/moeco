@@ -119,6 +119,21 @@ class AirQualityService {
     }
   }
 
+  /// The single worst reading, or null for an empty list.
+  static AirQualityReading? worst(List<AirQualityReading> readings) {
+    if (readings.isEmpty) return null;
+    var w = readings.first;
+    for (final r in readings) {
+      if (r.aqi > w.aqi) w = r;
+    }
+    return w;
+  }
+
+  /// How many cities read strictly above [threshold] (US AQI).
+  static int countAbove(List<AirQualityReading> readings, int threshold) {
+    return readings.where((r) => r.aqi > threshold).length;
+  }
+
   /// Plain-language AQI label (US EPA bands).
   static String label(int aqi, bool ar) {
     if (aqi <= 50) return ar ? 'جيدة' : 'Good';
