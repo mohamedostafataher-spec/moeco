@@ -482,6 +482,14 @@ class S {
       ? 'بيقلل انبعاثات بحوالي $kg كجم CO2 في السنة'
       : 'Cuts about $kg kg of CO2 per year';
   String get shDays => ar ? 'يوم مسجل' : 'days logged';
+
+  String get sgTitle => ar ? 'فرز الزبالة صح' : 'Sort your waste right';
+  String get sgSub => ar
+      ? 'إيه اللي يتعاد تدويره وإزاي تجهزه، مادة مادة'
+      : 'What gets recycled and how to prep it, material by material';
+  String get sgIntro => ar
+      ? 'الفرز من البيت بيخلي ٨٠٪ من الزبالة صالحة للتدوير. دي إرشادات عامة ثابتة؛ أماكن التسليم وأسعار الشراء هتلاقيها في صفحة إعادة التدوير.'
+      : 'Sorting at home keeps 80% of waste recyclable. This is fixed general guidance; drop-off points and buy prices are on the recycling page.';
   String get shGreenKm => ar ? 'كم مواصلات نظيفة' : 'green km';
   String get shCo2 => ar ? 'كجم كربون موفّر' : 'kg CO2 saved';
   String get shCardFooter => ar
