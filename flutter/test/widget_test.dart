@@ -11,6 +11,7 @@ import 'package:moeco/services/alert_center_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
+import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/footprint_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -386,5 +387,22 @@ void main() {
     expect(events.length, 1);
     expect(events.first.id, 'test1');
     expect(events.first.egyptRelevant, isTrue);
+  });
+
+
+  test('F6: OCR parser picks the meter number and skips dates/times', () {
+    // Clean meter display
+    expect(MeterOcrService.extractMeterReading('045821'), 45821);
+    // Number among noise
+    expect(MeterOcrService.extractMeterReading('kWh 12345 TOTAL'), 12345);
+    // Decimal tail kept
+    expect(MeterOcrService.extractMeterReading('reading 6789.4 kwh'), 6789.4);
+    // Dates and times are not meter readings
+    expect(MeterOcrService.extractMeterReading('28/11/2026 13:45'), isNull);
+    // Too short / no digits
+    expect(MeterOcrService.extractMeterReading('no numbers here'), isNull);
+    expect(MeterOcrService.extractMeterReading('42'), isNull);
+    // Longest plausible run wins
+    expect(MeterOcrService.extractMeterReading('123 45678 901'), 45678);
   });
 }
