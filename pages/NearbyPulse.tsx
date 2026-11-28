@@ -479,8 +479,8 @@ const NearbyPulse: React.FC = () => {
               <MapContainer center={[coords.lat, coords.lng]} zoom={12} style={{ height: '100%', width: '100%' }} zoomControl={false}>
                 <TileLayer
                   url={theme === 'dark' 
-                    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"}
+                    ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                    : "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
                 />
                 <MapUpdater coords={coords} />
                 
