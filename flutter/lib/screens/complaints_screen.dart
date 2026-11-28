@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
@@ -15,6 +16,25 @@ class ComplaintsScreen extends StatefulWidget {
 
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   S get s => widget.s;
+
+  String _draftText(Map d) {
+    final date = (d['createdAt'] ?? '').toString().split('T').first;
+    final notes = (d['notes'] ?? '').toString();
+    if (s.ar) {
+      return 'شكوى: ${d['title']}\nالتصنيف: ${d['category']}\nالتاريخ: $date'
+          + (notes.isEmpty ? '' : '\nالتفاصيل: $notes');
+    }
+    return 'Complaint: ${d['title']}\nCategory: ${d['category']}\nDate: $date'
+        + (notes.isEmpty ? '' : '\nDetails: $notes');
+  }
+
+  Future<void> _copy(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(s.compCopied), duration: const Duration(seconds: 2)),
+    );
+  }
 
   /// Verified official channels, same source as the web app's civic service.
   static const List<Map<String, String>> _channels = [
@@ -171,12 +191,22 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                           subtitle: Text('${d['category'] ?? ''}\n${d['notes'] ?? ''}',
                               style: const TextStyle(fontSize: 12, height: 1.4)),
                           isThreeLine: (d['notes'] ?? '').toString().isNotEmpty,
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                            onPressed: () async {
-                              await widget.store.deleteDraft(d['id'] ?? '');
-                              widget.onChanged();
-                            },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: s.compCopy,
+                                icon: const Icon(Icons.copy_outlined, color: MoEcoTheme.primary),
+                                onPressed: () => _copy(_draftText(d)),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                onPressed: () async {
+                                  await widget.store.deleteDraft(d['id'] ?? '');
+                                  widget.onChanged();
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -199,6 +229,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                         subtitle: Text(c['ref']!,
                             style: const TextStyle(fontSize: 12, color: MoEcoTheme.textMuted)),
+                        trailing: const Icon(Icons.copy_outlined,
+                            size: 18, color: MoEcoTheme.textMuted),
+                        onTap: () => _copy(c['ref']!),
                       ),
                     ),
                   )),
@@ -210,3 +243,4 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     );
   }
 }
+
