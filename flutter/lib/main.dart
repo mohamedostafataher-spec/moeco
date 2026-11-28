@@ -8,6 +8,7 @@ import 'screens/calculator_screen.dart';
 import 'screens/complaints_screen.dart';
 import 'screens/local_projects_screen.dart';
 import 'screens/more_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() {
   runApp(const MoEcoApp());
@@ -23,12 +24,16 @@ class MoEcoApp extends StatefulWidget {
 class _MoEcoAppState extends State<MoEcoApp> {
   FootprintStore? _store;
   bool _arabic = true;
+  bool _onboardingDone = false;
 
   @override
   void initState() {
     super.initState();
     FootprintStore.load().then((store) {
-      setState(() => _store = store);
+      setState(() {
+        _store = store;
+        _onboardingDone = store.onboardingDone;
+      });
     });
   }
 
@@ -50,7 +55,15 @@ class _MoEcoAppState extends State<MoEcoApp> {
       ],
       home: _store == null
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : _Shell(
+          : !_onboardingDone
+              ? OnboardingScreen(
+                  s: s,
+                  onDone: () async {
+                    await _store!.markOnboardingDone();
+                    setState(() => _onboardingDone = true);
+                  },
+                )
+              : _Shell(
               s: s,
               store: _store!,
               onChanged: _refresh,
