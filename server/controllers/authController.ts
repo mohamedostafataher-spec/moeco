@@ -9,8 +9,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'moeco_secret_key_2026';
-const REFRESH_SECRET = process.env.REFRESH_SECRET || 'moeco_refresh_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required (no fallback secrets allowed)');
+}
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
+if (!REFRESH_SECRET) {
+  throw new Error('REFRESH_SECRET environment variable is required (no fallback secrets allowed)');
+}
 
 const generateTokens = async (user: any) => {
   const accessToken = jwt.sign(
