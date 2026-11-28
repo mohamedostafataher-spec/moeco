@@ -7,6 +7,9 @@ import {
   Search, Filter, ChevronRight, Eye
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
 import { Certificate } from '../components/Certificate';
 
@@ -18,6 +21,56 @@ const Reports: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'reports' | 'certificates'>('reports');
   const [showCert, setShowCert] = useState(false);
   const [userStats, setUserStats] = useState<any>(null);
+
+  const flattenReport = (r: any): Record<string, string> => {
+    const out: Record<string, string> = {};
+    Object.entries(r || {}).forEach(([k, v]) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'object') return;
+      out[k] = String(v);
+    });
+    return out;
+  };
+
+  const handleExportExcel = (r: any) => {
+    try {
+      const flat = flattenReport(r);
+      const rows = Object.entries(flat).map(([field, value]) => ({ field, value }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Report');
+      XLSX.writeFile(wb, `moeco-report-${r.id || 'export'}.xlsx`);
+      notificationService.success(isRtl ? 'تم تنزيل ملف Excel.' : 'Excel file downloaded.');
+    } catch (e) {
+      console.error(e);
+      notificationService.error(isRtl ? 'تعذر إنشاء ملف Excel.' : 'Could not create the Excel file.');
+    }
+  };
+
+  const handleExportPdf = (r: any) => {
+    try {
+      const flat = flattenReport(r);
+      const skipped: string[] = [];
+      const rows = Object.entries(flat).map(([field, value]) => {
+        if (/[؀-ۿ]/.test(value)) {
+          skipped.push(field);
+          return [field, isRtl ? '[نص عربي - يظهر في التطبيق]' : '[Arabic text - shown in the app]'];
+        }
+        return [field, value];
+      });
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text(`MoEco ${r.type || ''} Report`, 14, 18);
+      doc.setFontSize(9);
+      doc.text(`Exported: ${new Date().toISOString().slice(0, 19)}`, 14, 25);
+      autoTable(doc, { startY: 32, head: [['Field', 'Value']], body: rows, styles: { fontSize: 8 } });
+      doc.save(`moeco-report-${r.id || 'export'}.pdf`);
+      notificationService.success(isRtl ? 'تم تنزيل ملف PDF.' : 'PDF downloaded.');
+    } catch (e) {
+      console.error(e);
+      notificationService.error(isRtl ? 'تعذر إنشاء ملف PDF.' : 'Could not create the PDF.');
+    }
+  };
 
   const fetchReports = async () => {
     setLoading(true);
@@ -244,10 +297,10 @@ const Reports: React.FC = () => {
                      </div>
                      
                      <div className="flex gap-2 mt-2 relative z-10">
-                       <button className="flex-1 py-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-500 border border-red-100 dark:border-red-500/30 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-colors">
+                       <button onClick={() => handleExportPdf(r)} className="flex-1 py-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-500 border border-red-100 dark:border-red-500/30 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-colors">
                          <FileDown size={14} /> PDF
                        </button>
-                       <button className="flex-1 py-3 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-500 border border-emerald-100 dark:border-emerald-500/30 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-colors">
+                       <button onClick={() => handleExportExcel(r)} className="flex-1 py-3 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-500 border border-emerald-100 dark:border-emerald-500/30 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-colors">
                          <Table size={14} /> EXCEL
                        </button>
                      </div>
