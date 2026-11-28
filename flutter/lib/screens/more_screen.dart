@@ -20,6 +20,7 @@ import 'challenge_screen.dart';
 import 'action_plan_screen.dart';
 import 'solar_screen.dart';
 import 'sorting_guide_screen.dart';
+import 'suggestion_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -180,6 +181,9 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.recycling, s.sgTitle, s.sgSub,
                   SortingGuideScreen(s: s)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.lightbulb_outline, s.sugTitle,
+                  s.sugSub, SuggestionScreen(s: s)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
