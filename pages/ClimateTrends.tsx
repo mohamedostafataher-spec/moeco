@@ -22,24 +22,42 @@ const ClimateTrends: React.FC = () => {
     { source: isRtl ? 'وزارة الكهرباء' : 'Ministry of Electricity', label: isRtl ? 'الشريحة السادسة (>650 ك.و.س)' : 'Tier 6 (>650 kWh)', value: '2.10 ج.م', icon: Zap, color: 'text-red-500' },
   ];
 
+  const [globalCo2, setGlobalCo2] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        const [statsData, fuelPrices, currentPulse, localWeather] = await Promise.all([
+        const [statsData, fuelPrices, , localWeather] = await Promise.all([
           storageService.getScientificData('climate_stats'),
           FuelIntelligenceEngine.getLatestPrices(),
-          storageService.getCarbonPulse(user?.id),
+          Promise.resolve(null),
           weatherService.getWeather(30.0444, 31.2357, language as 'ar' | 'en') // Cairo as default
         ]);
+
+        // Real global CO2 from the free global-warming.org API (monthly mean, no key). Never show a personal or zero value as "global".
+        let ppmText: string | null = null;
+        try {
+          const co2Res = await fetch('https://global-warming.org/api/co2-api');
+          const co2Json = await co2Res.json();
+          const latest = co2Json?.co2?.[co2Json.co2.length - 1];
+          const ppm = latest ? parseFloat(latest.cycle) : NaN;
+          ppmText = Number.isFinite(ppm) && ppm > 300 ? ppm.toFixed(2) : null;
+        } catch {
+          ppmText = null;
+        }
+        setGlobalCo2(ppmText);
+        const co2Value = ppmText
+          ? `${ppmText} ppm`
+          : (isRtl ? 'غير متاح حالياً' : 'Currently unavailable');
 
         setWeatherData(localWeather);
 
         if (statsData && statsData.length > 0) {
-          setClimateStats(statsData.map(s => s.label === 'تركيز CO2' || s.label === 'CO2 Concentration' ? { ...s, value: `${currentPulse} ppm` } : s));
+          setClimateStats(statsData.map(s => s.label === 'تركيز CO2' || s.label === 'CO2 Concentration' ? { ...s, value: co2Value } : s));
         } else {
           setClimateStats([
-            { label: isRtl ? 'تركيز CO2 العام' : 'Global CO2', value: `${currentPulse} ppm`, icon: Wind, color: 'text-egypt-gold', bg: 'bg-egypt-gold/10' },
+            { label: isRtl ? 'تركيز CO2 العام' : 'Global CO2', value: co2Value, icon: Wind, color: 'text-egypt-gold', bg: 'bg-egypt-gold/10' },
             { label: isRtl ? 'جودة الهواء' : 'Air Quality (AQI)', value: localWeather?.aqi.toString() || '45', icon: Cloud, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
             { label: isRtl ? 'الحرارة الحالية' : 'Current Temp', value: `${localWeather?.temp}°C`, icon: ThermometerSun, color: 'text-red-500', bg: 'bg-red-500/10' },
             { label: isRtl ? 'الرطوبة' : 'Humidity', value: `${localWeather?.humidity}%`, icon: Droplets, color: 'text-blue-500', bg: 'bg-blue-500/10' }
@@ -74,7 +92,7 @@ const ClimateTrends: React.FC = () => {
           <Globe className="w-12 h-12 text-white" />
         </div>
         <div>
-          <h1 className="text-4xl font-black text-white font-arabic">{isRtl ? 'مركز تحليل المناخ العالمي' : 'Global Climate Analysis Hub'}</h1>
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white font-arabic">{isRtl ? 'مركز تحليل المناخ العالمي' : 'Global Climate Analysis Hub'}</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Global Climate Intelligence Hub</p>
         </div>
       </div>
