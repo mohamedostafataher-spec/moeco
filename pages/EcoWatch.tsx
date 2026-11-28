@@ -61,8 +61,26 @@ const CATEGORY_ICONS: Record<ReportCategory, React.FC<{ className?: string }>> =
   other: HelpCircle,
 };
 
+const EGYPT_GOVERNORATES_EN: Record<string, string> = {
+  'القاهرة': 'Cairo',
+  'الجيزة': 'Giza',
+  'الإسكندرية': 'Alexandria',
+  'القليوبية': 'Qalyubia',
+  'الدقهلية': 'Dakahlia',
+  'الشرقية': 'Sharqia',
+  'الغربية': 'Gharbia',
+  'أسوان': 'Aswan',
+  'الأقصر': 'Luxor',
+  'بورسعيد': 'Port Said',
+  'السويس': 'Suez',
+  'الإسماعيلية': 'Ismailia',
+  'أسيوط': 'Asyut',
+  'المنيا': 'Minya',
+};
+
 const EcoWatch: React.FC = () => {
   const { user, isRtl } = useApp();
+  const ar = isRtl;
   const [reports, setReports] = useState<CivicReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'submit' | 'my_reports' | 'public_map'>('submit');
@@ -97,7 +115,7 @@ const EcoWatch: React.FC = () => {
       setReports(data);
     } catch (e) {
       console.error('Error loading reports:', e);
-      notificationService.error('تعذر تحميل قائمة البلاغات');
+      notificationService.error(ar ? 'تعذر تحميل قائمة البلاغات' : 'Could not load the reports list');
     } finally {
       setLoading(false);
     }
@@ -112,17 +130,17 @@ const EcoWatch: React.FC = () => {
       setShareLocationConsent(true);
     }
     if (!('geolocation' in navigator)) {
-      notificationService.error('المتصفح لا يدعم تحديد الموقع الجغرافي');
+      notificationService.error(ar ? 'المتصفح لا يدعم تحديد الموقع الجغرافي' : 'This browser does not support geolocation');
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
-        notificationService.success('تم التقاط الإحداثيات (ستُعرض كنطاق عام فقط للخصوصية)');
+        notificationService.success(ar ? 'تم التقاط الإحداثيات (ستُعرض كنطاق عام فقط للخصوصية)' : 'Coordinates captured (shown as a general zone only, for privacy)');
       },
       () => {
-        notificationService.error('تعذر الوصول للموقع الجغرافي. يمكنك تحديد المنطقة نصياً.');
+        notificationService.error(ar ? 'تعذر الوصول للموقع الجغرافي. يمكنك تحديد المنطقة نصياً.' : 'Could not access your location. You can enter the area as text.');
       }
     );
   };
@@ -131,7 +149,7 @@ const EcoWatch: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      setFormError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      setFormError(ar ? 'حجم الصورة يجب أن يكون أقل من 5 ميجابايت' : 'Image size must be under 5 MB');
       return;
     }
     setIsUploading(true);
@@ -140,7 +158,7 @@ const EcoWatch: React.FC = () => {
       const uploaded = await storageService.uploadImage(file, 'environmental-reports');
       setPhotoUrl(uploaded);
       setSharePhotoConsent(true);
-      notificationService.success('تم إرفاق الصورة بنجاح');
+      notificationService.success(ar ? 'تم إرفاق الصورة بنجاح' : 'Photo attached successfully');
     } catch {
       // Safe local preview fallback for demo/offline mode without breaking user flow
       const reader = new FileReader();
@@ -148,7 +166,7 @@ const EcoWatch: React.FC = () => {
         if (typeof reader.result === 'string') {
           setPhotoUrl(reader.result);
           setSharePhotoConsent(true);
-          notificationService.info('تم حفظ معاينة الصورة محلياً ضمن البلاغ التجريبي');
+          notificationService.info(ar ? 'تم حفظ معاينة الصورة محلياً ضمن البلاغ التجريبي' : 'Photo preview saved locally within the demo report');
         }
       };
       reader.readAsDataURL(file);
@@ -174,11 +192,11 @@ const EcoWatch: React.FC = () => {
     setSubmitSuccessId(null);
 
     if (!area.trim() || area.trim().length < 2) {
-      setFormError('يرجى إدخال اسم المنطقة أو الحي (مثال: المعادي، الدقي).');
+      setFormError(ar ? 'يرجى إدخال اسم المنطقة أو الحي (مثال: المعادي، الدقي).' : 'Please enter the area or neighborhood name (e.g. Maadi, Dokki).');
       return;
     }
     if (!description.trim() || description.trim().length < 8) {
-      setFormError('يرجى كتابة وصف مختصر واضح للمشكلة (8 أحرف على الأقل).');
+      setFormError(ar ? 'يرجى كتابة وصف مختصر واضح للمشكلة (8 أحرف على الأقل).' : 'Please write a short, clear description of the issue (at least 8 characters).');
       return;
     }
 
@@ -201,7 +219,7 @@ const EcoWatch: React.FC = () => {
         title.trim() || `${REPORT_CATEGORY_META[category].labelAr} - ${area.trim()}`;
       const created = await civicActionService.submitReport({
         userId: user?.id || 'guest-user-2026',
-        userName: user?.name || 'مشارك',
+        userName: user?.name || (ar ? 'مشارك' : 'Participant'),
         category,
         title: computedTitle,
         description,
@@ -228,12 +246,12 @@ const EcoWatch: React.FC = () => {
 
       notificationService.success(
         asDraft
-          ? 'تم حفظ البلاغ كمسودة محلية'
-          : 'تم حفظ البلاغ تجريبياً بحالة «تم الاستلام»'
+          ? (ar ? 'تم حفظ البلاغ كمسودة محلية' : 'Report saved as a local draft')
+          : (ar ? 'تم حفظ البلاغ تجريبياً بحالة «تم الاستلام»' : 'Report saved (demo) with status: Received')
       );
       setActiveTab('my_reports');
     } catch (e: any) {
-      setFormError(e?.message || 'حدث خطأ أثناء حفظ البلاغ');
+      setFormError(e?.message || (ar ? 'حدث خطأ أثناء حفظ البلاغ' : 'An error occurred while saving the report'));
     } finally {
       setIsSubmitting(false);
     }
@@ -242,19 +260,19 @@ const EcoWatch: React.FC = () => {
   const handlePublishDraft = async (id: string) => {
     await civicActionService.publishDraftReport(id);
     await loadReports();
-    notificationService.success('تم إرسال المسودة وحفظها بحالة «تم الاستلام»');
+    notificationService.success(ar ? 'تم إرسال المسودة وحفظها بحالة «تم الاستلام»' : 'Draft submitted and saved with status: Received');
   };
 
   const handleAnonymize = async (id: string) => {
     await civicActionService.anonymizeReport(id);
     await loadReports();
-    notificationService.success('تم إخفاء البيانات الشخصية والصورة والموقع الدقيق لهذا البلاغ');
+    notificationService.success(ar ? 'تم إخفاء البيانات الشخصية والصورة والموقع الدقيق لهذا البلاغ' : 'Personal data, photo, and precise location hidden for this report');
   };
 
   const handleDelete = async (id: string) => {
     await civicActionService.deleteReport(id);
     await loadReports();
-    notificationService.info('تم حذف البلاغ من سجلك المحلي');
+    notificationService.info(ar ? 'تم حذف البلاغ من سجلك المحلي' : 'Report deleted from your local record');
   };
 
   const currentUserId = user?.id || 'guest-user-2026';
@@ -273,13 +291,15 @@ const EcoWatch: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <p className="text-xs font-bold text-emerald-400">
-              المشاركة المجتمعية المحلية · نسخة تجريبية داخل التطبيق
+              {ar ? 'المشاركة المجتمعية المحلية · نسخة تجريبية داخل التطبيق' : 'Local community participation · in-app demo version'}
             </p>
             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight">
-              بلاغ بيئي
+              {ar ? 'بلاغ بيئي' : 'Eco Watch'}
             </h1>
             <p className="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
-              سجّل مشكلة بيئية في منطقتك وتابع حالتها خطوة بخطوة. يتم حماية خصوصيتك بعدم عرض موقعك الدقيق أو بياناتك الشخصية للعامة.
+              {ar
+                ? 'سجّل مشكلة بيئية في منطقتك وتابع حالتها خطوة بخطوة. يتم حماية خصوصيتك بعدم عرض موقعك الدقيق أو بياناتك الشخصية للعامة.'
+                : 'Report an environmental issue in your area and track its status step by step. Your privacy is protected: your precise location and personal data are never shown publicly.'}
             </p>
           </div>
 
@@ -289,7 +309,7 @@ const EcoWatch: React.FC = () => {
               className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm border border-white/10 transition-colors flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <BarChart3 className="w-4 h-4 text-emerald-400" />
-              <span>لوحة المتابعة المحلية</span>
+              <span>{ar ? 'لوحة المتابعة المحلية' : 'Local monitoring dashboard'}</span>
             </Link>
           </div>
         </div>
@@ -302,10 +322,12 @@ const EcoWatch: React.FC = () => {
           <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <div className="text-xs md:text-sm leading-relaxed space-y-1">
             <p className="font-bold text-amber-300">
-              تنبيه الشفافية: البلاغات في هذه النسخة تجريبية
+              {ar ? 'تنبيه الشفافية: البلاغات في هذه النسخة تجريبية' : 'Transparency note: reports in this version are demo'}
             </p>
             <p>
-              يُحفظ البلاغ داخل التطبيق لأغراض العرض والتوثيق المجتمعي، ولا يُرسل تلقائياً إلى الحي أو جهة حكومية رسمية إلا عند ربط شريك محلي مخوّل.
+              {ar
+                ? 'يُحفظ البلاغ داخل التطبيق لأغراض العرض والتوثيق المجتمعي، ولا يُرسل تلقائياً إلى الحي أو جهة حكومية رسمية إلا عند ربط شريك محلي مخوّل.'
+                : 'Reports are saved inside the app for display and community documentation, and are not sent automatically to any district or official government body unless an authorized local partner is connected.'}
             </p>
           </div>
         </div>
@@ -313,13 +335,13 @@ const EcoWatch: React.FC = () => {
         {/* Navigation Tabs */}
         <div
           role="tablist"
-          aria-label="أقسام البلاغات البيئية"
+          aria-label={ar ? 'أقسام البلاغات البيئية' : 'Environmental report sections'}
           className="flex flex-wrap gap-2 bg-slate-950/60 p-2 rounded-2xl border border-white/10"
         >
           {[
-            { id: 'submit', label: 'تقديم بلاغ جديد', icon: Plus },
-            { id: 'my_reports', label: `بلاغاتي (${myReports.length})`, icon: Clock },
-            { id: 'public_map', label: `البلاغات العامة والخريطة (${publicReports.length})`, icon: MapIcon },
+            { id: 'submit', label: ar ? 'تقديم بلاغ جديد' : 'Submit a report', icon: Plus },
+            { id: 'my_reports', label: ar ? `بلاغاتي (${myReports.length})` : `My reports (${myReports.length})`, icon: Clock },
+            { id: 'public_map', label: ar ? `البلاغات العامة والخريطة (${publicReports.length})` : `Public reports & map (${publicReports.length})`, icon: MapIcon },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -342,12 +364,12 @@ const EcoWatch: React.FC = () => {
       {/* TAB 1: SUBMIT REPORT */}
       {activeTab === 'submit' && (
         <section
-          aria-label="نموذج تقديم بلاغ بيئي"
+          aria-label={ar ? 'نموذج تقديم بلاغ بيئي' : 'Environmental report form'}
           className="bg-slate-900/80 border border-white/10 rounded-[2rem] p-6 md:p-10 space-y-8 shadow-xl"
         >
           <div className="space-y-3">
             <label className="block text-sm font-bold text-white">
-              1. نوع المشكلة البيئية <span className="text-rose-400">*</span>
+              {ar ? '1. نوع المشكلة البيئية' : '1. Environmental issue type'} <span className="text-rose-400">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {(Object.keys(REPORT_CATEGORY_META) as ReportCategory[]).map((catKey) => {
@@ -372,7 +394,7 @@ const EcoWatch: React.FC = () => {
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${meta.bg} ${meta.color}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-bold leading-snug">{meta.labelAr}</span>
+                    <span className="text-sm font-bold leading-snug">{ar ? meta.labelAr : meta.labelEn}</span>
                   </button>
                 );
               })}
@@ -382,7 +404,7 @@ const EcoWatch: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label htmlFor="report-gov" className="block text-sm font-bold text-white">
-                2. المحافظة <span className="text-rose-400">*</span>
+                {ar ? '2. المحافظة' : '2. Governorate'} <span className="text-rose-400">*</span>
               </label>
               <select
                 id="report-gov"
@@ -392,7 +414,7 @@ const EcoWatch: React.FC = () => {
               >
                 {EGYPT_GOVERNORATES.map((g) => (
                   <option key={g} value={g}>
-                    {g}
+                    {ar ? g : (EGYPT_GOVERNORATES_EN[g] || g)}
                   </option>
                 ))}
               </select>
@@ -400,7 +422,7 @@ const EcoWatch: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="report-area" className="block text-sm font-bold text-white">
-                3. المنطقة أو العنوان التقريبي <span className="text-rose-400">*</span>
+                {ar ? '3. المنطقة أو العنوان التقريبي' : '3. Area or approximate address'} <span className="text-rose-400">*</span>
               </label>
               <input
                 id="report-area"
@@ -410,7 +432,7 @@ const EcoWatch: React.FC = () => {
                   setArea(e.target.value);
                   setNearbyWarning(null);
                 }}
-                placeholder="مثال: المعادي - قرب محطة مترو المعادي"
+                placeholder={ar ? 'مثال: المعادي - قرب محطة مترو المعادي' : 'e.g. Maadi - near Maadi metro station'}
                 className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none"
               />
             </div>
@@ -418,28 +440,28 @@ const EcoWatch: React.FC = () => {
 
           <div className="space-y-2">
             <label htmlFor="report-title" className="block text-sm font-bold text-white">
-              عنوان مختصر (اختياري)
+              {ar ? 'عنوان مختصر (اختياري)' : 'Short title (optional)'}
             </label>
             <input
               id="report-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="مثال: تسريب مياه في ماسورة فرعية بالرصيف"
+              placeholder={ar ? 'مثال: تسريب مياه في ماسورة فرعية بالرصيف' : 'e.g. Water leak in a sidewalk branch pipe'}
               className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="report-desc" className="block text-sm font-bold text-white">
-              4. وصف مختصر للمشكلة <span className="text-rose-400">*</span>
+              {ar ? '4. وصف مختصر للمشكلة' : '4. Short description of the issue'} <span className="text-rose-400">*</span>
             </label>
             <textarea
               id="report-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="صف المشكلة بوضوح (المدة التقريبية، تأثيرها على المارة أو السكان... دون ذكر بيانات شخصية)."
+              placeholder={ar ? 'صف المشكلة بوضوح (المدة التقريبية، تأثيرها على المارة أو السكان... دون ذكر بيانات شخصية).' : 'Describe the issue clearly (approximate duration, impact on passersby or residents... no personal data).'}
               className="w-full bg-slate-950 border border-white/15 rounded-2xl px-4 py-3.5 text-white font-medium focus:border-emerald-400 focus:outline-none resize-y"
             />
           </div>
@@ -458,10 +480,12 @@ const EcoWatch: React.FC = () => {
                   />
                   <div>
                     <span className="block text-sm font-bold text-white">
-                      مشاركة الموقع الجغرافي (اختياري وبموافقتك)
+                      {ar ? 'مشاركة الموقع الجغرافي (اختياري وبموافقتك)' : 'Share my location (optional, with your consent)'}
                     </span>
                     <span className="block text-xs text-slate-400 mt-0.5">
-                      لن يُعرض موقعك الدقيق للعامة؛ يظهر النطاق العام فقط (~1 كم) لحماية الخصوصية.
+                      {ar
+                        ? 'لن يُعرض موقعك الدقيق للعامة؛ يظهر النطاق العام فقط (~1 كم) لحماية الخصوصية.'
+                        : 'Your precise location is never shown publicly; only the general zone (~1 km) appears, to protect privacy.'}
                     </span>
                   </div>
                 </label>
@@ -475,7 +499,7 @@ const EcoWatch: React.FC = () => {
                     className="w-full py-3 px-4 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/30 font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <MapPin className="w-4 h-4" />
-                    <span>تحديد موقعي الحالي أو الضغط على الخريطة</span>
+                    <span>{ar ? 'تحديد موقعي الحالي أو الضغط على الخريطة' : 'Use my current location or tap the map'}</span>
                   </button>
                   <div className="h-44 rounded-2xl overflow-hidden border border-white/10">
                     <MapContainer center={[lat, lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -501,10 +525,12 @@ const EcoWatch: React.FC = () => {
                 />
                 <div>
                   <span className="block text-sm font-bold text-white">
-                    إرفاق صورة توضيحية (اختياري وبموافقتك)
+                    {ar ? 'إرفاق صورة توضيحية (اختياري وبموافقتك)' : 'Attach an illustrative photo (optional, with your consent)'}
                   </span>
                   <span className="block text-xs text-slate-400 mt-0.5">
-                    تجنّب تصوير وجوه الأشخاص أو لوحات السيارات أو أي معلومات شخصية.
+                    {ar
+                      ? 'تجنّب تصوير وجوه الأشخاص أو لوحات السيارات أو أي معلومات شخصية.'
+                      : 'Avoid photographing faces, license plates, or any personal information.'}
                   </span>
                 </div>
               </label>
@@ -518,7 +544,7 @@ const EcoWatch: React.FC = () => {
                     className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-emerald-400 text-slate-300 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                   >
                     <Camera className="w-5 h-5 text-emerald-400" />
-                    <span>{isUploading ? 'جاري التحميل...' : photoUrl ? 'تغيير الصورة المرفقة' : 'اختر صورة من جهازك'}</span>
+                    <span>{isUploading ? (ar ? 'جاري التحميل...' : 'Uploading...') : photoUrl ? (ar ? 'تغيير الصورة المرفقة' : 'Change attached photo') : (ar ? 'اختر صورة من جهازك' : 'Choose a photo from your device')}</span>
                   </button>
                   <input
                     ref={fileInputRef}
@@ -529,7 +555,7 @@ const EcoWatch: React.FC = () => {
                   />
                   {photoUrl && (
                     <div className="relative rounded-xl overflow-hidden border border-white/10 max-h-40">
-                      <img src={photoUrl} alt="معاينة الصورة المرفقة" className="w-full h-40 object-cover" />
+                      <img src={photoUrl} alt={ar ? 'معاينة الصورة المرفقة' : 'Attached photo preview'} className="w-full h-40 object-cover" />
                     </div>
                   )}
                 </div>
@@ -549,10 +575,12 @@ const EcoWatch: React.FC = () => {
               <div>
                 <span className="flex items-center gap-2 text-sm font-bold text-white">
                   <EyeOff className="w-4 h-4 text-emerald-400" />
-                  <span>إخفاء اسمي عن العرض العام (موصى به)</span>
+                  <span>{ar ? 'إخفاء اسمي عن العرض العام (موصى به)' : 'Hide my name from public view (recommended)'}</span>
                 </span>
                 <span className="block text-xs text-slate-400 mt-0.5">
-                  عند التفعيل، يظهر البلاغ للعامة باسم «مستخدم مجهول» ولا تظهر هويتك.
+                  {ar
+                    ? 'عند التفعيل، يظهر البلاغ للعامة باسم «مستخدم مجهول» ولا تظهر هويتك.'
+                    : 'When enabled, the report appears publicly as Anonymous user and your identity stays hidden.'}
                 </span>
               </div>
             </label>
@@ -568,13 +596,15 @@ const EcoWatch: React.FC = () => {
                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 text-sm">
                   <p className="font-bold text-amber-200">
-                    يوجد بلاغ مفتوح مشابه قريب من نفس المنطقة
+                    {ar ? 'يوجد بلاغ مفتوح مشابه قريب من نفس المنطقة' : 'A similar open report exists near this area'}
                   </p>
                   <p className="text-slate-200">
-                    «{nearbyWarning.title}» — الحالة: {REPORT_STATUS_META[nearbyWarning.status].labelAr}
+                    «{nearbyWarning.title}» — {ar ? 'الحالة' : 'Status'}: {ar ? REPORT_STATUS_META[nearbyWarning.status].labelAr : REPORT_STATUS_META[nearbyWarning.status].labelEn}
                   </p>
                   <p className="text-xs text-slate-300">
-                    لتقليل التكرار، يمكنك متابعة البلاغ القائم أو تأكيد أن بلاغك يخص مشكلة مختلفة وإرساله بشكل طبيعي.
+                    {ar
+                      ? 'لتقليل التكرار، يمكنك متابعة البلاغ القائم أو تأكيد أن بلاغك يخص مشكلة مختلفة وإرساله بشكل طبيعي.'
+                      : 'To reduce duplicates, you can follow the existing report, or confirm yours is a different issue and submit normally.'}
                   </p>
                 </div>
               </div>
@@ -584,7 +614,7 @@ const EcoWatch: React.FC = () => {
                   onClick={() => setActiveTab('public_map')}
                   className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold"
                 >
-                  عرض البلاغات القريبة
+                  {ar ? 'عرض البلاغات القريبة' : 'View nearby reports'}
                 </button>
                 <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 cursor-pointer text-xs font-bold text-amber-100">
                   <input
@@ -593,7 +623,7 @@ const EcoWatch: React.FC = () => {
                     onChange={(e) => setDistinctIssueConfirmed(e.target.checked)}
                     className="w-4 h-4 accent-amber-400"
                   />
-                  <span>أؤكد أنها مشكلة مختلفة عن البلاغ القائم</span>
+                  <span>{ar ? 'أؤكد أنها مشكلة مختلفة عن البلاغ القائم' : 'I confirm this is a different issue from the existing report'}</span>
                 </label>
               </div>
             </div>
@@ -610,7 +640,9 @@ const EcoWatch: React.FC = () => {
             <p className="text-xs text-slate-400 flex items-center gap-2">
               <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>
-                قبل الإرسال: يُحفظ هذا البلاغ في التطبيق كـ «نموذج تجريبي» ولا يُرسل تلقائياً لأي جهة حكومية ما لم يتوفر ربط شريك فعلي.
+                {ar
+                  ? 'قبل الإرسال: يُحفظ هذا البلاغ في التطبيق كـ «نموذج تجريبي» ولا يُرسل تلقائياً لأي جهة حكومية ما لم يتوفر ربط شريك فعلي.'
+                  : 'Before submitting: this report is saved in the app as a demo record and is not sent automatically to any government body unless a real partner integration exists.'}
               </span>
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -621,7 +653,7 @@ const EcoWatch: React.FC = () => {
                 className="sm:w-56 py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm flex items-center justify-center gap-2 border border-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 <FileEdit className="w-4 h-4" />
-                <span>حفظ كمسودة</span>
+                <span>{ar ? 'حفظ كمسودة' : 'Save as draft'}</span>
               </button>
               <button
                 type="button"
@@ -630,7 +662,7 @@ const EcoWatch: React.FC = () => {
                 className="flex-1 py-4 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'جاري الحفظ...' : 'إرسال البلاغ التجريبي'}</span>
+                <span>{isSubmitting ? (ar ? 'جاري الحفظ...' : 'Saving...') : (ar ? 'إرسال البلاغ التجريبي' : 'Submit demo report')}</span>
               </button>
             </div>
           </div>
@@ -639,29 +671,31 @@ const EcoWatch: React.FC = () => {
 
       {/* TAB 2: MY REPORTS */}
       {activeTab === 'my_reports' && (
-        <section aria-label="قائمة بلاغاتي" className="space-y-6">
+        <section aria-label={ar ? 'قائمة بلاغاتي' : 'My reports list'} className="space-y-6">
           {submitSuccessId && (
             <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-sm font-bold flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>تم حفظ البلاغ في قائمتك بنجاح. يمكنك متابعته أو إخفاء بياناته أو حذفه في أي وقت.</span>
+              <span>{ar ? 'تم حفظ البلاغ في قائمتك بنجاح. يمكنك متابعته أو إخفاء بياناته أو حذفه في أي وقت.' : 'Report saved to your list. You can track it, hide its data, or delete it at any time.'}</span>
             </div>
           )}
 
           {loading ? (
-            <div className="p-16 text-center text-slate-400 font-bold">جاري تحميل بلاغاتك...</div>
+            <div className="p-16 text-center text-slate-400 font-bold">{ar ? 'جاري تحميل بلاغاتك...' : 'Loading your reports...'}</div>
           ) : myReports.length === 0 ? (
             <div className="p-14 bg-slate-900/60 border border-dashed border-white/15 rounded-[2rem] text-center space-y-4">
               <AlertTriangle className="w-12 h-12 text-slate-500 mx-auto" />
-              <h2 className="text-xl font-bold text-white">لا توجد بلاغات مسجلة بعد</h2>
+              <h2 className="text-xl font-bold text-white">{ar ? 'لا توجد بلاغات مسجلة بعد' : 'No reports recorded yet'}</h2>
               <p className="text-sm text-slate-400 max-w-md mx-auto">
-                يمكنك البدء بتسجيل بلاغ بيئي تجريبي أو حفظ مسودة لمتابعتها لاحقاً.
+                {ar
+                  ? 'يمكنك البدء بتسجيل بلاغ بيئي تجريبي أو حفظ مسودة لمتابعتها لاحقاً.'
+                  : 'You can start by submitting a demo environmental report or saving a draft to follow up later.'}
               </p>
               <button
                 type="button"
                 onClick={() => setActiveTab('submit')}
                 className="px-6 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm"
               >
-                تقديم أول بلاغ
+                {ar ? 'تقديم أول بلاغ' : 'Submit your first report'}
               </button>
             </div>
           ) : (
@@ -683,17 +717,17 @@ const EcoWatch: React.FC = () => {
                         <div>
                           <h3 className="text-lg font-bold text-white">{rep.title}</h3>
                           <p className="text-xs text-slate-400">
-                            {catMeta.labelAr} · {rep.governorate} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString('ar-EG')}
+                            {ar ? catMeta.labelAr : catMeta.labelEn} · {ar ? rep.governorate : (EGYPT_GOVERNORATES_EN[rep.governorate] || rep.governorate)} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString(ar ? 'ar-EG' : 'en-GB')}
                           </p>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusMeta.badgeClass}`}>
-                          {statusMeta.labelAr}
+                          {ar ? statusMeta.labelAr : statusMeta.labelEn}
                         </span>
                         {rep.isDemo && (
                           <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 text-slate-300 border border-white/10">
-                            نموذج تجريبي
+                            {ar ? 'نموذج تجريبي' : 'Demo record'}
                           </span>
                         )}
                       </div>
@@ -703,9 +737,9 @@ const EcoWatch: React.FC = () => {
 
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10 text-xs text-slate-400">
                       <div className="flex flex-wrap items-center gap-4">
-                        <span>العرض العام: {rep.isAnonymous ? 'مخفي (مستخدم مجهول)' : rep.reporterDisplayName}</span>
-                        <span>الموقع: {rep.shareLocationConsent ? `نطاق عام (${rep.publicLat}, ${rep.publicLng})` : 'غير مشارك'}</span>
-                        <span>الصورة: {rep.photoUrl ? 'مرفقة بموافقتك' : 'غير مرفقة'}</span>
+                        <span>{ar ? 'العرض العام' : 'Public display'}: {rep.isAnonymous ? (ar ? 'مخفي (مستخدم مجهول)' : 'Hidden (anonymous user)') : rep.reporterDisplayName}</span>
+                        <span>{ar ? 'الموقع' : 'Location'}: {rep.shareLocationConsent ? (ar ? `نطاق عام (${rep.publicLat}, ${rep.publicLng})` : `General zone (${rep.publicLat}, ${rep.publicLng})`) : (ar ? 'غير مشارك' : 'Not shared')}</span>
+                        <span>{ar ? 'الصورة' : 'Photo'}: {rep.photoUrl ? (ar ? 'مرفقة بموافقتك' : 'Attached with your consent') : (ar ? 'غير مرفقة' : 'Not attached')}</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {rep.status === 'draft' && (
@@ -714,7 +748,7 @@ const EcoWatch: React.FC = () => {
                             onClick={() => handlePublishDraft(rep.id)}
                             className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
                           >
-                            إرسال المسودة الآن
+                            {ar ? 'إرسال المسودة الآن' : 'Submit draft now'}
                           </button>
                         )}
                         {!rep.isAnonymous || rep.photoUrl || rep.shareLocationConsent ? (
@@ -723,7 +757,7 @@ const EcoWatch: React.FC = () => {
                             onClick={() => handleAnonymize(rep.id)}
                             className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 font-bold text-xs"
                           >
-                            إخفاء البيانات الشخصية والصورة
+                            {ar ? 'إخفاء البيانات الشخصية والصورة' : 'Hide personal data & photo'}
                           </button>
                         ) : null}
                         <button
@@ -731,7 +765,7 @@ const EcoWatch: React.FC = () => {
                           onClick={() => handleDelete(rep.id)}
                           className="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs border border-rose-500/30"
                         >
-                          حذف البلاغ
+                          {ar ? 'حذف البلاغ' : 'Delete report'}
                         </button>
                       </div>
                     </div>
@@ -745,12 +779,14 @@ const EcoWatch: React.FC = () => {
 
       {/* TAB 3: PUBLIC REPORTS & SIMPLIFIED MAP */}
       {activeTab === 'public_map' && (
-        <section aria-label="البلاغات العامة والخريطة المبسطة" className="space-y-6">
+        <section aria-label={ar ? 'البلاغات العامة والخريطة المبسطة' : 'Public reports & simplified map'} className="space-y-6">
           {/* Privacy notice */}
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs md:text-sm text-emerald-100 flex items-center gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
             <span>
-              حماية الخصوصية مفعّلة: لا تُعرض أسماء المبلّغين المجهولين أو أي بيانات شخصية أو إحداثيات دقيقة على الخريطة العامة (تُقرّب للنطاق العام فقط).
+              {ar
+                ? 'حماية الخصوصية مفعّلة: لا تُعرض أسماء المبلّغين المجهولين أو أي بيانات شخصية أو إحداثيات دقيقة على الخريطة العامة (تُقرّب للنطاق العام فقط).'
+                : 'Privacy protection is on: anonymous reporter names, personal data, and precise coordinates are never shown on the public map (rounded to the general zone only).'}
             </span>
           </div>
 
@@ -758,37 +794,37 @@ const EcoWatch: React.FC = () => {
           <div className="flex flex-wrap gap-3 items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-white/10">
             <div className="flex flex-wrap gap-2">
               <select
-                aria-label="تصفية حسب نوع المشكلة"
+                aria-label={ar ? 'تصفية حسب نوع المشكلة' : 'Filter by issue type'}
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as any)}
                 className="bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
               >
-                <option value="all">كل أنواع المشكلات</option>
+                <option value="all">{ar ? 'كل أنواع المشكلات' : 'All issue types'}</option>
                 {(Object.keys(REPORT_CATEGORY_META) as ReportCategory[]).map((k) => (
                   <option key={k} value={k}>
-                    {REPORT_CATEGORY_META[k].labelAr}
+                    {ar ? REPORT_CATEGORY_META[k].labelAr : REPORT_CATEGORY_META[k].labelEn}
                   </option>
                 ))}
               </select>
 
               <select
-                aria-label="تصفية حسب حالة البلاغ"
+                aria-label={ar ? 'تصفية حسب حالة البلاغ' : 'Filter by report status'}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="bg-slate-950 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
               >
-                <option value="all">كل الحالات</option>
+                <option value="all">{ar ? 'كل الحالات' : 'All statuses'}</option>
                 {(Object.keys(REPORT_STATUS_META) as ReportStatus[])
                   .filter((s) => s !== 'draft')
                   .map((s) => (
                     <option key={s} value={s}>
-                      {REPORT_STATUS_META[s].labelAr}
+                      {ar ? REPORT_STATUS_META[s].labelAr : REPORT_STATUS_META[s].labelEn}
                     </option>
                   ))}
               </select>
             </div>
             <span className="text-xs font-bold text-slate-400">
-              النتائج المعروضة: {publicReports.length}
+              {ar ? 'النتائج المعروضة' : 'Results shown'}: {publicReports.length}
             </span>
           </div>
 
@@ -801,13 +837,13 @@ const EcoWatch: React.FC = () => {
                 .map((r) => (
                   <Marker key={r.id} position={[r.publicLat!, r.publicLng!]}>
                     <Popup>
-                      <div className="text-right font-arabic space-y-1 p-1" dir="rtl">
+                      <div className="text-right font-arabic space-y-1 p-1" dir={ar ? 'rtl' : 'ltr'}>
                         <p className="font-bold text-slate-900 text-sm">{r.title}</p>
                         <p className="text-xs text-slate-600">
-                          {REPORT_CATEGORY_META[r.category].labelAr} · {r.governorate} - {r.area}
+                          {ar ? REPORT_CATEGORY_META[r.category].labelAr : REPORT_CATEGORY_META[r.category].labelEn} · {ar ? r.governorate : (EGYPT_GOVERNORATES_EN[r.governorate] || r.governorate)} - {r.area}
                         </p>
                         <p className="text-xs font-bold text-emerald-700">
-                          الحالة: {REPORT_STATUS_META[r.status].labelAr}
+                          {ar ? 'الحالة' : 'Status'}: {ar ? REPORT_STATUS_META[r.status].labelAr : REPORT_STATUS_META[r.status].labelEn}
                         </p>
                       </div>
                     </Popup>
@@ -835,20 +871,20 @@ const EcoWatch: React.FC = () => {
                       <div>
                         <h3 className="text-base font-bold text-white">{rep.title}</h3>
                         <p className="text-xs text-slate-400">
-                          {rep.governorate} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString('ar-EG')}
+                          {ar ? rep.governorate : (EGYPT_GOVERNORATES_EN[rep.governorate] || rep.governorate)} - {rep.area} · {new Date(rep.createdAt).toLocaleDateString(ar ? 'ar-EG' : 'en-GB')}
                         </p>
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-xl text-xs font-bold border shrink-0 ${statusMeta.badgeClass}`}>
-                      {statusMeta.labelAr}
+                      {ar ? statusMeta.labelAr : statusMeta.labelEn}
                     </span>
                   </div>
                   <p className="text-sm text-slate-300 leading-relaxed">{rep.description}</p>
                   <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
                     <span>
-                      المبلّغ: {rep.isAnonymous ? 'مستخدم مجهول' : rep.reporterDisplayName || 'مشارك'}
+                      {ar ? 'المبلّغ' : 'Reporter'}: {rep.isAnonymous ? (ar ? 'مستخدم مجهول' : 'Anonymous user') : rep.reporterDisplayName || (ar ? 'مشارك' : 'Participant')}
                     </span>
-                    <span>{rep.isDemo ? 'بيانات تجريبية / نموذجية' : 'بلاغ مسجّل'}</span>
+                    <span>{rep.isDemo ? (ar ? 'بيانات تجريبية / نموذجية' : 'Demo / sample data') : (ar ? 'بلاغ مسجّل' : 'Recorded report')}</span>
                   </div>
                 </article>
               );
