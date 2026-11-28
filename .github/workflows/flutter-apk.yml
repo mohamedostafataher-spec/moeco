@@ -25,22 +25,38 @@ jobs:
           cache: true
       - name: Generate Android platform files
         run: flutter create --platforms android --project-name moeco .
+      - name: Set real application id and app label
+        run: |
+          sed -i 's/applicationId = "com.example.moeco"/applicationId = "eg.moeco.app"/' android/app/build.gradle.kts
+          sed -i 's/android:label="moeco"/android:label="MoEco"/' android/app/src/main/AndroidManifest.xml
+          grep -n 'applicationId' android/app/build.gradle.kts
+          grep -n 'android:label' android/app/src/main/AndroidManifest.xml
       - name: Pub get
         run: flutter pub get
       - name: Analyze
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
-      - name: Build debug APK (sideloadable preview)
-        run: flutter build apk --debug
-      - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/moeco-flutter-preview.apk
+      - name: Test
+        run: flutter test
+      - name: Build release APKs per ABI (debug-signed preview)
+        run: flutter build apk --release --split-per-abi
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          cp app-armeabi-v7a-release.apk moeco-flutter-armeabi-v7a.apk
+          cp app-arm64-v8a-release.apk moeco-flutter-arm64-v8a.apk
+          cp app-x86_64-release.apk moeco-flutter-x86_64.apk
+          ls -la *.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: moeco-flutter-preview
-          path: flutter/build/app/outputs/flutter-apk/moeco-flutter-preview.apk
+          name: moeco-flutter-release
+          path: flutter/build/app/outputs/flutter-apk/moeco-flutter-*.apk
       - name: Publish rolling release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: flutter-preview
           name: MoEco Flutter preview
-          body: Debug-signed preview APK of the MoEco Flutter app (Phase 1). Rebuilt on every change under flutter/. Install by sideloading.
-          files: flutter/build/app/outputs/flutter-apk/moeco-flutter-preview.apk
+          body: |
+            MoEco Flutter app preview (release build, split per ABI; signed with the debug key for sideloading).
+            Pick the APK for your phone: most modern phones = arm64-v8a, older 32-bit = armeabi-v7a, emulators = x86_64.
+            Rebuilt automatically on every change under flutter/.
+          files: flutter/build/app/outputs/flutter-apk/moeco-flutter-*.apk
