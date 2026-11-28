@@ -185,6 +185,7 @@ const ComplaintAssistant = React.lazy(() => import("./pages/ComplaintAssistant")
 const LocalProjects = React.lazy(() => import("./pages/LocalProjects"));
 const MoreHub = React.lazy(() => import("./pages/MoreHub"));
 const PrivacyData = React.lazy(() => import("./pages/PrivacyData"));
+const Terms = React.lazy(() => import("./pages/Terms"));
 const MyData = React.lazy(() => import("./pages/MyData"));
 const OwnerAnalytics = React.lazy(() => import("./pages/OwnerAnalytics"));
 
@@ -1060,6 +1061,7 @@ const AppContent: React.FC = () => {
                       <Route path="/local-projects" element={<LocalProjects />} />
                       <Route path="/more" element={<MoreHub />} />
                       <Route path="/privacy" element={<PrivacyData />} />
+                      <Route path="/terms" element={<Terms />} />
                       <Route path="/my-data" element={<MyData />} />
                       <Route path="/owner-stats" element={<OwnerAnalytics />} />
                       <Route
