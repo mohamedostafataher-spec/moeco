@@ -334,5 +334,11 @@ class S {
   String get climateSource => ar
       ? 'المصدر: Open-Meteo (إعادة تحليل ERA5). أرقام تقديرية للتوعية، مش بديل عن تقارير الأرصاد الرسمية.'
       : 'Source: Open-Meteo (ERA5 reanalysis). Estimates for awareness, not a substitute for official met reports.';
+  // Complaints: copy helpers
+  String get compCopy => ar ? 'نسخ الشكوى' : 'Copy complaint';
+  String get compCopied => ar
+      ? 'اتنسخت! الصقها في القناة الرسمية المناسبة'
+      : 'Copied! Paste it into the right official channel';
+
   String get version => '0.2.0';
 }
