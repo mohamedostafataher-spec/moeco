@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { storageService } from '../services/storageService';
@@ -44,6 +43,43 @@ const Settings: React.FC = () => {
       setDetecting(false);
     }
   };
+  const handleExportData = () => {
+    try {
+      const localData: Record<string, string | null> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.toLowerCase().includes('moeco')) {
+          localData[key] = localStorage.getItem(key);
+        }
+      }
+      const payload = {
+        exported_at: new Date().toISOString(),
+        profile: {
+          name,
+          full_name: fullName,
+          phone_number: phone,
+          bio,
+          country,
+          governorate,
+          city,
+          socialBracket,
+        },
+        settings: { language, theme, userCountry },
+        local_records: localData,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'moeco-data-export-' + new Date().toISOString().split('T')[0] + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      notificationService.success(isRtl ? 'تم تصدير بياناتك بنجاح' : 'Your data was exported successfully');
+    } catch (e) {
+      notificationService.error(isRtl ? 'فشل تصدير البيانات' : 'Data export failed');
+    }
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [countries, setCountries] = useState<{id: string, label: string}[]>([]);
   const [governorates, setGovernorates] = useState<string[]>([]);
@@ -229,7 +265,7 @@ const Settings: React.FC = () => {
                   <p className="text-sm font-bold text-white/60 leading-relaxed italic">
                      {isRtl ? 'يتم تشفير كافة بياناتك الشخصية ضمن بروتوكولات الأمان الوطنية للشركة المصرية.' : 'All your personal data is encrypted within the national security protocols of the Egyptian Company.'}
                   </p>
-                  <button className="w-full py-4 border-2 border-white/10 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all">
+                  <button onClick={handleExportData} className="w-full py-4 border-2 border-white/10 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all">
                      {isRtl ? 'تحميل بياناتي' : 'Export Data Log'}
                   </button>
                </div>
