@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import '../services/air_quality.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   final S s;
@@ -17,6 +19,79 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _transport;
   String? _electricity;
   String? _food;
+  List<AirQualityReading>? _aq;
+  bool _aqLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    AirQualityService.getReadings().then((readings) {
+      if (!mounted) return;
+      setState(() {
+        _aq = readings;
+        _aqLoading = false;
+      });
+    });
+  }
+
+  Widget _aqCard() {
+    final timeFmt = DateFormat.Hm();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.air, color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(s.aqTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_aqLoading)
+              Text(s.aqLoading, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else if (_aq == null || _aq!.isEmpty)
+              Text(s.aqUnavailable, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else ...[
+              ..._aq!.map((r) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(s.ar ? r.cityAr : r.cityEn,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: r.aqi <= 50
+                                ? const Color(0xFFDCFCE7)
+                                : r.aqi <= 100
+                                    ? const Color(0xFFFEF9C3)
+                                    : const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${r.aqi} · ${AirQualityService.label(r.aqi, s.ar)}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 8),
+              Text(
+                s.aqSource(timeFmt.format(_aq!.first.fetchedAt)),
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   S get s => widget.s;
 
@@ -79,6 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: s.homeHeroSub,
           icon: Icons.spa_outlined,
           chip: streak > 0 ? s.streakDays(streak) : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _aqCard(),
         ),
         Padding(
           padding: const EdgeInsets.all(16),
