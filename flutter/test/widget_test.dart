@@ -13,6 +13,7 @@ import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/services/share_card_service.dart';
 import 'package:moeco/services/footprint_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -361,5 +362,29 @@ void main() {
     expect(stats.streakDays, 1);
     expect(stats.greenKm, 12.0);
     expect(stats.co2SavedKg, closeTo(12.0 * FootprintStore.co2PerCarKm, 0.001));
+  });
+
+
+  test('F7: global events serve stale cache when every source is unreachable', () async {
+    final seeded = GlobalEvent(
+      id: 'test1',
+      title: 'اختبار',
+      kind: GlobalEventKind.disaster,
+      source: GlobalEventSource.gdacs,
+      severity: AlertSeverity.watch,
+      egyptRelevant: true,
+      publishedAt: DateTime.utc(2026, 11, 27),
+    );
+    SharedPreferences.setMockInitialValues({
+      'moeco_global_events_cache_v1': jsonEncode([seeded.toJson()]),
+      // Older than the 30-minute TTL: forces a network attempt, which fails
+      // in the test environment, so the stale cache must be served.
+      'moeco_global_events_cache_time_v1':
+          DateTime.now().subtract(const Duration(hours: 3)).millisecondsSinceEpoch,
+    });
+    final events = await GlobalEventsService.load();
+    expect(events.length, 1);
+    expect(events.first.id, 'test1');
+    expect(events.first.egyptRelevant, isTrue);
   });
 }
