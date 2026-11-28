@@ -33,6 +33,25 @@ const GreenEconomy: React.FC = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddDonation, setShowAddDonation] = useState(false);
   const [dailyReward, setDailyReward] = useState<any>(null);
+  const [claiming, setClaiming] = useState(false);
+
+  const handleClaimDailyBonus = async () => {
+    if (claiming) return;
+    if (!dailyReward) {
+      notificationService.info(isRtl ? 'لا توجد مكافأة متاحة الآن - ربما استلمت مكافأة اليوم بالفعل' : 'No bonus available right now - you may have already claimed today\'s bonus');
+      return;
+    }
+    setClaiming(true);
+    try {
+      await storageService.claimDailyReward(dailyReward.id);
+      notificationService.success(isRtl ? 'تم استلام المكافأة! أُضيفت نقاطك' : 'Bonus claimed! Your points were added');
+      setDailyReward(null);
+    } catch (e) {
+      notificationService.error(isRtl ? 'تعذر استلام المكافأة الآن - حاول مرة أخرى لاحقاً' : 'Could not claim the bonus right now - please try again later');
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -144,7 +163,8 @@ const GreenEconomy: React.FC = () => {
                     <Sparkles className="mb-4" />
                     <h4 className="text-xl font-black mb-2">{isRtl ? 'مكافأة اليوم' : 'Daily Bonus'}</h4>
                     <p className="text-xs font-bold opacity-90 mb-6">{isRtl ? 'سجل دخولك يومياً لربح نقاط إضافية' : 'Log in daily to earn extra points'}</p>
-                    <button className="w-full py-4 bg-white text-emerald-600 rounded-2xl font-black hover:scale-105 transition-transform">
+                    <button onClick={handleClaimDailyBonus} disabled={claiming} className={`w-full py-4 bg-white text-emerald-600 rounded-2xl font-black hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}>
+                       {claiming && <Loader2 className="animate-spin" size={16} />}
                        {isRtl ? 'استلام' : 'Claim Now'}
                     </button>
                  </div>
