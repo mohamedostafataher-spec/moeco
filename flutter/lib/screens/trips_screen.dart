@@ -23,6 +23,7 @@ class TripsScreen extends StatefulWidget {
 
 class _TripsScreenState extends State<TripsScreen> {
   String _mode = 'walk';
+  String _instead = 'car';
   final _kmController = TextEditingController();
 
   @override
@@ -34,7 +35,7 @@ class _TripsScreenState extends State<TripsScreen> {
   Future<void> _add() async {
     final km = double.tryParse(_kmController.text.replaceAll(',', '.'));
     if (km == null || km <= 0 || km > 200) return;
-    await widget.store.addGreenTrip(mode: _mode, km: km);
+    await widget.store.addGreenTrip(mode: _mode, km: km, instead: _instead);
     widget.onChanged();
     setState(() => _kmController.clear());
   }
@@ -51,6 +52,8 @@ class _TripsScreenState extends State<TripsScreen> {
     final trips = widget.store.greenTrips;
     final totalKm = widget.store.greenTripTotalKm;
     final savedKg = widget.store.greenTripCo2SavedKg;
+    final savedEgpMonth =
+        widget.store.greenTripEgpSavedThisMonth(DateTime.now());
     final dateFmt = DateFormat.yMMMd(s.ar ? 'ar' : 'en');
 
     return Scaffold(
@@ -88,6 +91,33 @@ class _TripsScreenState extends State<TripsScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(s.tripsInstead,
+                        style: const TextStyle(
+                            color: MoEcoTheme.textMuted, fontSize: 12)),
+                  ),
+                  const SizedBox(height: 6),
+                  SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(
+                          value: 'car',
+                          icon: const Icon(Icons.directions_car_outlined),
+                          label: Text(s.tripsInsteadCar)),
+                      ButtonSegment(
+                          value: 'metro',
+                          icon: const Icon(Icons.subway_outlined),
+                          label: Text(s.tripsInsteadMetro)),
+                      ButtonSegment(
+                          value: 'microbus',
+                          icon: const Icon(Icons.airport_shuttle_outlined),
+                          label: Text(s.tripsInsteadMicrobus)),
+                    ],
+                    selected: {_instead},
+                    onSelectionChanged: (v) =>
+                        setState(() => _instead = v.first),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -162,6 +192,31 @@ class _TripsScreenState extends State<TripsScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: MoEcoTheme.primary.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.tripsSavedEgpMonth(savedEgpMonth.toStringAsFixed(0)),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: MoEcoTheme.primaryDark)),
+                        const SizedBox(height: 3),
+                        Text(s.tripsEgpNote,
+                            style: const TextStyle(
+                                color: MoEcoTheme.textMuted,
+                                fontSize: 11,
+                                height: 1.5)),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(s.tripsFactorNote,
