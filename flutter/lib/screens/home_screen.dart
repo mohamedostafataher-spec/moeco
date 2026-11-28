@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
+import '../services/savings_tips_service.dart';
 import '../services/air_quality.dart';
 import '../services/prayer_times.dart';
 import '../services/weather_service.dart';
@@ -672,10 +673,98 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
             const SizedBox(height: 6),
             Text(s.billNote, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11)),
+            ..._tierSection(),
           ],
         ),
       ),
     );
+  }
+
+  /// F4: slab-boundary warning + weekly savings tip, driven by the kWh
+  /// the user already typed into the bill card. All local rules, no AI.
+  List<Widget> _tierSection() {
+    final kwh = double.tryParse(_kwhCtrl.text.replaceAll(',', '.'));
+    if (kwh == null || kwh <= 0) return [];
+    final status = SavingsTipsService.tierStatus(kwh);
+    final tip = SavingsTipsService.weeklyTip(DateTime.now());
+    final tipEgp = tip.egpSaved(status.tierPrice);
+    return [
+      const SizedBox(height: 14),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: status.nearNextTier || status.kwhToNext == null
+              ? const Color(0xFFFFF8E1)
+              : const Color(0xFFE8F5E9),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: status.nearNextTier || status.kwhToNext == null
+                  ? const Color(0xFFF9A825)
+                  : const Color(0xFF66BB6A)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(s.svTierNow(status.tierPrice.toStringAsFixed(2)),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+            const SizedBox(height: 4),
+            Text(
+              status.kwhToNext == null
+                  ? s.svTierTop
+                  : status.nearNextTier
+                      ? s.svTierNear(status.kwhToNext!.toStringAsFixed(0),
+                          status.crossingJump!.toStringAsFixed(0))
+                      : s.svTierFar(status.kwhToNext!.toStringAsFixed(0)),
+              style: TextStyle(
+                  fontSize: 12,
+                  height: 1.5,
+                  color: status.nearNextTier || status.kwhToNext == null
+                      ? const Color(0xFF8D6E00)
+                      : MoEcoTheme.primaryDark,
+                  fontWeight: status.nearNextTier ? FontWeight.w700 : FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F5E9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.eco_outlined, color: MoEcoTheme.primary, size: 16),
+                const SizedBox(width: 6),
+                Text(s.svTipTitle,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        color: MoEcoTheme.primaryDark)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(s.ar ? tip.titleAr : tip.titleEn,
+                style: const TextStyle(fontSize: 12.5, height: 1.5)),
+            const SizedBox(height: 2),
+            Text(s.svTipSave(tipEgp.toStringAsFixed(0)),
+                style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: MoEcoTheme.primaryDark)),
+            const SizedBox(height: 2),
+            Text(s.svTipNote,
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 10)),
+          ],
+        ),
+      ),
+    ];
   }
 
   Future<void> _logDay() async {
