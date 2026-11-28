@@ -6,6 +6,7 @@ import 'package:moeco/services/recycling_service.dart';
 import 'package:moeco/services/metro_data.dart';
 import 'package:moeco/services/weather_service.dart';
 import 'package:moeco/services/services_data.dart';
+import 'package:moeco/services/green_spots_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -74,6 +75,45 @@ void main() {
       expect(RegExp(r'^[0-9]{3,5}$').hasMatch(h.number), isTrue,
           reason: h.labelEn);
     }
+  });
+
+  test('green spots parser keeps named spots and sorts by distance', () {
+    final elements = [
+      {
+        'type': 'node',
+        'lat': 30.05,
+        'lon': 31.24,
+        'tags': {'leisure': 'park', 'name': 'Far Park'},
+      },
+      {
+        'type': 'node',
+        'lat': 30.0445,
+        'lon': 31.2358,
+        'tags': {'amenity': 'drinking_water', 'name:ar': 'سبيل قريب'},
+      },
+      {
+        'type': 'node',
+        'lat': 30.046,
+        'lon': 31.236,
+        'tags': {'leisure': 'garden'}, // unnamed: dropped
+      },
+      {
+        'type': 'way',
+        'center': {'lat': 30.045, 'lon': 31.236},
+        'tags': {'leisure': 'garden', 'name': 'Near Garden'},
+      },
+    ];
+    final spots =
+        GreenSpotsService.parseElements(elements, 30.0444, 31.2357);
+    expect(spots.length, 3);
+    // Nearest first: the drinking-water point is ~10 m from the center.
+    expect(spots.first.kind, GreenSpotKind.drinkingWater);
+    expect(spots.first.name, 'سبيل قريب');
+    expect(spots.last.name, 'Far Park');
+    expect(spots.any((p) => p.kind == GreenSpotKind.garden), isTrue);
+    // Haversine sanity: ~111 km per degree of latitude.
+    expect(GreenSpotsService.haversineKm(30.0, 31.0, 31.0, 31.0),
+        closeTo(111.2, 0.5));
   });
 
   test('water savings estimator matches the documented assumptions', () {
