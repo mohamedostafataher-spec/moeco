@@ -37,6 +37,22 @@ class S {
       ? 'تعذّر تحميل بيانات الهواء دلوقتي. هنحاول تاني تلقائيًا.'
       : 'Could not load air data right now. We will retry automatically.';
 
+  // Air quality alert banner on home (only when a city crosses the band).
+  String aqAlertTitle(String city, int aqi) => ar
+      ? 'تحذير: الهواء غير صحي في $city ($aqi)'
+      : 'Warning: unhealthy air in $city ($aqi)';
+  String get aqAlertTip => ar
+      ? 'قلّل المجهود برّه النهاردة، بالذات للأطفال وكبار السن.'
+      : 'Take it easy outdoors today, especially kids and older adults.';
+  String aqAlertSensitiveTitle(String city, int aqi) => ar
+      ? 'تنبيه لأصحاب الحساسية: الهواء مش كويس في $city ($aqi)'
+      : 'For sensitive groups: air is poor in $city ($aqi)';
+  String get aqAlertSensitiveTip => ar
+      ? 'لو عندك حساسية صدرية، قلّل الخروج دلوقتي.'
+      : 'If you have respiratory sensitivity, limit time outside for now.';
+  String aqAlertMore(int n) =>
+      ar ? '+$n محافظات تانية بنفس المستوى' : '+$n more governorates at this level';
+
   // Prayer times (live, Aladhan — Egyptian General Authority of Survey)
   String get ptTitle => ar ? 'مواقيت الصلاة — القاهرة' : 'Prayer times — Cairo';
   String get ptLoading => ar ? 'بنجيب مواقيت الصلاة...' : 'Fetching prayer times...';
