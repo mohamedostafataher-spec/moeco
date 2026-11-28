@@ -110,5 +110,69 @@ class S {
       : 'This version of the app saves your data on your device only. No account, no tracking, no ads.';
   String get moreWeb => ar ? 'نسخة الويب' : 'Web version';
   String get moreWebUrl => 'https://moeco-eg.vercel.app';
-  String get version => '0.1.0';
+
+  // Meters (home utility tracking)
+  String get navMeters => ar ? 'العدادات' : 'Meters';
+  String get metersHeroTitle => ar ? 'عدادات بيتك' : 'Your home meters';
+  String get metersHeroSub => ar
+      ? 'سجّل قراءة الكهربا والمياه كل شهر وشوف الفرق. محفوظة على جهازك فقط.'
+      : 'Log electricity and water readings monthly and see the difference. Saved on your device only.';
+  String metersAddTitle(String month) => ar ? 'قراءة شهر $month' : 'Reading for $month';
+  String get metersOverwrite => ar
+      ? 'عندك قراءة للشهر ده، الحفظ هيحدّثها.'
+      : 'You have a reading for this month; saving updates it.';
+  String get metersKwh => ar ? 'الكهرباء (كيلووات ساعة)' : 'Electricity (kWh)';
+  String get metersM3 => ar ? 'المياه (متر مكعب)' : 'Water (m³)';
+  String get metersSave => ar ? 'احفظ القراءة' : 'Save reading';
+  String get metersNote => ar
+      ? 'تقدير الكربون: ٠.٤٢ كجم لكل كيلووات ساعة و٠.٢٩٨ كجم لكل متر مكعب مياه (معاملات استرشادية).'
+      : 'Carbon estimate: 0.42 kg per kWh and 0.298 kg per m³ of water (indicative factors).';
+  String get metersHistory => ar ? 'القراءات السابقة' : 'Past readings';
+  String get metersEmpty => ar ? 'لسه مفيش قراءات' : 'No readings yet';
+  String get metersEmptySub => ar
+      ? 'أضف أول قراءة من عدادك أو فاتورتك، وهتشوف الفرق شهر بشهر.'
+      : 'Add your first reading from your meter or bill, and track month by month.';
+  String metersLine(String kwh, String m3, String kg) => ar
+      ? '$kwh ك.و.س • $m3 م³ • ≈ $kg كجم CO₂e'
+      : '$kwh kWh • $m3 m³ • ≈ $kg kg CO₂e';
+
+  // Achievements
+  String get achHeroTitle => ar ? 'إنجازاتك' : 'Your achievements';
+  String get achHeroSub => ar
+      ? 'بتتحسب من سجلاتك على جهازك بس، من غير ما نبعت حاجة.'
+      : 'Computed from your on-device logs only, nothing sent anywhere.';
+  String achProgress(int done, int total) => ar
+      ? 'فتحت $done من $total إنجاز'
+      : '$done of $total achievements unlocked';
+  String get achFirstLog => ar ? 'أول يوم مسجل' : 'First day logged';
+  String get achStreak3 => ar ? 'سلسلة ٣ أيام' : '3-day streak';
+  String get achStreak7 => ar ? 'سلسلة ٧ أيام' : '7-day streak';
+  String get achStreak30 => ar ? 'سلسلة ٣٠ يوم' : '30-day streak';
+  String get achDays14 => ar ? '١٤ يوم مسجل' : '14 days logged';
+  String get achFirstDraft => ar ? 'أول مسودة شكوى' : 'First complaint draft';
+  String get achFirstMeter => ar ? 'أول قراءة عداد' : 'First meter reading';
+  String get achUnlocked => ar ? 'اتفتح' : 'Unlocked';
+  String achCount(int cur, int target) => ar ? '$cur من $target' : '$cur of $target';
+  String get achNote => ar
+      ? 'الإنجازات تشجيع شخصي بس، مش مسابقة ومش بتتشارك مع حد.'
+      : 'Achievements are personal encouragement only, not a competition and never shared.';
+
+  // Climate trends
+  String get climateHeroTitle => ar ? 'مناخ مصر عبر السنين' : "Egypt's climate over the years";
+  String get climateHeroSub => ar
+      ? 'متوسط الحرارة السنوي لمدن مصرية من بيانات حقيقية، بيتحدث تلقائيًا.'
+      : 'Yearly mean temperature for Egyptian cities from real data, updated automatically.';
+  String climateChange(String sign, String v) => ar
+      ? 'الفرق: $sign$v°م بين أول وآخر الفترة'
+      : 'Change: $sign$v°C between the first and last half';
+  String climateWindow(int first, int last) => ar
+      ? 'متوسطات سنوية $first - $last'
+      : 'Yearly means $first - $last';
+  String get climateUnavailable => ar
+      ? 'تعذّر تحميل بيانات المناخ دلوقتي. هنحاول تاني لما تفتح الصفحة.'
+      : 'Could not load climate data right now. We will retry when you reopen this page.';
+  String get climateSource => ar
+      ? 'المصدر: Open-Meteo (إعادة تحليل ERA5). أرقام تقديرية للتوعية، مش بديل عن تقارير الأرصاد الرسمية.'
+      : 'Source: Open-Meteo (ERA5 reanalysis). Estimates for awareness, not a substitute for official met reports.';
+  String get version => '0.2.0';
 }
