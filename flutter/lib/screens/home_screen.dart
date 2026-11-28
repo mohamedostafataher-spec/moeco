@@ -280,6 +280,77 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Governorate-level AQ alert banner: shown only when the worst city's
+  /// AQI crosses the sensitive (100) or unhealthy (150) band. Real Open-Meteo
+  /// readings only - no banner when data is missing or air is fine.
+  Widget? _aqAlert() {
+    if (_aqLoading || _aq == null || _aq!.isEmpty) return null;
+    final worst = AirQualityService.worst(_aq!);
+    if (worst == null || worst.aqi <= 100) return null;
+    final unhealthy = worst.aqi > 150;
+    final count = AirQualityService.countAbove(_aq!, unhealthy ? 150 : 100);
+    final timeFmt = DateFormat.Hm();
+    final bg = unhealthy ? const Color(0xFFFEF2F2) : const Color(0xFFFFFBEB);
+    final fg = unhealthy ? const Color(0xFFB91C1C) : const Color(0xFFB45309);
+    final iconBg = unhealthy ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7);
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+            child: Icon(
+              unhealthy ? Icons.warning_amber_rounded : Icons.health_and_safety_outlined,
+              color: fg, size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  unhealthy
+                      ? s.aqAlertTitle(s.ar ? worst.cityAr : worst.cityEn, worst.aqi)
+                      : s.aqAlertSensitiveTitle(s.ar ? worst.cityAr : worst.cityEn, worst.aqi),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: fg, height: 1.4),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  unhealthy ? s.aqAlertTip : s.aqAlertSensitiveTip,
+                  style: TextStyle(fontSize: 12, color: fg.withValues(alpha: 0.85), height: 1.5),
+                ),
+                if (count > 1) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(20)),
+                    child: Text(
+                      s.aqAlertMore(count - 1),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  s.aqSource(timeFmt.format(worst.fetchedAt)),
+                  style: TextStyle(color: fg.withValues(alpha: 0.6), fontSize: 10.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _aqCard() {
     final timeFmt = DateFormat.Hm();
     return Card(
@@ -569,6 +640,11 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icons.spa_outlined,
           chip: streak > 0 ? s.streakDays(streak) : null,
         ),
+        if (_aqAlert() != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: _aqAlert()!,
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: _weatherCard(),
