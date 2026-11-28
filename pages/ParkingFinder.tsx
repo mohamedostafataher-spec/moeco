@@ -98,9 +98,15 @@ const ParkingFinder: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <button className="p-5 bg-egypt-gold text-egypt-black rounded-2xl hover:scale-110 transition-transform shadow-lg shadow-egypt-gold/20">
-                      <Navigation className="w-6 h-6" />
-                    </button>
+                    {(p.lat && p.lng) ? (
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`} target="_blank" rel="noreferrer" className="p-5 bg-egypt-gold text-egypt-black rounded-2xl hover:scale-110 transition-transform shadow-lg shadow-egypt-gold/20" title={language === 'ar' ? 'الاتجاهات' : 'Directions'}>
+                        <Navigation className="w-6 h-6" />
+                      </a>
+                    ) : (
+                      <span className="p-5 bg-egypt-gold text-egypt-black rounded-2xl opacity-30 cursor-not-allowed" title={language === 'ar' ? 'الموقع غير متاح' : 'Location unavailable'}>
+                        <Navigation className="w-6 h-6" />
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -118,6 +124,14 @@ const ParkingFinder: React.FC = () => {
             </div>
           )}
         </div>
+
+        {filteredParkings.length === 0 && !loading && (
+          <div className="p-10 text-center bg-white dark:bg-egypt-black rounded-[2.5rem] border border-zinc-100 dark:border-white/5 mb-8">
+            <Car className="w-10 h-10 mx-auto text-zinc-300 mb-4" />
+            <p className="font-black text-zinc-400">{language === 'ar' ? 'لا توجد بيانات أماكن ركن متاحة حالياً' : 'No parking data available right now'}</p>
+            <p className="text-xs font-bold text-zinc-400 mt-2">{language === 'ar' ? 'خدمة بيانات الركن غير متوفرة في الوقت الحالي - جرّب لاحقاً' : 'The parking data service is unavailable at the moment - try again later'}</p>
+          </div>
+        )}
 
         {/* Community Tip */}
         <div className="mt-12 p-8 bg-blue-500/10 border border-blue-500/20 rounded-[3rem] flex items-start gap-6">
