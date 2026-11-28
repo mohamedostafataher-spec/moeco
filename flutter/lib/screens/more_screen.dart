@@ -10,6 +10,7 @@ import 'utilities_screen.dart';
 import 'news_screen.dart';
 import 'trips_screen.dart';
 import 'metro_screen.dart';
+import 'recycling_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final S s;
@@ -140,6 +141,9 @@ class MoreScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _navTile(context, Icons.subway_outlined, s.metroHeroTitle,
                   s.metroHeroSub, MetroScreen(s: s)),
+              const SizedBox(height: 10),
+              _navTile(context, Icons.recycling, s.recHeroTitle, s.recHeroSub,
+                  RecyclingScreen(s: s)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
