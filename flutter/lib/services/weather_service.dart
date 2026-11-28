@@ -128,3 +128,206 @@ class WeatherService {
         : 'Mild weather: a good chance to switch off the A/C and open windows.';
   }
 }
+
+/// One city's current + today's forecast, for national alerts.
+class CityForecast {
+  final String cityAr;
+  final String cityEn;
+  final double temp;
+  final double maxTemp;
+  final double minTemp;
+  final double windKmh;
+  final int code;
+  const CityForecast({
+    required this.cityAr,
+    required this.cityEn,
+    required this.temp,
+    required this.maxTemp,
+    required this.minTemp,
+    required this.windKmh,
+    required this.code,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'cityAr': cityAr,
+        'cityEn': cityEn,
+        'temp': temp,
+        'maxTemp': maxTemp,
+        'minTemp': minTemp,
+        'windKmh': windKmh,
+        'code': code,
+      };
+
+  static CityForecast fromJson(Map<String, dynamic> j) => CityForecast(
+        cityAr: j['cityAr'] ?? '',
+        cityEn: j['cityEn'] ?? '',
+        temp: (j['temp'] as num?)?.toDouble() ?? 0,
+        maxTemp: (j['maxTemp'] as num?)?.toDouble() ?? 0,
+        minTemp: (j['minTemp'] as num?)?.toDouble() ?? 0,
+        windKmh: (j['windKmh'] as num?)?.toDouble() ?? 0,
+        code: (j['code'] as num?)?.toInt() ?? 0,
+      );
+}
+
+enum WeatherAlertKind { extremeHeat, heat, storm, wind, rain, cold }
+
+class WeatherAlert {
+  final String cityAr;
+  final String cityEn;
+  final WeatherAlertKind kind;
+  final double value; // temperature C or wind km/h, 0 when not applicable
+  const WeatherAlert(this.cityAr, this.cityEn, this.kind, this.value);
+
+  Map<String, dynamic> toJson() => {
+        'cityAr': cityAr,
+        'cityEn': cityEn,
+        'kind': kind.name,
+        'value': value,
+      };
+
+  static WeatherAlert fromJson(Map<String, dynamic> j) => WeatherAlert(
+        j['cityAr'] ?? '',
+        j['cityEn'] ?? '',
+        WeatherAlertKind.values.firstWhere(
+          (k) => k.name == j['kind'],
+          orElse: () => WeatherAlertKind.heat,
+        ),
+        (j['value'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+/// National weather alerts derived from Open-Meteo forecast data.
+/// These are NOT official Egypt Meteorological Authority warnings.
+class NationalWeatherAlerts {
+  /// 11 major cities covering all regions.
+  static const cities = <(String, String, double, double)>[
+    ('القاهرة', 'Cairo', 30.0444, 31.2357),
+    ('الجيزة', 'Giza', 30.0131, 31.2089),
+    ('الإسكندرية', 'Alexandria', 31.2001, 29.9187),
+    ('بورسعيد', 'Port Said', 31.2653, 32.3019),
+    ('السويس', 'Suez', 29.9668, 32.5498),
+    ('طنطا', 'Tanta', 30.7865, 31.0004),
+    ('المنصورة', 'Mansoura', 31.0364, 31.3807),
+    ('الأقصر', 'Luxor', 25.6872, 32.6396),
+    ('أسوان', 'Aswan', 24.0889, 32.8998),
+    ('الغردقة', 'Hurghada', 27.2579, 33.8116),
+    ('شرم الشيخ', 'Sharm El Sheikh', 27.9158, 34.3300),
+  ];
+
+  static const _stormCodes = {95, 96, 99};
+  static const _rainCodes = {61, 63, 65, 66, 67, 80, 81, 82};
+
+  /// Pure derivation so tests can pin the thresholds.
+  static List<WeatherAlert> deriveAlerts(List<CityForecast> forecasts) {
+    final alerts = <WeatherAlert>[];
+    for (final f in forecasts) {
+      final worst = f.temp > f.maxTemp ? f.temp : f.maxTemp;
+      if (worst >= 42) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.extremeHeat, worst));
+      } else if (worst >= 38) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.heat, worst));
+      }
+      if (_stormCodes.contains(f.code)) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.storm, 0));
+      } else if (_rainCodes.contains(f.code)) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.rain, 0));
+      }
+      if (f.windKmh >= 50) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.wind, f.windKmh));
+      }
+      if (f.minTemp <= 5) {
+        alerts.add(WeatherAlert(f.cityAr, f.cityEn, WeatherAlertKind.cold, f.minTemp));
+      }
+    }
+    const order = {
+      WeatherAlertKind.storm: 0,
+      WeatherAlertKind.extremeHeat: 1,
+      WeatherAlertKind.heat: 2,
+      WeatherAlertKind.wind: 3,
+      WeatherAlertKind.rain: 4,
+      WeatherAlertKind.cold: 5,
+    };
+    alerts.sort((a, b) => order[a.kind]!.compareTo(order[b.kind]!));
+    return alerts;
+  }
+
+  static const _cacheKey = 'weather_alerts_v1';
+
+  /// Fresh (< 30 min) cached alerts, otherwise one multi-city Open-Meteo
+  /// call; stale cache when offline; null when nothing is available.
+  static Future<List<WeatherAlert>?> getAlerts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = _readCache(prefs);
+    if (cached != null &&
+        DateTime.now().difference(cached.$2) < const Duration(minutes: 30)) {
+      return cached.$1;
+    }
+    final fresh = await _fetchAlerts();
+    if (fresh != null) {
+      await prefs.setString(
+        _cacheKey,
+        jsonEncode({
+          'at': DateTime.now().toIso8601String(),
+          'alerts': fresh.map((a) => a.toJson()).toList(),
+        }),
+      );
+      return fresh;
+    }
+    return cached?.$1;
+  }
+
+  static (List<WeatherAlert>, DateTime)? _readCache(SharedPreferences prefs) {
+    final raw = prefs.getString(_cacheKey);
+    if (raw == null) return null;
+    try {
+      final j = jsonDecode(raw) as Map<String, dynamic>;
+      final at = DateTime.tryParse(j['at'] ?? '') ?? DateTime.now();
+      final list = (j['alerts'] as List? ?? [])
+          .map((e) => WeatherAlert.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      return (list, at);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<List<WeatherAlert>?> _fetchAlerts() async {
+    try {
+      final lats = cities.map((c) => c.$3).join(',');
+      final lons = cities.map((c) => c.$4).join(',');
+      final uri = Uri.parse(
+        'https://api.open-meteo.com/v1/forecast'
+        '?latitude=$lats&longitude=$lons'
+        '&current=temperature_2m,weather_code,wind_speed_10m'
+        '&daily=temperature_2m_max,temperature_2m_min'
+        '&forecast_days=1&timezone=Africa%2FCairo',
+      );
+      final res = await http.get(uri).timeout(const Duration(seconds: 12));
+      if (res.statusCode != 200) return null;
+      final body = jsonDecode(res.body);
+      final List<dynamic> items = body is List ? body : [body];
+      final forecasts = <CityForecast>[];
+      for (var i = 0; i < items.length && i < cities.length; i++) {
+        final item = items[i] as Map<String, dynamic>;
+        final cur = item['current'] as Map<String, dynamic>? ?? {};
+        final daily = item['daily'] as Map<String, dynamic>? ?? {};
+        double firstOf(dynamic v) =>
+            v is List && v.isNotEmpty ? (v.first as num).toDouble() : 0;
+        forecasts.add(CityForecast(
+          cityAr: cities[i].$1,
+          cityEn: cities[i].$2,
+          temp: (cur['temperature_2m'] as num?)?.toDouble() ?? 0,
+          maxTemp: firstOf(daily['temperature_2m_max']),
+          minTemp: firstOf(daily['temperature_2m_min']),
+          windKmh: (cur['wind_speed_10m'] as num?)?.toDouble() ?? 0,
+          code: (cur['weather_code'] as num?)?.toInt() ?? 0,
+        ));
+      }
+      if (forecasts.isEmpty) return null;
+      return deriveAlerts(forecasts);
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
