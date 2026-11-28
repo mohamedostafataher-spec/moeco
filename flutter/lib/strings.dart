@@ -34,8 +34,23 @@ class S {
       : 'Source: Open-Meteo, updated $time';
   String get aqLoading => ar ? 'بنجيب جودة الهواء...' : 'Fetching air quality...';
   String get aqUnavailable => ar
-      ? 'جودة الهواء مش متاحة دلوقتي (مفيش نت).'
-      : 'Air quality is unavailable right now (offline).';
+      ? 'تعذّر تحميل بيانات الهواء دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'Could not load air data right now. We will retry automatically.';
+
+  // Weekly chart + bill converter (Home)
+  String get weeklyTitle => ar ? 'أسبوعك بالكربون (تقدير)' : 'Your week in carbon (estimate)';
+  String get weeklyEmpty => ar
+      ? 'سجّل يومك عشان يظهر رسم الأسبوع.'
+      : 'Log your day to see the weekly chart.';
+  String get billTitle => ar ? 'فاتورة الكهربا = كام كربون؟' : 'Your bill in carbon';
+  String get billHint => ar ? 'الكيلووات ساعة من الفاتورة (kWh)' : 'kWh from your bill';
+  String get billCalc => ar ? 'احسب' : 'Calculate';
+  String billResult(String kg) => ar
+      ? '≈ $kg كجم CO₂e في الشهر'
+      : '≈ $kg kg CO₂e per month';
+  String get billNote => ar
+      ? 'معامل ٠.٤٢ كجم لكل كيلووات ساعة (تقدير للشبكة المصرية، مش بديل للفاتورة).'
+      : 'Factor 0.42 kg per kWh (Egyptian grid estimate, not a bill substitute).';
 
   // Calculator
   String get calcHeroTitle => ar ? 'حاسبة البصمة الكربونية' : 'Carbon Footprint Calculator';
