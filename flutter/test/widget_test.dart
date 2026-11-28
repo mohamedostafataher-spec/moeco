@@ -3,6 +3,7 @@ import 'package:moeco/strings.dart';
 import 'package:moeco/screens/metro_screen.dart';
 import 'package:moeco/services/air_quality.dart';
 import 'package:moeco/services/recycling_service.dart';
+import 'package:moeco/services/metro_data.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -57,6 +58,23 @@ void main() {
     expect(pts.first.name, 'Green Point');
     expect(pts.first.materials, containsAll(['plastic', 'paper']));
     expect(pts[1].name, 'container');
+  });
+
+  test('metro trip planner counts stops and fares, with transfers', () {
+    // Same line: Helwan (L1 #0) to Sadat (L1 #8) = 8 stops -> 10 EGP.
+    final direct = planMetroTrip(0, 0, 0, 8);
+    expect(direct.stops, 8);
+    expect(direct.fare, 10.0);
+    expect(direct.seniorFare, 5.0);
+    expect(direct.transferAr, isNull);
+    // Transfer: Kit Kat (L3 #22) to Helwan (L1 #0) via Nasser = 3 + 9 = 12 stops.
+    final transfer = planMetroTrip(2, 22, 0, 0);
+    expect(transfer.stops, 12);
+    expect(transfer.fare, 12.0);
+    expect(transfer.transferEn, 'Nasser');
+    // Fare bands: 24 stops crosses into the 15 EGP band.
+    expect(metroFareForStops(24), 15.0);
+    expect(metroFareForStops(40), 20.0);
   });
 
   test('metro subscriptions are zone-based and ascending', () {
