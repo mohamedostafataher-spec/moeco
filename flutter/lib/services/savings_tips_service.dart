@@ -18,7 +18,7 @@ class TierStatus {
 
   bool get nearNextTier =>
       kwhToNext != null && (kwhToNext! <= 25 || kwhToNext! <= 0.1 * _tierSpan);
-  double get _tierSpan => const [50, 50, 100, 150, 300, 350][tierIndex.clamp(0, 5)];
+  double get _tierSpan => const [50.0, 50.0, 100.0, 150.0, 300.0, 350.0][tierIndex.clamp(0, 5)];
 }
 
 class SavingsTip {
