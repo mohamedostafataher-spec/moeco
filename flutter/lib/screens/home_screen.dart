@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _ptLoading = true;
   WeatherReading? _wx;
   bool _wxLoading = true;
+  List<WeatherAlert>? _nalerts;
   final TextEditingController _kwhCtrl = TextEditingController();
   double? _billKg;
 
@@ -79,6 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _wx = w;
         _wxLoading = false;
       });
+    });
+    NationalWeatherAlerts.getAlerts().then((alerts) {
+      if (!mounted) return;
+      setState(() => _nalerts = alerts);
     });
   }
 
@@ -151,6 +156,99 @@ class _HomeScreenState extends State<HomeScreen> {
         '${s.weeklyCost(cost.toStringAsFixed(0))}\n'
         '$vs'
         '${s.weeklyEstimateNote}';
+  }
+
+  /// National weather alert card: forecast-derived, honestly labeled,
+  /// hidden when there is nothing to warn about.
+  Widget? _wxAlertCard() {
+    final alerts = _nalerts;
+    if (alerts == null || alerts.isEmpty) return null;
+    final shown = alerts.take(3).toList();
+    final extra = alerts.length - shown.length;
+    Color colorFor(WeatherAlert a) =>
+        (a.kind == WeatherAlertKind.extremeHeat || a.kind == WeatherAlertKind.storm)
+            ? const Color(0xFFC62828)
+            : const Color(0xFFE65100);
+    IconData iconFor(WeatherAlert a) {
+      switch (a.kind) {
+        case WeatherAlertKind.extremeHeat:
+        case WeatherAlertKind.heat:
+          return Icons.thermostat;
+        case WeatherAlertKind.storm:
+          return Icons.thunderstorm_outlined;
+        case WeatherAlertKind.rain:
+          return Icons.water_drop_outlined;
+        case WeatherAlertKind.wind:
+          return Icons.air;
+        case WeatherAlertKind.cold:
+          return Icons.ac_unit;
+      }
+    }
+
+    String lineFor(WeatherAlert a) {
+      final city = s.ar ? a.cityAr : a.cityEn;
+      switch (a.kind) {
+        case WeatherAlertKind.extremeHeat:
+          return s.wxAlertExtreme(city, a.value.toStringAsFixed(0));
+        case WeatherAlertKind.heat:
+          return s.wxAlertHeat(city, a.value.toStringAsFixed(0));
+        case WeatherAlertKind.cold:
+          return s.wxAlertCold(city, a.value.toStringAsFixed(0));
+        case WeatherAlertKind.wind:
+          return s.wxAlertWind(city, a.value.toStringAsFixed(0));
+        case WeatherAlertKind.rain:
+          return s.wxAlertRain(city);
+        case WeatherAlertKind.storm:
+          return s.wxAlertStorm(city);
+      }
+    }
+
+    return Card(
+      color: const Color(0xFFFFF8E1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    color: Color(0xFFE65100), size: 20),
+                const SizedBox(width: 8),
+                Text(s.wxAlertTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            for (final a in shown)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(iconFor(a), color: colorFor(a), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(lineFor(a),
+                          style: const TextStyle(fontSize: 12.5, height: 1.4)),
+                    ),
+                  ],
+                ),
+              ),
+            if (extra > 0)
+              Text(s.wxAlertMore(extra.toString()),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: MoEcoTheme.textMuted,
+                      fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text(s.wxAlertNote,
+                style: const TextStyle(
+                    color: MoEcoTheme.textMuted, fontSize: 11, height: 1.5)),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _weatherCard() {
@@ -644,6 +742,11 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: _aqAlert()!,
+          ),
+        if (_wxAlertCard() != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: _wxAlertCard()!,
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
