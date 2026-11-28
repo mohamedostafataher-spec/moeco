@@ -12,8 +12,10 @@ import 'package:moeco/services/error_log_service.dart';
 import 'package:moeco/services/meter_ocr_service.dart';
 import 'package:moeco/services/bill_compare_service.dart';
 import 'package:moeco/services/challenge_service.dart';
+import 'package:moeco/services/notification_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
+import 'package:moeco/screens/utilities_screen.dart' show estimateElectricityBill;
 import 'package:moeco/services/share_card_service.dart';
 import 'package:moeco/services/footprint_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -491,5 +493,41 @@ void main() {
         now: DateTime(2026, 11, 28));
     expect(p.current, 0);
     expect(p.done, isFalse);
+  });
+
+  test('Slab-crossing warning math: crossing 200 kWh re-rates the whole bill', () {
+    // 190 kWh projected => slab 2 (0.95). 210 kWh projected => slab 3 (1.55).
+    expect(SavingsTipsService.tierIndexForKwh(190), 2);
+    expect(SavingsTipsService.tierIndexForKwh(210), 3);
+    final extra = estimateElectricityBill(210) - estimateElectricityBill(200);
+    // The extra is far more than the 10 kWh marginal usage: whole-bill re-rate.
+    expect(extra, greaterThan(10 * 0.95));
+    // 80 kWh used mid-month, projected 190 => same slab, no warning condition
+    expect(SavingsTipsService.tierIndexForKwh(190) >
+        SavingsTipsService.tierIndexForKwh(80), isFalse);
+    // 190 used, projected 210 => warning fires
+    expect(SavingsTipsService.tierIndexForKwh(210) >
+        SavingsTipsService.tierIndexForKwh(190), isTrue);
+  });
+
+  test('Local reminders land on the 1st at 9:00 and Saturday at 10:00', () {
+    // Mid-month: next reading reminder is the 1st of next month.
+    final r = NotificationService.nextReadingReminder(DateTime(2026, 11, 28, 12));
+    expect(r, DateTime(2026, 12, 1, 9));
+    // On the 1st before 9:00: same day.
+    expect(NotificationService.nextReadingReminder(DateTime(2026, 12, 1, 8)),
+        DateTime(2026, 12, 1, 9));
+    // On the 1st after 9:00: next month, including year rollover.
+    expect(NotificationService.nextReadingReminder(DateTime(2026, 12, 1, 9, 1)),
+        DateTime(2027, 1, 1, 9));
+    // Saturday 2026-11-28 at 12:00: next weekly tip is next Saturday.
+    expect(NotificationService.nextWeeklyTip(DateTime(2026, 11, 28, 12)),
+        DateTime(2026, 12, 5, 10));
+    // Friday: tomorrow.
+    expect(NotificationService.nextWeeklyTip(DateTime(2026, 11, 27, 12)),
+        DateTime(2026, 11, 28, 10));
+    // Saturday before 10:00: same day.
+    expect(NotificationService.nextWeeklyTip(DateTime(2026, 11, 28, 8)),
+        DateTime(2026, 11, 28, 10));
   });
 }
