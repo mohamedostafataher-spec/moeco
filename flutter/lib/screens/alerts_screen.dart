@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../theme.dart';
 import '../strings.dart';
 import '../services/alert_center_service.dart';
+import '../services/global_events_service.dart';
 
 /// The national alert center: every active alert across all governorates,
 /// with severity levels, a live map, and per-governorate detail.
@@ -20,6 +21,9 @@ class _AlertsScreenState extends State<AlertsScreen> {
   AlertCenterData? _data;
   bool _loading = true;
   String? _cityFilter; // cityEn
+  List<GlobalEvent>? _events;
+  bool _eventsLoading = true;
+  String _eventScope = 'all'; // all | egypt | global
 
   @override
   void initState() {
@@ -29,6 +33,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
       setState(() {
         _data = d;
         _loading = false;
+      });
+    });
+    GlobalEventsService.load().then((ev) {
+      if (!mounted) return;
+      setState(() {
+        _events = ev;
+        _eventsLoading = false;
       });
     });
   }
@@ -104,6 +115,146 @@ class _AlertsScreenState extends State<AlertsScreen> {
       case AlertKind.fireRisk:
         return s.alFireRisk(city);
     }
+  }
+
+
+  IconData _eventIcon(GlobalEventKind k) {
+    switch (k) {
+      case GlobalEventKind.earthquake:
+        return Icons.waves_outlined;
+      case GlobalEventKind.disaster:
+        return Icons.storm_outlined;
+      case GlobalEventKind.conflict:
+        return Icons.shield_outlined;
+      case GlobalEventKind.majorEvent:
+        return Icons.public;
+    }
+  }
+
+  String _eventKindLabel(GlobalEventKind k) {
+    switch (k) {
+      case GlobalEventKind.earthquake:
+        return s.geKindEarthquake;
+      case GlobalEventKind.disaster:
+        return s.geKindDisaster;
+      case GlobalEventKind.conflict:
+        return s.geKindConflict;
+      case GlobalEventKind.majorEvent:
+        return s.geKindMajor;
+    }
+  }
+
+  String _eventSourceLabel(GlobalEventSource src) {
+    switch (src) {
+      case GlobalEventSource.gdacs:
+        return s.geSourceGdacs;
+      case GlobalEventSource.usgs:
+        return s.geSourceUsgs;
+      case GlobalEventSource.eonet:
+        return s.geSourceEonet;
+      case GlobalEventSource.bbcArabic:
+        return s.geSourceBbc;
+    }
+  }
+
+  String _relTime(DateTime t) {
+    final diff = DateTime.now().difference(t);
+    if (diff.inMinutes < 60) return s.geMinutesAgo('${diff.inMinutes}');
+    if (diff.inHours < 48) return s.geHoursAgo('${diff.inHours}');
+    return s.geDaysAgo('${diff.inDays}');
+  }
+
+  Widget _scopeChip(String scope, String label) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 12)),
+        selected: _eventScope == scope,
+        onSelected: (_) => setState(() => _eventScope = scope),
+      ),
+    );
+  }
+
+  Widget _eventCard(GlobalEvent e) {
+    final color = _severityColors[e.severity]!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: BorderDirectional(
+            start: BorderSide(color: color, width: 4),
+          ),
+          boxShadow: const [
+            BoxShadow(
+                blurRadius: 6, color: Color(0x14000000), offset: Offset(0, 2))
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(_eventIcon(e.kind), color: color, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(e.title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          height: 1.4)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(_sevLabel(e.severity),
+                            style: TextStyle(
+                                color: color,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800)),
+                      ),
+                      _miniTag(_eventKindLabel(e.kind)),
+                      _miniTag(
+                          '${_eventSourceLabel(e.source)} · ${e.isNews ? s.geNewsTag : s.geFeedTag}'),
+                      Text(_relTime(e.publishedAt),
+                          style: const TextStyle(
+                              color: MoEcoTheme.textMuted, fontSize: 10)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _miniTag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0x11000000),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(text,
+          style: const TextStyle(
+              color: MoEcoTheme.textMuted,
+              fontSize: 10,
+              fontWeight: FontWeight.w600)),
+    );
   }
 
   @override
@@ -374,6 +525,74 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         ),
                     const SizedBox(height: 8),
                     Text(s.alFootnote,
+                        style: const TextStyle(
+                            color: MoEcoTheme.textMuted,
+                            fontSize: 10.5,
+                            height: 1.6)),
+                    const SizedBox(height: 20),
+                    // ---- national & global events ----
+                    Text(s.geSectionTitle,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(s.geSectionSub,
+                        style: const TextStyle(
+                            color: MoEcoTheme.textMuted,
+                            fontSize: 11.5,
+                            height: 1.5)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 34,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _scopeChip('all', s.geAll),
+                          _scopeChip('egypt', s.geEgyptOnly),
+                          _scopeChip('global', s.geGlobal),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (_eventsLoading)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(s.geLoading,
+                            style: const TextStyle(
+                                color: MoEcoTheme.textMuted, fontSize: 12)),
+                      )
+                    else
+                      ...() {
+                        final all = _events ?? [];
+                        final scoped = _eventScope == 'egypt'
+                            ? all.where((e) => e.egyptRelevant).toList()
+                            : _eventScope == 'global'
+                                ? all.where((e) => !e.egyptRelevant).toList()
+                                : List<GlobalEvent>.from(all);
+                        scoped.sort((a, b) {
+                          if (a.egyptRelevant != b.egyptRelevant) {
+                            return a.egyptRelevant ? -1 : 1;
+                          }
+                          final bySev = b.severity.index
+                              .compareTo(a.severity.index);
+                          if (bySev != 0) return bySev;
+                          return b.publishedAt.compareTo(a.publishedAt);
+                        });
+                        if (scoped.isEmpty) {
+                          return [
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(s.geNone,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: MoEcoTheme.textMuted,
+                                      fontSize: 13)),
+                            )
+                          ];
+                        }
+                        return [for (final e in scoped) _eventCard(e)];
+                      }(),
+                    const SizedBox(height: 8),
+                    Text(s.geFootnote,
                         style: const TextStyle(
                             color: MoEcoTheme.textMuted,
                             fontSize: 10.5,
