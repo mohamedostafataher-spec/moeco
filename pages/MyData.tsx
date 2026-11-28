@@ -70,7 +70,7 @@ const MyData: React.FC = () => {
       setProjectNotes(nList);
       setConsents(consList);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تحميل بياناتك من الخادم.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر تحميل بياناتك من الخادم.' : 'Could not load your data from the server.'));
     } finally {
       setLoading(false);
     }
@@ -89,9 +89,9 @@ const MyData: React.FC = () => {
       if (analyticsEnabled) {
         trackUsageEvent('data_exported', { feature: 'my_data', status: 'json' });
       }
-      setStatusMsg('تم تنزيل نسخة كاملة من بياناتك المحفوظة في الخادم بصيغة JSON.');
+      setStatusMsg(isRtl ? 'تم تنزيل نسخة كاملة من بياناتك المحفوظة في الخادم بصيغة JSON.' : 'Downloaded a full copy of your saved server data as JSON.');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر تصدير البيانات.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر تصدير البيانات.' : 'Could not export the data.'));
     }
   };
 
@@ -100,9 +100,9 @@ const MyData: React.FC = () => {
     try {
       await supabaseDataService.deleteHouseholdReading(authUser.id, id);
       setReadings((prev) => prev.filter((r) => r.id !== id));
-      setStatusMsg('تم حذف القراءة من الخادم.');
+      setStatusMsg(isRtl ? 'تم حذف القراءة من الخادم.' : 'Reading deleted from the server.');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر الحذف.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر الحذف.' : 'Could not delete.'));
     }
   };
 
@@ -111,9 +111,9 @@ const MyData: React.FC = () => {
     try {
       await supabaseDataService.deleteComplaintDraft(authUser.id, id);
       setComplaints((prev) => prev.filter((c) => c.id !== id));
-      setStatusMsg('تم حذف مسودة الشكوى من الخادم.');
+      setStatusMsg(isRtl ? 'تم حذف مسودة الشكوى من الخادم.' : 'Complaint draft deleted from the server.');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر الحذف.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر الحذف.' : 'Could not delete.'));
     }
   };
 
@@ -132,9 +132,9 @@ const MyData: React.FC = () => {
       setConsents([]);
       await signOutSession();
       await refreshPrivacyState();
-      setStatusMsg('تم حذف جميع بياناتك وسجلات الموافقة من قاعدة البيانات وإنهاء الجلسة.');
+      setStatusMsg(isRtl ? 'تم حذف جميع بياناتك وسجلات الموافقة من قاعدة البيانات وإنهاء الجلسة.' : 'All your data and consent records were deleted from the database and the session ended.');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'تعذر حذف جميع البيانات.');
+      setErrorMsg(err?.message || (isRtl ? 'تعذر حذف جميع البيانات.' : 'Could not delete all data.'));
     } finally {
       setDeletingAll(false);
     }
@@ -148,10 +148,10 @@ const MyData: React.FC = () => {
     const res = await linkEmailAccount(linkEmail);
     setLinking(false);
     if (res.ok) {
-      setStatusMsg(res.message || 'تم إرسال رسالة تأكيد البريد الإلكتروني.');
+      setStatusMsg(res.message || (isRtl ? 'تم إرسال رسالة تأكيد البريد الإلكتروني.' : 'Email confirmation message sent.'));
       setLinkEmail('');
     } else {
-      setErrorMsg(res.error || 'تعذر ربط البريد الإلكتروني.');
+      setErrorMsg(res.error || (isRtl ? 'تعذر ربط البريد الإلكتروني.' : 'Could not link the email.'));
     }
   };
 
@@ -162,12 +162,13 @@ const MyData: React.FC = () => {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700">
               <Database className="w-4 h-4" />
-              <span>مركز التحكم في البيانات الشخصية</span>
+              <span>{isRtl ? 'مركز التحكم في البيانات الشخصية' : 'Personal data control center'}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">بياناتي في الخادم</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">{isRtl ? 'بياناتي في الخادم' : 'My data on the server'}</h1>
             <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
-              اعرض السجلات المرتبطة بجلستك داخل قاعدة بيانات MoEco، وصدّرها متى شئت، أو احذف أي
-              سجل أو احذف حسابك المجهول بالكامل.
+              {isRtl
+                ? 'اعرض السجلات المرتبطة بجلستك داخل قاعدة بيانات MoEco، وصدّرها متى شئت، أو احذف أي سجل أو احذف حسابك المجهول بالكامل.'
+                : 'View the records linked to your session in the MoEco database, export them anytime, delete any record, or delete your anonymous account entirely.'}
             </p>
           </div>
 
@@ -179,7 +180,7 @@ const MyData: React.FC = () => {
                 className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold"
               >
                 <Download className="w-4 h-4" />
-                <span>تصدير كل بياناتي (JSON)</span>
+                <span>{isRtl ? 'تصدير كل بياناتي (JSON)' : 'Export all my data (JSON)'}</span>
               </button>
               {readings.length > 0 && (
                 <button
@@ -188,7 +189,7 @@ const MyData: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 text-xs font-bold"
                 >
                   <Download className="w-4 h-4 text-emerald-700" />
-                  <span>تصدير ملف بيتي (Excel)</span>
+                  <span>{isRtl ? 'تصدير ملف بيتي (Excel)' : 'Export My Home (Excel)'}</span>
                 </button>
               )}
             </div>
@@ -211,17 +212,17 @@ const MyData: React.FC = () => {
       )}
 
       {!hasCoreConsent ? (
-        <ConsentRequiredNotice featureTitle="بياناتي وإدارة السجلات" />
+        <ConsentRequiredNotice featureTitle={isRtl ? "بياناتي وإدارة السجلات" : "My data & record management"} />
       ) : (
         <>
           {/* Identity & Optional Email Upgrade */}
           <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">الهوية الحالية في الخادم</h2>
+                <h2 className="text-base font-extrabold text-slate-900">{isRtl ? 'الهوية الحالية في الخادم' : 'Current identity on the server'}</h2>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  المعرّف: <span className="font-mono num-ltr">{authUser?.id}</span> · الحالة:{' '}
-                  <strong>{authUser?.isAnonymous ? 'جلسة مجهولة' : `مرتبطة (${authUser?.email})`}</strong>
+                  {isRtl ? 'المعرّف:' : 'ID:'} <span className="font-mono num-ltr">{authUser?.id}</span> · {isRtl ? 'الحالة:' : 'Status:'}{' '}
+                  <strong>{authUser?.isAnonymous ? (isRtl ? 'جلسة مجهولة' : 'Anonymous session') : (isRtl ? `مرتبطة (${authUser?.email})` : `Linked (${authUser?.email})`)}</strong>
                 </p>
               </div>
               <Link
@@ -229,7 +230,7 @@ const MyData: React.FC = () => {
                 className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700"
               >
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>إعدادات الخصوصية والتحليلات</span>
+                <span>{isRtl ? 'إعدادات الخصوصية والتحليلات' : 'Privacy & analytics settings'}</span>
               </Link>
             </div>
 
@@ -241,9 +242,9 @@ const MyData: React.FC = () => {
                 <div className="flex items-start gap-2 text-xs text-slate-700">
                   <Mail className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold text-slate-900">اختياري: حفظ سجلاتك عبر ربط بريد إلكتروني</p>
+                    <p className="font-bold text-slate-900">{isRtl ? 'اختياري: حفظ سجلاتك عبر ربط بريد إلكتروني' : 'Optional: keep your records by linking an email'}</p>
                     <p className="mt-0.5">
-                      إذا مسحت بيانات المتصفح ستضيع الجلسة المجهولة؛ ربط البريد يحافظ على هذه السجلات.
+                      {isRtl ? 'إذا مسحت بيانات المتصفح ستضيع الجلسة المجهولة؛ ربط البريد يحافظ على هذه السجلات.' : 'If you clear browser data the anonymous session is lost; linking an email preserves these records.'}
                     </p>
                   </div>
                 </div>
@@ -263,7 +264,7 @@ const MyData: React.FC = () => {
                     className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold"
                   >
                     {linking && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>ربط البريد بالجلسة</span>
+                    <span>{isRtl ? 'ربط البريد بالجلسة' : 'Link email to session'}</span>
                   </button>
                 </div>
               </form>
@@ -274,7 +275,7 @@ const MyData: React.FC = () => {
           {loading ? (
             <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-600 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-              <span>جاري تحميل سجلاتك من الخادم...</span>
+              <span>{isRtl ? 'جاري تحميل سجلاتك من الخادم...' : 'Loading your records from the server...'}</span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -283,14 +284,14 @@ const MyData: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-600" />
-                    <span>سجلات ملف بيتي ({readings.length})</span>
+                    <span>{isRtl ? `سجلات ملف بيتي (${readings.length})` : `My Home records (${readings.length})`}</span>
                   </h2>
                   <Link to="/my-home" className="text-xs font-bold text-emerald-700 hover:underline">
-                    فتح ملف بيتي
+                    {isRtl ? 'فتح ملف بيتي' : 'Open My Home'}
                   </Link>
                 </div>
                 {readings.length === 0 ? (
-                  <p className="text-xs text-slate-500">لا توجد قراءات أو فواتير محفوظة في الخادم.</p>
+                  <p className="text-xs text-slate-500">{isRtl ? 'لا توجد قراءات أو فواتير محفوظة في الخادم.' : 'No readings or bills saved on the server.'}</p>
                 ) : (
                   <div className="space-y-2">
                     {readings.map((r) => (
@@ -300,7 +301,7 @@ const MyData: React.FC = () => {
                       >
                         <div>
                           <span className="font-bold text-slate-900">
-                            {r.serviceType === 'electricity' ? 'كهرباء' : 'مياه'}:{' '}
+                            {r.serviceType === 'electricity' ? (isRtl ? 'كهرباء' : 'Electricity') : (isRtl ? 'مياه' : 'Water')}:{' '}
                             <span className="num-ltr">{r.value} {r.unit}</span>
                           </span>
                           <span className="block text-slate-500 num-ltr mt-0.5">
@@ -314,7 +315,7 @@ const MyData: React.FC = () => {
                           onClick={() => handleDeleteReading(r.id)}
                           className="min-h-[44px] px-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold"
                         >
-                          حذف
+                          {isRtl ? 'حذف' : 'Delete'}
                         </button>
                       </div>
                     ))}
@@ -327,14 +328,14 @@ const MyData: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-emerald-700" />
-                    <span>مسودات «شكواي ما تضيعش» ({complaints.length})</span>
+                    <span>{isRtl ? `مسودات «شكواي ما تضيعش» (${complaints.length})` : `Complaint drafts (${complaints.length})`}</span>
                   </h2>
                   <Link to="/my-complaints" className="text-xs font-bold text-emerald-700 hover:underline">
-                    فتح شكواي ما تضيعش
+                    {isRtl ? 'فتح شكواي ما تضيعش' : 'Open My Complaints'}
                   </Link>
                 </div>
                 {complaints.length === 0 ? (
-                  <p className="text-xs text-slate-500">لا توجد مسودات شكاوى محفوظة.</p>
+                  <p className="text-xs text-slate-500">{isRtl ? 'لا توجد مسودات شكاوى محفوظة.' : 'No complaint drafts saved.'}</p>
                 ) : (
                   <div className="space-y-2">
                     {complaints.map((c) => (
@@ -353,7 +354,7 @@ const MyData: React.FC = () => {
                           onClick={() => handleDeleteComplaint(c.id)}
                           className="min-h-[44px] px-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold"
                         >
-                          حذف
+                          {isRtl ? 'حذف' : 'Delete'}
                         </button>
                       </div>
                     ))}
@@ -365,10 +366,10 @@ const MyData: React.FC = () => {
               <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
                 <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                   <Bookmark className="w-4 h-4 text-emerald-700" />
-                  <span>ملاحظات المشروعات الموثقة ({projectNotes.length})</span>
+                  <span>{isRtl ? `ملاحظات المشروعات الموثقة (${projectNotes.length})` : `Documented project notes (${projectNotes.length})`}</span>
                 </h2>
                 {projectNotes.length === 0 ? (
-                  <p className="text-xs text-slate-500">لا توجد ملاحظات مشروعات محفوظة.</p>
+                  <p className="text-xs text-slate-500">{isRtl ? 'لا توجد ملاحظات مشروعات محفوظة.' : 'No project notes saved.'}</p>
                 ) : (
                   <div className="space-y-2">
                     {projectNotes.map((n) => (
@@ -383,9 +384,9 @@ const MyData: React.FC = () => {
 
               {/* Consents Audit */}
               <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-                <h2 className="text-base font-extrabold text-slate-900">سجل موافقاتك (consents)</h2>
+                <h2 className="text-base font-extrabold text-slate-900">{isRtl ? 'سجل موافقاتك (consents)' : 'Your consent log'}</h2>
                 {consents.length === 0 ? (
-                  <p className="text-xs text-slate-500">لا توجد سجلات موافقة.</p>
+                  <p className="text-xs text-slate-500">{isRtl ? 'لا توجد سجلات موافقة.' : 'No consent records.'}</p>
                 ) : (
                   <div className="space-y-1.5 text-xs">
                     {consents.slice(0, 10).map((item) => (
@@ -394,8 +395,8 @@ const MyData: React.FC = () => {
                         className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"
                       >
                         <span className="font-bold text-slate-800">
-                          {item.consentType === 'core_storage' ? 'الحفظ الأساسي' : 'إحصاءات الاستخدام'}:{' '}
-                          {item.granted ? 'موافق' : 'موقوف'}
+                          {item.consentType === 'core_storage' ? (isRtl ? 'الحفظ الأساسي' : 'Core storage') : (isRtl ? 'إحصاءات الاستخدام' : 'Usage analytics')}:{' '}
+                          {item.granted ? (isRtl ? 'موافق' : 'Granted') : (isRtl ? 'موقوف' : 'Paused')}
                         </span>
                         <span className="text-slate-500 num-ltr">
                           v{item.consentVersion} · {new Date(item.acceptedAt).toLocaleString('ar-EG')}
@@ -414,10 +415,11 @@ const MyData: React.FC = () => {
             className="bg-rose-50 border border-rose-200 rounded-2xl p-6 space-y-4"
           >
             <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-rose-950">حذف جميع بياناتي من الخادم</h2>
+              <h2 className="text-base font-extrabold text-rose-950">{isRtl ? 'حذف جميع بياناتي من الخادم' : 'Delete all my data from the server'}</h2>
               <p className="text-xs text-rose-900 leading-relaxed">
-                يحذف هذا الإجراء جميع قراءاتك المنزلية، ومسودات الشكاوى، وملاحظات المشروعات، وأحداث
-                الاستخدام، وسجل الموافقات من قاعدة البيانات بشكل نهائي ثم ينهي جلستك الحالية.
+                {isRtl
+                  ? 'يحذف هذا الإجراء جميع قراءاتك المنزلية، ومسودات الشكاوى، وملاحظات المشروعات، وأحداث الاستخدام، وسجل الموافقات من قاعدة البيانات بشكل نهائي ثم ينهي جلستك الحالية.'
+                  : 'This permanently deletes all your home readings, complaint drafts, project notes, usage events, and consent records from the database, then ends your current session.'}
               </p>
             </div>
 
@@ -429,7 +431,7 @@ const MyData: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>حذف كل بياناتي نهائيًا</span>
+                  <span>{isRtl ? 'حذف كل بياناتي نهائيًا' : 'Delete all my data permanently'}</span>
                 </button>
                 <button
                   type="button"
@@ -437,14 +439,15 @@ const MyData: React.FC = () => {
                   className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>إنهاء الجلسة فقط</span>
+                  <span>{isRtl ? 'إنهاء الجلسة فقط' : 'End session only'}</span>
                 </button>
               </div>
             ) : (
               <div className="bg-white border border-rose-300 rounded-xl p-4 space-y-3">
                 <p className="text-xs font-bold text-rose-900">
-                  تأكيد نهائي: سيتم حذف كافة سجلاتك من الخادم ولا يمكن التراجع. صدّر نسخة JSON قبل
-                  الحذف إذا احتجت إليها.
+                  {isRtl
+                    ? 'تأكيد نهائي: سيتم حذف كافة سجلاتك من الخادم ولا يمكن التراجع. صدّر نسخة JSON قبل الحذف إذا احتجت إليها.'
+                    : 'Final confirmation: all your records will be deleted from the server and this cannot be undone. Export a JSON copy first if you need it.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -454,14 +457,14 @@ const MyData: React.FC = () => {
                     className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-rose-700 text-white text-xs font-bold"
                   >
                     {deletingAll && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>نعم، احذف جميع بياناتي من الخادم</span>
+                    <span>{isRtl ? 'نعم، احذف جميع بياناتي من الخادم' : 'Yes, delete all my data from the server'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteAll(false)}
                     className="min-h-[44px] px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold"
                   >
-                    إلغاء
+                    {isRtl ? 'إلغاء' : 'Cancel'}
                   </button>
                 </div>
               </div>
