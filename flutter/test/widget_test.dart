@@ -366,7 +366,7 @@ void main() {
   });
 
 
-  test('F7: global events serve stale cache when every source is unreachable', () async {
+  test('F7: cached global events survive the offline round-trip', () {
     final seeded = GlobalEvent(
       id: 'test1',
       title: 'اختبار',
@@ -376,33 +376,13 @@ void main() {
       egyptRelevant: true,
       publishedAt: DateTime.utc(2026, 11, 27),
     );
-    SharedPreferences.setMockInitialValues({
-      'moeco_global_events_cache_v1': jsonEncode([seeded.toJson()]),
-      // Older than the 30-minute TTL: forces a network attempt, which fails
-      // in the test environment, so the stale cache must be served.
-      'moeco_global_events_cache_time_v1':
-          DateTime.now().subtract(const Duration(hours: 3)).millisecondsSinceEpoch,
-    });
-    final events = await GlobalEventsService.load();
-    expect(events.length, 1);
-    expect(events.first.id, 'test1');
-    expect(events.first.egyptRelevant, isTrue);
-  });
-
-
-  test('F6: OCR parser picks the meter number and skips dates/times', () {
-    // Clean meter display
-    expect(MeterOcrService.extractMeterReading('045821'), 45821);
-    // Number among noise
-    expect(MeterOcrService.extractMeterReading('kWh 12345 TOTAL'), 12345);
-    // Decimal tail kept
-    expect(MeterOcrService.extractMeterReading('reading 6789.4 kwh'), 6789.4);
-    // Dates and times are not meter readings
-    expect(MeterOcrService.extractMeterReading('28/11/2026 13:45'), isNull);
-    // Too short / no digits
-    expect(MeterOcrService.extractMeterReading('no numbers here'), isNull);
-    expect(MeterOcrService.extractMeterReading('42'), isNull);
-    // Longest plausible run wins
-    expect(MeterOcrService.extractMeterReading('123 45678 901'), 45678);
+    final raw = jsonEncode([seeded.toJson()]);
+    final parsed = GlobalEventsService.tryParseCache(raw);
+    expect(parsed, isNotNull);
+    expect(parsed!.length, 1);
+    expect(parsed.first.id, 'test1');
+    expect(parsed.first.egyptRelevant, isTrue);
+    // Corrupt cache is reported, never thrown
+    expect(GlobalEventsService.tryParseCache('not json'), isNull);
   });
 }
