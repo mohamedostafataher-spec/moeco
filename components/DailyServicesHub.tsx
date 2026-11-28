@@ -212,10 +212,10 @@ const DailyServicesHub: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'live': return <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-lg animate-pulse">مباشر</span>;
-      case 'realtime': return <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-lg">وقت حقيقي</span>;
-      case 'cache': return <span className="px-2 py-0.5 bg-zinc-500 text-white text-[10px] font-bold rounded-lg">محفوظ</span>;
-      case 'estimated': return <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-lg">تقديري</span>;
+      case 'live': return <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-lg animate-pulse">{language === 'ar' ? 'مباشر' : 'LIVE'}</span>;
+      case 'realtime': return <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-lg">{language === 'ar' ? 'وقت حقيقي' : 'Real-time'}</span>;
+      case 'cache': return <span className="px-2 py-0.5 bg-zinc-500 text-white text-[10px] font-bold rounded-lg">{language === 'ar' ? 'محفوظ' : 'Cached'}</span>;
+      case 'estimated': return <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-lg">{language === 'ar' ? 'تقديري' : 'Estimated'}</span>;
       default: return null;
     }
   };
