@@ -6,12 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FootprintStore {
   static const _kLogs = 'daily_logs_v1';
   static const _kDrafts = 'complaint_drafts_v1';
+  static const _kOnboarding = 'onboarding_done_v1';
 
   final SharedPreferences _prefs;
   FootprintStore(this._prefs);
 
   static Future<FootprintStore> load() async =>
       FootprintStore(await SharedPreferences.getInstance());
+
+  bool get onboardingDone => _prefs.getBool(_kOnboarding) ?? false;
+
+  Future<void> markOnboardingDone() => _prefs.setBool(_kOnboarding, true);
 
   List<Map<String, dynamic>> _readList(String key) {
     final raw = _prefs.getString(key);
