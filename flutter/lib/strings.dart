@@ -27,6 +27,16 @@ class S {
       : 'Saved on your device only. Values are estimates (per-person averages).';
   String get loggedToday => ar ? 'سجلت النهاردة' : 'Logged today';
 
+  // Air quality (live, Open-Meteo)
+  String get aqTitle => ar ? 'جودة الهواء دلوقتي' : 'Air quality right now';
+  String aqSource(String time) => ar
+      ? 'مصدر: Open-Meteo، آخر تحديث $time'
+      : 'Source: Open-Meteo, updated $time';
+  String get aqLoading => ar ? 'بنجيب جودة الهواء...' : 'Fetching air quality...';
+  String get aqUnavailable => ar
+      ? 'جودة الهواء مش متاحة دلوقتي (مفيش نت).'
+      : 'Air quality is unavailable right now (offline).';
+
   // Calculator
   String get calcHeroTitle => ar ? 'حاسبة البصمة الكربونية' : 'Carbon Footprint Calculator';
   String get calcHeroSub => ar
