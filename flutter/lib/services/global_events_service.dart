@@ -86,6 +86,19 @@ class GlobalEventsService {
   static const _cacheTimeKey = 'moeco_global_events_cache_time_v1';
   static const _cacheTtl = Duration(minutes: 30);
 
+  /// Parse a cached events list; returns null on corrupt data.
+  /// Public so tests can verify the offline round-trip without a network.
+  static List<GlobalEvent>? tryParseCache(String raw) {
+    try {
+      final list = jsonDecode(raw) as List;
+      return list
+          .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Egypt + its immediate neighborhood: Egypt itself, north Sudan,
   /// eastern Libya, the Red Sea, Gaza/Israel/Jordan, the East Mediterranean.
   static bool isEgyptRelevantCoords(double lat, double lon) =>
@@ -199,14 +212,9 @@ class GlobalEventsService {
     final cachedRaw = prefs.getString(_cacheKey);
     if (cachedRaw != null &&
         DateTime.now().difference(cachedAt) < _cacheTtl) {
-      try {
-        final list = jsonDecode(cachedRaw) as List;
-        return list
-            .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList();
-      } catch (_) {
-        // fall through to network
-      }
+      final parsed = tryParseCache(cachedRaw);
+      if (parsed != null) return parsed;
+      // fall through to network on corrupt cache
     }
 
     final results = await Future.wait([
@@ -228,12 +236,8 @@ class GlobalEventsService {
     // Offline (or every source failed): serve the stale cache instead of
     // an empty list, so the screen keeps its last real data (F7).
     if (cachedRaw != null) {
-      try {
-        final list = jsonDecode(cachedRaw) as List;
-        return list
-            .map((e) => GlobalEvent.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
-      } catch (_) {}
+      final parsed = tryParseCache(cachedRaw);
+      if (parsed != null) return parsed;
     }
     return [];
   }
