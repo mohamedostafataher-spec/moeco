@@ -145,6 +145,13 @@ const GreenEconomy: React.FC = () => {
               <div className="lg:col-span-2 bg-white dark:bg-zinc-900 p-8 rounded-[3rem] border border-zinc-100 dark:border-white/5">
                  <h3 className="text-xl font-black mb-6">{isRtl ? 'لوحة الأبطال' : 'Champions Board'}</h3>
                  <div className="space-y-3">
+                    {leaderboard.length === 0 && !isLoading && (
+                       <div className="py-12 text-center">
+                          <Trophy className="w-10 h-10 mx-auto text-stone-300 mb-4" />
+                          <p className="font-black text-stone-400">{isRtl ? 'لا توجد بيانات متصدرين متاحة حالياً' : 'No leaderboard data available right now'}</p>
+                          <p className="text-xs font-bold text-stone-400 mt-2">{isRtl ? 'ستظهر الترتيبات هنا عند توفر الخدمة' : 'Rankings will appear here when the service is available'}</p>
+                       </div>
+                    )}
                     {leaderboard.slice(0, 10).map((u, i) => (
                        <div key={u.id} className="flex items-center justify-between p-4 bg-stone-50 dark:bg-white/5 rounded-2xl">
                           <div className="flex items-center gap-4">
