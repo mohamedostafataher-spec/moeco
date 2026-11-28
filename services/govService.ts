@@ -137,19 +137,9 @@ export const govService = {
   },
 
   login: async (country: string, pass: string) => {
-    if (pass === 'MoEcoGov2026!' || pass === 'admin123' || pass === 'moeco2026') {
-      const user = { 
-        id: 'gov_admin_1', 
-        name: 'Strategic Admin', 
-        country, 
-        role: 'gov_admin',
-        lastLogin: new Date().toISOString()
-      };
-      localStorage.setItem('moeco_gov_user', JSON.stringify(user));
-      localStorage.setItem('moeco_gov_token', 'secure-gov-integration-token');
-      return user;
-    }
-
+    // Security (P0, May 2026 audit): no hardcoded credentials. Admin/gov access
+    // is granted only through accounts provisioned in the backend (gov_users),
+    // to be migrated to Supabase Auth roles (RBAC) when the backend is live.
     try {
       const { data, error } = await supabase
         .from('scientific_data')
