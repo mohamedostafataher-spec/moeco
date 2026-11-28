@@ -22,32 +22,42 @@ import {
 } from '../services/civicActionService';
 
 const EGYPT_GOVS = ['القاهرة', 'الجيزة', 'الإسكندرية', 'القليوبية', 'الدقهلية', 'الشرقية', 'أسوان', 'أسيوط'];
+const EGYPT_GOVS_EN = ['Cairo', 'Giza', 'Alexandria', 'Qalyubia', 'Dakahlia', 'Sharqia', 'Aswan', 'Assiut'];
 
 const WATER_TIPS = [
   {
     id: 'tip-1',
     title: 'فحص سيفون المرحاض بصورة دورية',
+    titleEn: 'Check the toilet flush valve regularly',
     desc: 'تسريب السيفون الصامت قد يهدر كميات كبيرة يومياً؛ ضع نقطتي ملون طعام في الخزان وتأكد من عدم نزوله للمرحاض دون سحب.',
+    descEn: 'A silent flush leak can waste large amounts daily; put two drops of food coloring in the tank and make sure none reaches the bowl without flushing.',
   },
   {
     id: 'tip-2',
     title: 'تركيب مهوي (Aerator) على الحنفيات',
+    titleEn: 'Install an aerator on faucets',
     desc: 'يمزج الهواء بالماء ويقلل التدفق مع الحفاظ على قوة الغسيل، وهي خطوة منخفضة التكلفة للأسر.',
+    descEn: 'Mixes air with water and reduces flow while keeping washing power; a low-cost step for households.',
   },
   {
     id: 'tip-3',
     title: 'إغلاق الصنبور أثناء التنظيف وغسل الأواني',
+    titleEn: 'Turn off the tap while brushing and washing dishes',
     desc: 'فتح الماء فقط عند الشطف بدلاً من الجريان المستمر يخفض الاستهلاك التقديري بشكل ملموس.',
+    descEn: 'Running water only when rinsing instead of a continuous flow noticeably reduces estimated consumption.',
   },
   {
     id: 'tip-4',
     title: 'استخدام الدلو بدلاً من الخرطوم في التنظيف',
+    titleEn: 'Use a bucket instead of a hose for cleaning',
     desc: 'غسل السيارات أو الشرفات بالخرطوم يستهلك عشرات اللترات في دقائق قليلة.',
+    descEn: 'Washing cars or balconies with a hose consumes tens of liters in a few minutes.',
   },
 ];
 
 const WaterSaving: React.FC = () => {
-  const { user } = useApp();
+  const { user, language } = useApp();
+  const ar = language === 'ar';
   const [waterReports, setWaterReports] = useState<CivicReport[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,7 +97,7 @@ const WaterSaving: React.FC = () => {
 
   const handleGetLocation = () => {
     if (!('geolocation' in navigator)) {
-      notificationService.error('المتصفح لا يدعم تحديد الموقع الجغرافي');
+      notificationService.error(ar ? 'المتصفح لا يدعم تحديد الموقع الجغرافي' : 'This browser does not support geolocation');
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -95,9 +105,9 @@ const WaterSaving: React.FC = () => {
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
         setShareLocationConsent(true);
-        notificationService.success('تم التقاط الإحداثيات (ستُقرب للنطاق العام فقط)');
+        notificationService.success(ar ? 'تم التقاط الإحداثيات (ستُقرب للنطاق العام فقط)' : 'Coordinates captured (rounded to the general area only)');
       },
-      () => notificationService.warning('تعذر الحصول على الموقع؛ يمكنك الاكتفاء بكتابة المنطقة.')
+      () => notificationService.warning(ar ? 'تعذر الحصول على الموقع؛ يمكنك الاكتفاء بكتابة المنطقة.' : 'Could not get location; you can just type the area.')
     );
   };
 
@@ -105,14 +115,14 @@ const WaterSaving: React.FC = () => {
     e.preventDefault();
     setFormError('');
     if (!title.trim() || !area.trim()) {
-      setFormError('يرجى إدخال وصف مختصر للتسريب والمنطقة على الأقل.');
+      setFormError(ar ? 'يرجى إدخال وصف مختصر للتسريب والمنطقة على الأقل.' : 'Please enter at least a short description of the leak and the area.');
       return;
     }
     setSubmitting(true);
     try {
       await civicActionService.submitReport({
         userId: user?.id || 'guest-user-2026',
-        userName: user?.name || 'مشارك',
+        userName: user?.name || (ar ? 'مشارك' : 'Participant'),
         category: 'water_leak',
         title: title.trim(),
         description: description.trim() || title.trim(),
@@ -124,13 +134,13 @@ const WaterSaving: React.FC = () => {
         sharePhotoConsent: false,
         isAnonymous,
       });
-      notificationService.success('تم حفظ بلاغ تسريب المياه تجريبياً في التطبيق.');
+      notificationService.success(ar ? 'تم حفظ بلاغ تسريب المياه تجريبياً في التطبيق.' : 'Water leak report saved in the app (demo).');
       setTitle('');
       setDescription('');
       setArea('');
       await loadWaterReports();
     } catch {
-      setFormError('حدث خطأ أثناء حفظ البلاغ. حاول مرة أخرى.');
+      setFormError(ar ? 'حدث خطأ أثناء حفظ البلاغ. حاول مرة أخرى.' : 'An error occurred while saving the report. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +160,7 @@ const WaterSaving: React.FC = () => {
   const estimatedCo2Kg = Number((estimatedMonthlyM3 * 0.298).toFixed(2));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir="rtl">
+    <div className="max-w-6xl mx-auto px-4 pb-32 space-y-6" dir={ar ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -159,9 +169,11 @@ const WaterSaving: React.FC = () => {
               <Droplets className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-white">وفّر مياه منطقتك</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white">{ar ? 'وفّر مياه منطقتك' : 'Save your district\'s water'}</h1>
               <p className="text-sm text-slate-300 mt-1">
-                توعية عملية وإبلاغ عن تسريبات المياه ومتابعة حالتها دون مبالغة أو أرقام غير محسوبة.
+                {ar
+                  ? 'توعية عملية وإبلاغ عن تسريبات المياه ومتابعة حالتها دون مبالغة أو أرقام غير محسوبة.'
+                  : 'Practical awareness, water-leak reporting and status tracking, with no exaggeration or uncalculated numbers.'}
               </p>
             </div>
           </div>
@@ -171,14 +183,16 @@ const WaterSaving: React.FC = () => {
             className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 border border-white/10 font-bold text-xs hover:bg-slate-700 transition focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none"
           >
             <BookOpen className="w-4 h-4 text-sky-400" />
-            <span>كيف نحسب الأثر؟</span>
+            <span>{ar ? 'كيف نحسب الأثر؟' : 'How do we calculate impact?'}</span>
           </Link>
         </div>
 
         <div className="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-4 flex items-start gap-3">
           <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
           <p className="text-xs md:text-sm text-sky-100 leading-relaxed">
-            <strong>مبدأ الدقة:</strong> لا يمكن حساب كمية المياه المهدورة أو الموفرة من صورة تسريب أو من إغلاق البلاغ وحده؛ لذا نفصل تماماً بين «حالة بلاغ التسريب» وبين «حاسبة التوفير المنزلي التقديري».
+            <strong>{ar ? 'مبدأ الدقة:' : 'Accuracy principle:'}</strong> {ar
+              ? 'لا يمكن حساب كمية المياه المهدورة أو الموفرة من صورة تسريب أو من إغلاق البلاغ وحده؛ لذا نفصل تماماً بين «حالة بلاغ التسريب» وبين «حاسبة التوفير المنزلي التقديري».'
+              : 'The amount of water wasted or saved cannot be calculated from a leak photo or from closing a report alone; so we fully separate "leak report status" from the "estimated home savings calculator".'}
           </p>
         </div>
       </header>
@@ -189,10 +203,10 @@ const WaterSaving: React.FC = () => {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-xl font-black text-white flex items-center gap-2">
               <Wrench className="w-5 h-5 text-sky-400" />
-              إبلاغ عن تسريب مياه
+              {ar ? 'إبلاغ عن تسريب مياه' : 'Report a water leak'}
             </h2>
             <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
-              نموذج تجريبي
+              {ar ? 'نموذج تجريبي' : 'Demo form'}
             </span>
           </div>
 
@@ -205,14 +219,14 @@ const WaterSaving: React.FC = () => {
           <form onSubmit={handleSubmitLeak} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="water-title" className="block text-xs font-bold text-slate-300">
-                وصف التسريب وموضعه *
+                {ar ? 'وصف التسريب وموضعه *' : 'Leak description and location *'}
               </label>
               <input
                 id="water-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="مثال: تسريب من ماسورة رصيف أو صنبور مكسور"
+                placeholder={ar ? 'مثال: تسريب من ماسورة رصيف أو صنبور مكسور' : 'e.g. leak from a sidewalk pipe or a broken tap'}
                 className="w-full min-h-[44px] bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-sky-400 focus:outline-none"
               />
             </div>
@@ -220,7 +234,7 @@ const WaterSaving: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label htmlFor="water-gov" className="block text-xs font-bold text-slate-300">
-                  المحافظة
+                  {ar ? 'المحافظة' : 'Governorate'}
                 </label>
                 <select
                   id="water-gov"
@@ -228,23 +242,23 @@ const WaterSaving: React.FC = () => {
                   onChange={(e) => setGovernorate(e.target.value)}
                   className="w-full min-h-[44px] bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-sky-400 focus:outline-none"
                 >
-                  {EGYPT_GOVS.map((g) => (
+                  {EGYPT_GOVS.map((g, gi) => (
                     <option key={g} value={g}>
-                      {g}
+                      {ar ? g : EGYPT_GOVS_EN[gi]}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="water-area" className="block text-xs font-bold text-slate-300">
-                  المنطقة أو الحي *
+                  {ar ? 'المنطقة أو الحي *' : 'Area or district *'}
                 </label>
                 <input
                   id="water-area"
                   type="text"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="مثال: المعادي / حي الجامعة"
+                  placeholder={ar ? 'مثال: المعادي / حي الجامعة' : 'e.g. Maadi / University district'}
                   className="w-full min-h-[44px] bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-sky-400 focus:outline-none"
                 />
               </div>
@@ -252,14 +266,14 @@ const WaterSaving: React.FC = () => {
 
             <div className="space-y-1.5">
               <label htmlFor="water-desc" className="block text-xs font-bold text-slate-300">
-                تفاصيل إضافية (اختياري)
+                {ar ? 'تفاصيل إضافية (اختياري)' : 'Additional details (optional)'}
               </label>
               <textarea
                 id="water-desc"
                 rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="هل التسريب مستمر أم متقطع؟ هل يعوق المارة؟"
+                placeholder={ar ? 'هل التسريب مستمر أم متقطع؟ هل يعوق المارة؟' : 'Is the leak continuous or intermittent? Does it block pedestrians?'}
                 className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-sky-400 focus:outline-none"
               />
             </div>
@@ -271,7 +285,7 @@ const WaterSaving: React.FC = () => {
                 className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 border border-white/10 text-xs font-bold text-slate-200 hover:bg-slate-700 transition focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none"
               >
                 <MapPin className="w-4 h-4 text-sky-400" />
-                <span>{shareLocationConsent ? 'تمت إضافة الموقع التقريبي' : 'مشاركة الموقع (اختياري وبموافقتك)'}</span>
+                <span>{shareLocationConsent ? (ar ? 'تمت إضافة الموقع التقريبي' : 'Approximate location added') : (ar ? 'مشاركة الموقع (اختياري وبموافقتك)' : 'Share location (optional, with your consent)')}</span>
               </button>
 
               <label className="min-h-[44px] inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950/60 border border-white/10 text-xs font-bold text-slate-300 cursor-pointer">
@@ -282,12 +296,14 @@ const WaterSaving: React.FC = () => {
                   className="accent-emerald-500 w-4 h-4"
                 />
                 <EyeOff className="w-3.5 h-3.5 text-slate-400" />
-                <span>إخفاء اسمي عن العرض العام</span>
+                <span>{ar ? 'إخفاء اسمي عن العرض العام' : 'Hide my name from public view'}</span>
               </label>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-3 text-xs text-amber-100 leading-relaxed">
-              تنبيه: يُحفظ البلاغ في التطبيق فقط ولا يُرسل حالياً لشركة المياه أو الحي؛ للإبلاغ الرسمي الطارئ يُرجى الاتصال بالخط الساخن <strong>125</strong>.
+              {ar
+                ? <>تنبيه: يُحفظ البلاغ في التطبيق فقط ولا يُرسل حالياً لشركة المياه أو الحي؛ للإبلاغ الرسمي الطارئ يُرجى الاتصال بالخط الساخن <strong>125</strong>.</>
+                : <>Note: the report is saved in the app only and is not currently sent to the water company or the district; for urgent official reporting please call the hotline <strong>125</strong>.</>}
             </div>
 
             <button
@@ -296,7 +312,7 @@ const WaterSaving: React.FC = () => {
               className="w-full min-h-[44px] bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:outline-none"
             >
               <Send className="w-4 h-4" />
-              <span>{submitting ? 'جاري الحفظ...' : 'حفظ بلاغ تسريب المياه'}</span>
+              <span>{submitting ? (ar ? 'جاري الحفظ...' : 'Saving...') : (ar ? 'حفظ بلاغ تسريب المياه' : 'Save water leak report')}</span>
             </button>
           </form>
         </section>
@@ -306,17 +322,17 @@ const WaterSaving: React.FC = () => {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-xl font-black text-white flex items-center gap-2">
               <Calculator className="w-5 h-5 text-emerald-400" />
-              مُقدّر الترشيد المنزلي
+              {ar ? 'مُقدّر الترشيد المنزلي' : 'Home savings estimator'}
             </h2>
             <span className="px-3 py-1 rounded-lg text-xs font-black bg-amber-500/15 text-amber-300 border border-amber-400/40">
-              تقديري (ليس قياس عداد)
+              {ar ? 'تقديري (ليس قياس عداد)' : 'Estimated (not a meter reading)'}
             </span>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between bg-slate-950/60 border border-white/10 rounded-xl p-3.5">
               <label htmlFor="hh-members" className="text-xs font-bold text-slate-200">
-                عدد أفراد الأسرة
+                {ar ? 'عدد أفراد الأسرة' : 'Household members'}
               </label>
               <input
                 id="hh-members"
@@ -331,8 +347,8 @@ const WaterSaving: React.FC = () => {
 
             <label className="min-h-[44px] flex items-center justify-between gap-3 bg-slate-950/60 border border-white/10 rounded-xl p-3.5 cursor-pointer">
               <div>
-                <p className="text-xs font-bold text-white">إصلاح حنفية تنقط باستمرار</p>
-                <p className="text-[11px] text-slate-400">افتراض تقديري: ~15 لتر/يوم للحنفية الواحدة</p>
+                <p className="text-xs font-bold text-white">{ar ? 'إصلاح حنفية تنقط باستمرار' : 'Fix a constantly dripping tap'}</p>
+                <p className="text-[11px] text-slate-400">{ar ? 'افتراض تقديري: ~15 لتر/يوم للحنفية الواحدة' : 'Estimate assumption: ~15 L/day per tap'}</p>
               </div>
               <input
                 type="checkbox"
@@ -344,8 +360,8 @@ const WaterSaving: React.FC = () => {
 
             <label className="min-h-[44px] flex items-center justify-between gap-3 bg-slate-950/60 border border-white/10 rounded-xl p-3.5 cursor-pointer">
               <div>
-                <p className="text-xs font-bold text-white">تركيب مهوي ترشيد على الحنفية (Aerator)</p>
-                <p className="text-[11px] text-slate-400">افتراض تقديري: ~20 لتر/فرد/يوم عند الاستخدام المعتدل</p>
+                <p className="text-xs font-bold text-white">{ar ? 'تركيب مهوي ترشيد على الحنفية (Aerator)' : 'Install a faucet aerator'}</p>
+                <p className="text-[11px] text-slate-400">{ar ? 'افتراض تقديري: ~20 لتر/فرد/يوم عند الاستخدام المعتدل' : 'Estimate assumption: ~20 L/person/day with moderate use'}</p>
               </div>
               <input
                 type="checkbox"
@@ -358,9 +374,9 @@ const WaterSaving: React.FC = () => {
             <div className="bg-slate-950/60 border border-white/10 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold">
                 <label htmlFor="shower-range" className="text-white">
-                  تقصير مدة الاستحمام اليومي
+                  {ar ? 'تقصير مدة الاستحمام اليومي' : 'Shorten daily shower time'}
                 </label>
-                <span className="text-sky-300 tabular-nums">{shorterShowerMin} دقائق/يوم</span>
+                <span className="text-sky-300 tabular-nums">{shorterShowerMin} {ar ? 'دقائق/يوم' : 'min/day'}</span>
               </div>
               <input
                 id="shower-range"
@@ -371,27 +387,29 @@ const WaterSaving: React.FC = () => {
                 onChange={(e) => setShorterShowerMin(Number(e.target.value))}
                 className="w-full accent-sky-400"
               />
-              <p className="text-[11px] text-slate-400">افتراض تدفق الدش القياسي: ~9 لتر/دقيقة</p>
+              <p className="text-[11px] text-slate-400">{ar ? 'افتراض تدفق الدش القياسي: ~9 لتر/دقيقة' : 'Standard shower flow assumption: ~9 L/min'}</p>
             </div>
           </div>
 
           <div className="bg-slate-950 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-300">الوفر الشهري التقديري (تقديري)</span>
+              <span className="text-xs font-bold text-slate-300">{ar ? 'الوفر الشهري التقديري (تقديري)' : 'Estimated monthly savings (estimate)'}</span>
               <span className="text-2xl font-black text-sky-300 tabular-nums">
-                {totalEstimatedMonthlyLiters.toLocaleString()} لتر
+                {totalEstimatedMonthlyLiters.toLocaleString()} {ar ? 'لتر' : 'liters'}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>ما يعادل تقريباً بالمتر المكعب</span>
-              <span className="font-bold text-white tabular-nums">{estimatedMonthlyM3.toFixed(2)} م³ / شهر</span>
+              <span>{ar ? 'ما يعادل تقريباً بالمتر المكعب' : 'Approximate cubic-meter equivalent'}</span>
+              <span className="font-bold text-white tabular-nums">{estimatedMonthlyM3.toFixed(2)} m³ / {ar ? 'شهر' : 'month'}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>الطاقة المكافئة للضخ والمعالجة (تقديري)</span>
+              <span>{ar ? 'الطاقة المكافئة للضخ والمعالجة (تقديري)' : 'Equivalent pumping & treatment energy (estimate)'}</span>
               <span className="font-bold text-emerald-300 tabular-nums">{estimatedCo2Kg} kg CO₂e</span>
             </div>
             <p className="text-[11px] text-slate-400 pt-2 border-t border-white/10 leading-relaxed">
-              المعادلة: (مجموع اللترات اليومية المفترضة × 30 يوماً) ÷ 1000 × 0.298 كجم CO₂e/م³ (الشركة القابضة لمياه الشرب والصرف الصحي HCWW). هذه أرقام إرشادية تقديرية وليست قراءة عداد فعلية.
+              {ar
+                ? 'المعادلة: (مجموع اللترات اليومية المفترضة × 30 يوماً) ÷ 1000 × 0.298 كجم CO₂e/م³ (الشركة القابضة لمياه الشرب والصرف الصحي HCWW). هذه أرقام إرشادية تقديرية وليست قراءة عداد فعلية.'
+                : 'Formula: (assumed daily liters x 30 days) / 1000 x 0.298 kg CO2e/m3 (Holding Company for Water and Wastewater, HCWW). These are indicative estimates, not an actual meter reading.'}
             </p>
           </div>
         </section>
@@ -401,23 +419,25 @@ const WaterSaving: React.FC = () => {
       <section className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-xl font-black text-white">متابعة بلاغات تسريب المياه</h2>
+            <h2 className="text-xl font-black text-white">{ar ? 'متابعة بلاغات تسريب المياه' : 'Water leak report tracking'}</h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              تعرض حالة البلاغ المسجلة فعلياً فقط دون ادعاء كميات مياه موفرة.
+              {ar
+                ? 'تعرض حالة البلاغ المسجلة فعلياً فقط دون ادعاء كميات مياه موفرة.'
+                : 'Shows only the actually recorded report status, with no claims of saved water amounts.'}
             </p>
           </div>
           <Link
             to="/eco-watch"
             className="text-xs font-bold text-sky-400 hover:underline min-h-[44px] inline-flex items-center"
           >
-            إدارة بلاغاتي في «بلاغ بيئي»
+            {ar ? 'إدارة بلاغاتي في «بلاغ بيئي»' : 'Manage my reports in Eco Watch'}
           </Link>
         </div>
 
         {loading ? (
-          <p className="text-sm text-slate-400 py-6 text-center">جاري تحميل بلاغات المياه...</p>
+          <p className="text-sm text-slate-400 py-6 text-center">{ar ? 'جاري تحميل بلاغات المياه...' : 'Loading water reports...'}</p>
         ) : waterReports.length === 0 ? (
-          <p className="text-sm text-slate-400 py-6 text-center">لا توجد بلاغات تسريب مياه مسجلة حالياً.</p>
+          <p className="text-sm text-slate-400 py-6 text-center">{ar ? 'لا توجد بلاغات تسريب مياه مسجلة حالياً.' : 'No water leak reports recorded yet.'}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {waterReports.map((rep) => {
@@ -430,7 +450,7 @@ const WaterSaving: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-black text-white">{rep.title}</h3>
                     <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border shrink-0 ${st.badgeClass}`}>
-                      {st.labelAr}
+                      {ar ? st.labelAr : st.labelEn}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300">{rep.description}</p>
@@ -439,7 +459,7 @@ const WaterSaving: React.FC = () => {
                       <MapPin className="w-3.5 h-3.5 text-sky-400" />
                       {rep.governorate} - {rep.area}
                     </span>
-                    {rep.isDemo && <span className="text-amber-300 font-bold">عينة تجريبية</span>}
+                    {rep.isDemo && <span className="text-amber-300 font-bold">{ar ? 'عينة تجريبية' : 'Demo sample'}</span>}
                   </div>
                 </article>
               );
@@ -452,19 +472,19 @@ const WaterSaving: React.FC = () => {
       <section className="bg-slate-900/75 border border-white/10 rounded-3xl p-6 space-y-4">
         <h2 className="text-xl font-black text-white flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-          نصائح عملية للترشيد المنزلي
+          {ar ? 'نصائح عملية للترشيد المنزلي' : 'Practical home saving tips'}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {WATER_TIPS.map((tip) => (
             <div key={tip.id} className="bg-slate-950/70 border border-white/10 rounded-2xl p-4 space-y-1.5">
-              <h3 className="text-sm font-black text-emerald-300">{tip.title}</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">{tip.desc}</p>
+              <h3 className="text-sm font-black text-emerald-300">{ar ? tip.title : tip.titleEn}</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">{ar ? tip.desc : tip.descEn}</p>
             </div>
           ))}
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">
           <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>تنطبق الأرقام التقديرية على حالات الاستخدام المنزلي الشائعة وتختلف من أسرة لأخرى.</span>
+          <span>{ar ? 'تنطبق الأرقام التقديرية على حالات الاستخدام المنزلي الشائعة وتختلف من أسرة لأخرى.' : 'Estimated figures apply to common household usage cases and vary from one family to another.'}</span>
         </div>
       </section>
     </div>
