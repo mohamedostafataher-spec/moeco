@@ -7,6 +7,7 @@ import 'package:moeco/services/metro_data.dart';
 import 'package:moeco/services/weather_service.dart';
 import 'package:moeco/services/services_data.dart';
 import 'package:moeco/services/green_spots_service.dart';
+import 'package:moeco/services/alert_center_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -75,6 +76,63 @@ void main() {
       expect(RegExp(r'^[0-9]{3,5}$').hasMatch(h.number), isTrue,
           reason: h.labelEn);
     }
+  });
+
+  test('alert center derives severities across all hazard kinds', () {
+    CityAlertInput ci(String city,
+            {double maxT = 33,
+            double minT = 18,
+            double mm = 0,
+            double prob = 0,
+            double uv = 4,
+            double wind = 10,
+            int code = 1,
+            int aqi = 40,
+            double dust = 20}) =>
+        CityAlertInput(
+            cityAr: city,
+            cityEn: city,
+            lat: 30,
+            lon: 31,
+            maxTemp: maxT,
+            minTemp: minT,
+            precipMm: mm,
+            precipProb: prob,
+            uvMax: uv,
+            windKmh: wind,
+            code: code,
+            usAqi: aqi,
+            dustUgM3: dust);
+    // Calm day: no alerts.
+    expect(AlertCenterService.deriveAlerts([ci('Cairo')]), isEmpty);
+    final alerts = AlertCenterService.deriveAlerts([
+      ci('Aswan', maxT: 46),
+      ci('Cairo', code: 95),
+      ci('Alexandria', code: 63, mm: 30, prob: 80),
+      ci('Suez', wind: 75),
+      ci('Giza', dust: 400),
+      ci('Luxor', uv: 12),
+      ci('Tanta', aqi: 180),
+      ci('Mansoura', minT: 2),
+      ci('Hurghada', maxT: 37, wind: 35),
+    ]);
+    expect(alerts.any((a) => a.kind == AlertKind.extremeHeat && a.severity == AlertSeverity.severe), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.storm), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.heavyRain && a.severity == AlertSeverity.severe), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.strongWind && a.severity == AlertSeverity.severe), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.dust && a.severity == AlertSeverity.warning), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.uv), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.poorAir && a.severity == AlertSeverity.warning), isTrue);
+    expect(alerts.any((a) => a.kind == AlertKind.cold), isTrue);
+    // Hurghada: 37C + 35 km/h wind + dry -> fire-weather advisory (no heat alert under 38).
+    expect(alerts.any((a) => a.cityEn == 'Hurghada' && a.kind == AlertKind.fireRisk), isTrue);
+    expect(alerts.any((a) => a.cityEn == 'Hurghada' && a.kind == AlertKind.heat), isFalse);
+    // Sorted severe-first.
+    expect(alerts.first.severity, AlertSeverity.severe);
+    // Worst-per-city map helper.
+    final data = AlertCenterData(alerts, const [], DateTime.now());
+    expect(data.worstPerCity()['Aswan'], AlertSeverity.severe);
+    expect(data.worstPerCity()['Mansoura'], AlertSeverity.advisory);
   });
 
   test('green spots parser keeps named spots and sorts by distance', () {
