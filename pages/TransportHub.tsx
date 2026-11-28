@@ -1217,7 +1217,7 @@ const TransportHub: React.FC = () => {
                           {language === "ar" ? "مِلاَح القاهرة الذكي" : "Cairo Smart Transit"}
                         </h2>
                         <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mt-0.5">
-                          {language === "ar" ? "الخطوط والمسارات المعتمدة" : "Licensed official GTFS feeds"}
+                          {language === "ar" ? "بيانات خطوط ومحطات محلية تُحدَّث يدويًا" : "Locally maintained route & station data"}
                         </span>
                       </div>
                       <button
