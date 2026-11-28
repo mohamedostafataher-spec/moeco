@@ -49,12 +49,17 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     const saved = localStorage.getItem('accessibility_settings');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      // Migration for old fontSize number to string
-      if (typeof parsed.fontSize === 'number') {
-        parsed.fontSize = 'medium';
+      try {
+        const parsed = JSON.parse(saved);
+        // Migration for old fontSize number to string
+        if (typeof parsed.fontSize === 'number') {
+          parsed.fontSize = 'medium';
+        }
+        return { ...DEFAULT_SETTINGS, ...parsed };
+      } catch (e) {
+        console.warn('Invalid saved accessibility settings, resetting to defaults');
+        localStorage.removeItem('accessibility_settings');
       }
-      return { ...DEFAULT_SETTINGS, ...parsed };
     }
     return DEFAULT_SETTINGS;
   });
