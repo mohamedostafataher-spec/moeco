@@ -3,6 +3,7 @@ import '../theme.dart';
 import '../strings.dart';
 import '../services/footprint_store.dart';
 import '../services/air_quality.dart';
+import '../services/prayer_times.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _food;
   List<AirQualityReading>? _aq;
   bool _aqLoading = true;
+  PrayerTimes? _pt;
+  bool _ptLoading = true;
   final TextEditingController _kwhCtrl = TextEditingController();
   double? _billKg;
 
@@ -50,6 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _aq = readings;
         _aqLoading = false;
+      });
+    });
+    PrayerTimesService.getToday().then((pt) {
+      if (!mounted) return;
+      setState(() {
+        _pt = pt;
+        _ptLoading = false;
       });
     });
   }
@@ -83,6 +93,79 @@ class _HomeScreenState extends State<HomeScreen> {
       out.add((label, log == null ? null : _dayKg(log)));
     }
     return out;
+  }
+
+  Widget _prayerCard() {
+    final timeFmt = DateFormat.Hm();
+    final next = _pt == null ? null : PrayerTimesService.nextPrayer(_pt!);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.mosque, color: MoEcoTheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(s.ptTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                ),
+                if (next != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      s.ptNext(s.ptName(next)),
+                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_ptLoading)
+              Text(s.ptLoading, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else if (_pt == null)
+              Text(s.ptUnavailable, style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 12.5))
+            else ...[
+              ...PrayerTimesService.order.map((name) {
+                final isNext = name == next;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(s.ptName(name),
+                            style: TextStyle(
+                                fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                                fontSize: 13.5,
+                                color: isNext ? MoEcoTheme.primary : null)),
+                      ),
+                      Text(
+                        _pt!.times[name] ?? '--:--',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                            color: isNext ? MoEcoTheme.primary : null),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+              Text(
+                s.ptSource(timeFmt.format(_pt!.fetchedAt)),
+                style: const TextStyle(color: MoEcoTheme.textMuted, fontSize: 11),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _aqCard() {
@@ -324,6 +407,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: _aqCard(),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _prayerCard(),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
