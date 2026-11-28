@@ -87,7 +87,12 @@ class _ShellState extends State<_Shell> {
       CalculatorScreen(s: s),
       ComplaintsScreen(s: s, store: widget.store, onChanged: widget.onChanged),
       LocalProjectsScreen(s: s),
-      MoreScreen(s: s, onToggleLanguage: widget.onToggleLanguage),
+      MoreScreen(
+        s: s,
+        store: widget.store,
+        onChanged: widget.onChanged,
+        onToggleLanguage: widget.onToggleLanguage,
+      ),
     ];
     return Scaffold(
       appBar: AppBar(
