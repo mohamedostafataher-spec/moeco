@@ -351,6 +351,12 @@ class S {
       ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
       : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
 
+  // F7: offline mode (local-first, last-sync honesty)
+  String get offBanner => ar
+      ? 'أنت غير متصل — المعروض آخر بيانات محفوظة على جهازك'
+      : 'You are offline - showing the last data saved on your device';
+  String offLastSync(String t) => ar ? 'آخر مزامنة: $t' : 'Last sync: $t';
+
   // F5: shareable achievement card (real on-device numbers only)
   String get shCardTitle => ar ? 'إنجازي مع MoEco' : 'My MoEco achievement';
   String get shStreak => ar ? 'أيام متتالية' : 'day streak';
