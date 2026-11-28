@@ -297,7 +297,7 @@ const Dashboard: React.FC = () => {
                 <span className="text-xs font-bold text-slate-500">kg CO₂e</span>
               </p>
               <p className="text-[11px] text-slate-500">
-                تقدير محسوب من {activities.length} سجل أدخله المستخدم
+                {isRtl ? `تقدير محسوب من ${activities.length} سجل أدخله المستخدم` : `Estimate computed from ${activities.length} user-logged records`}
               </p>
             </>
           ) : (
@@ -322,7 +322,7 @@ const Dashboard: React.FC = () => {
                 <span className="text-xs font-bold text-slate-500">EU AQI</span>
               </p>
               <p className="text-[11px] text-slate-500">
-                مصدر خارجي حي (Open-Meteo) · {aqiData.updatedAt}
+                {isRtl ? 'مصدر خارجي حي (Open-Meteo)' : 'Live external feed (Open-Meteo)'} · {aqiData.updatedAt}
               </p>
             </>
           ) : (
@@ -362,12 +362,12 @@ const Dashboard: React.FC = () => {
             <h2 className="text-sm font-extrabold text-slate-900">
               {isRtl ? 'بيانات مؤشرات مجمّعة (من الخادم)' : 'Server Metrics'}
             </h2>
-            <span className="text-[11px] text-slate-500">مصدر قاعدة البيانات المسجلة</span>
+            <span className="text-[11px] text-slate-500">{isRtl ? 'مصدر قاعدة البيانات المسجلة' : 'Recorded database source'}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             {typeof nationalMetrics.totalCarbonSaved === 'number' && (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-slate-500">الأثر المجمع</p>
+                <p className="text-slate-500">{isRtl ? 'الأثر المجمع' : 'Aggregate impact'}</p>
                 <p className="text-base font-extrabold text-slate-900 num-ltr mt-0.5">
                   {(nationalMetrics.totalCarbonSaved / 1000).toFixed(1)} t CO₂e
                 </p>
@@ -375,7 +375,7 @@ const Dashboard: React.FC = () => {
             )}
             {typeof nationalMetrics.waterSavedM3 === 'number' && (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-slate-500">كمية المياه</p>
+                <p className="text-slate-500">{isRtl ? 'كمية المياه' : 'Water saved'}</p>
                 <p className="text-base font-extrabold text-slate-900 num-ltr mt-0.5">
                   {nationalMetrics.waterSavedM3.toFixed(0)} m³
                 </p>
@@ -383,7 +383,7 @@ const Dashboard: React.FC = () => {
             )}
             {typeof nationalMetrics.renewablePercentage === 'number' && (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-slate-500">نسبة الطاقة المتجددة</p>
+                <p className="text-slate-500">{isRtl ? 'نسبة الطاقة المتجددة' : 'Renewable share'}</p>
                 <p className="text-base font-extrabold text-slate-900 num-ltr mt-0.5">
                   {nationalMetrics.renewablePercentage.toFixed(1)}%
                 </p>
@@ -391,7 +391,7 @@ const Dashboard: React.FC = () => {
             )}
             {typeof nationalMetrics.activeEcoNodes === 'number' && (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-slate-500">نقاط مسجلة</p>
+                <p className="text-slate-500">{isRtl ? 'نقاط مسجلة' : 'Registered nodes'}</p>
                 <p className="text-base font-extrabold text-slate-900 num-ltr mt-0.5">
                   {nationalMetrics.activeEcoNodes}
                 </p>
@@ -419,7 +419,7 @@ const Dashboard: React.FC = () => {
             className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline"
           >
             <BookOpen className="w-4 h-4" />
-            <span>كيف نحسب الأثر؟</span>
+            <span>{isRtl ? 'كيف نحسب الأثر؟' : 'How do we calculate impact?'}</span>
           </Link>
         </div>
 
@@ -439,7 +439,7 @@ const Dashboard: React.FC = () => {
                 className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold"
               >
                 <Calculator className="w-4 h-4" />
-                <span>الذهاب إلى الحاسبة</span>
+                <span>{isRtl ? 'الذهاب إلى الحاسبة' : 'Go to the calculator'}</span>
               </Link>
             </div>
           </div>
@@ -567,7 +567,7 @@ const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowQuickLogModal(false)}
-                aria-label="إغلاق"
+                aria-label={isRtl ? 'إغلاق' : 'Close'}
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600"
               >
                 <X className="w-5 h-5" />
