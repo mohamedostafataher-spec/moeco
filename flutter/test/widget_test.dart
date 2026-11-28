@@ -8,6 +8,7 @@ import 'package:moeco/services/weather_service.dart';
 import 'package:moeco/services/services_data.dart';
 import 'package:moeco/services/green_spots_service.dart';
 import 'package:moeco/services/alert_center_service.dart';
+import 'package:moeco/services/global_events_service.dart';
 
 void main() {
   test('strings switch between Arabic and English', () {
@@ -267,5 +268,41 @@ void main() {
     for (var i = 1; i < metroSubscriptions.length; i++) {
       expect(metroSubscriptions[i], greaterThan(metroSubscriptions[i - 1]));
     }
+  });
+
+
+  test('global events: Egypt-relevance bounding box covers Egypt and neighbors', () {
+    // Cairo
+    expect(GlobalEventsService.isEgyptRelevantCoords(30.04, 31.24), isTrue);
+    // Red Sea (shipping / Suez relevance)
+    expect(GlobalEventsService.isEgyptRelevantCoords(26.5, 35.0), isTrue);
+    // Gaza border area
+    expect(GlobalEventsService.isEgyptRelevantCoords(31.3, 34.3), isTrue);
+    // North Sudan border
+    expect(GlobalEventsService.isEgyptRelevantCoords(20.0, 30.5), isTrue);
+    // Far away: London, Tokyo
+    expect(GlobalEventsService.isEgyptRelevantCoords(51.5, -0.12), isFalse);
+    expect(GlobalEventsService.isEgyptRelevantCoords(35.7, 139.7), isFalse);
+  });
+
+  test('global events: news classifier only passes major events', () {
+    expect(GlobalEventsService.classifyNews('غارات جديدة على المنطقة'),
+        GlobalEventKind.conflict);
+    expect(GlobalEventsService.classifyNews('زلزال يضرب شرق المتوسط'),
+        GlobalEventKind.disaster);
+    // Ordinary headlines are filtered out: no noise, no alarmism
+    expect(GlobalEventsService.classifyNews('مباراة ودية في كرة القدم'), isNull);
+    expect(GlobalEventsService.classifyNews('أسعار الذهب اليوم'), isNull);
+  });
+
+  test('global events: severity mapping and Egypt bump', () {
+    expect(GlobalEventsService.gdacsSeverity('Red'), AlertSeverity.severe);
+    expect(GlobalEventsService.gdacsSeverity('Orange'), AlertSeverity.warning);
+    expect(GlobalEventsService.gdacsSeverity('Green'), AlertSeverity.advisory);
+    expect(GlobalEventsService.quakeSeverity(6.5, false), AlertSeverity.warning);
+    expect(GlobalEventsService.quakeSeverity(4.7, false), AlertSeverity.advisory);
+    // A moderate quake near Egypt is raised one level
+    expect(GlobalEventsService.quakeSeverity(4.7, true), AlertSeverity.watch);
+    expect(GlobalEventsService.quakeSeverity(5.5, true), AlertSeverity.warning);
   });
 }
