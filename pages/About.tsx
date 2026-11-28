@@ -105,7 +105,7 @@ const About: React.FC = () => {
           © 2026 Mohamed Mostafa Taher. All rights reserved.
         </p>
         <p className="text-emerald-700 font-bold font-arabic">
-          جميع الحقوق محفوظة لمحمد مصطفى طاهر.
+          {isRtl ? 'جميع الحقوق محفوظة لمحمد مصطفى طاهر.' : 'All rights reserved to Mohamed Mostafa Taher.'}
         </p>
       </div>
 
@@ -142,8 +142,8 @@ const About: React.FC = () => {
           {submitted ? (
             <div className="p-12 bg-emerald-50 rounded-[3rem] text-center space-y-4">
               <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto" />
-              <h3 className="text-2xl font-black text-emerald-900 font-arabic">تم إرسال رسالتك بنجاح</h3>
-              <p className="text-emerald-700 font-bold">سيتواصل معك فريق الدعم في أقرب وقت ممكن.</p>
+              <h3 className="text-2xl font-black text-emerald-900 font-arabic">{isRtl ? 'تم إرسال رسالتك بنجاح' : 'Your message was sent successfully'}</h3>
+              <p className="text-emerald-700 font-bold">{isRtl ? 'سيتواصل معك فريق الدعم في أقرب وقت ممكن.' : 'The support team will contact you as soon as possible.'}</p>
             </div>
           ) : (
             <form onSubmit={handleSupportSubmit} className="space-y-6">
@@ -225,18 +225,41 @@ const About: React.FC = () => {
             <div className="prose prose-emerald max-w-none text-stone-500 font-medium leading-relaxed font-arabic">
               {activePolicy === 'privacy' ? (
                 <div className="space-y-4">
-                  <p>نحن في MoEco نولي أهمية قصوى لخصوصية بياناتك. جميع البيانات التي يتم جمعها تُستخدم فقط لتحسين تجربتك في التطبيق وتقديم تحليلات بيئية دقيقة.</p>
-                  <p>• يتم تشفير جميع البيانات المخزنة في الخادم بأعلى معايير الأمان.</p>
-                  <p>• لا نقوم بمشاركة بياناتك الشخصية مع أي أطراف ثالثة دون موافقتك الصريحة.</p>
-                  <p>• يمكنك طلب حذف بياناتك في أي وقت من خلال إعدادات الحساب.</p>
+                  {isRtl ? (
+                    <>
+                      <p>نحن في MoEco نولي أهمية قصوى لخصوصية بياناتك. جميع البيانات التي يتم جمعها تُستخدم فقط لتحسين تجربتك في التطبيق وتقديم تحليلات بيئية دقيقة.</p>
+                      <p>• يتم تشفير جميع البيانات المخزنة في الخادم بأعلى معايير الأمان.</p>
+                      <p>• لا نقوم بمشاركة بياناتك الشخصية مع أي أطراف ثالثة دون موافقتك الصريحة.</p>
+                      <p>• يمكنك طلب حذف بياناتك في أي وقت من خلال إعدادات الحساب.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>At MoEco we take your data privacy very seriously. All collected data is used only to improve your app experience and provide accurate environmental analytics.</p>
+                      <p>• All data stored on the server is encrypted to the highest security standards.</p>
+                      <p>• We never share your personal data with any third party without your explicit consent.</p>
+                      <p>• You can request deletion of your data at any time from the account settings.</p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p>باستخدامك لتطبيق MoEco، فإنك توافق على الشروط التالية:</p>
-                  <p>• التطبيق مخصص للاستخدام الشخصي والبحثي فقط.</p>
-                  <p>• يلتزم المستخدم بتقديم بيانات دقيقة عند الإبلاغ عن حالات الطوارئ أو استهلاك الموارد.</p>
-                  <p>• يُحظر استخدام التطبيق لأي أغراض غير قانونية أو تضليلية.</p>
-                  <p>• يحتفظ المطور بالحق في تحديث الشروط والميزات لضمان أفضل خدمة للمجتمع.</p>
+                  {isRtl ? (
+                    <>
+                      <p>باستخدامك لتطبيق MoEco، فإنك توافق على الشروط التالية:</p>
+                      <p>• التطبيق مخصص للاستخدام الشخصي والبحثي فقط.</p>
+                      <p>• يلتزم المستخدم بتقديم بيانات دقيقة عند الإبلاغ عن حالات الطوارئ أو استهلاك الموارد.</p>
+                      <p>• يُحظر استخدام التطبيق لأي أغراض غير قانونية أو تضليلية.</p>
+                      <p>• يحتفظ المطور بالحق في تحديث الشروط والميزات لضمان أفضل خدمة للمجتمع.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>By using the MoEco app, you agree to the following terms:</p>
+                      <p>• The app is intended for personal and research use only.</p>
+                      <p>• The user commits to providing accurate data when reporting emergencies or resource consumption.</p>
+                      <p>• Using the app for any illegal or misleading purposes is prohibited.</p>
+                      <p>• The developer reserves the right to update terms and features to ensure the best service for the community.</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
