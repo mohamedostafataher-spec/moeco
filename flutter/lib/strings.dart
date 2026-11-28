@@ -291,6 +291,40 @@ class S {
       ? 'المصدر: بيانات خريطة OpenStreetMap المفتوحة (مجتمعية)، تُحدَّث كل ٦ ساعات.'
       : 'Source: OpenStreetMap open community data, refreshed every 6 hours.';
 
+  // National alert center (comprehensive, forecast-derived)
+  String get alHeroTitle => ar ? 'مركز الإنذار القومي' : 'National Alert Center';
+  String get alHeroSub => ar
+      ? 'حرارة، غبار، جودة هواء، أمطار، رياح، أشعة — كل المحافظات في مكان واحد.'
+      : 'Heat, dust, air quality, rain, wind, UV - every governorate in one place.';
+  String get alLoading => ar ? 'بنجمع الإنذارات من كل المحافظات...' : 'Gathering alerts from all governorates...';
+  String get alError => ar
+      ? 'الإنذارات مش متاحة دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'Alerts are unavailable right now. We will retry automatically.';
+  String get alAllClear => ar ? 'مفيش إنذارات نشطة النهاردة' : 'No active alerts today';
+  String alActiveCount(String n) => ar ? '$n إنذار نشط على مستوى الجمهورية' : '$n active alerts nationwide';
+  String alUpdated(String t) => ar ? 'آخر تحديث $t' : 'Updated $t';
+  String get alAll => ar ? 'كل المحافظات' : 'All';
+  String get alNoneHere => ar ? 'مفيش إنذارات هنا — الوضع مطمئن' : 'No alerts here - all clear';
+  String get alDerivedTag => ar ? 'مشتق من التوقعات' : 'forecast-derived';
+  String get alMapCredit => ar ? 'الخريطة: OpenStreetMap' : 'Map: OpenStreetMap';
+  String get alSevAdvisory => ar ? 'تنبيه' : 'Advisory';
+  String get alSevWatch => ar ? 'مراقبة' : 'Watch';
+  String get alSevWarning => ar ? 'تحذير' : 'Warning';
+  String get alSevSevere => ar ? 'شديد' : 'Severe';
+  String alExtremeHeat(String c, String t) => ar ? 'موجة حر شديدة في $c: $t°' : 'Severe heat wave in $c: $t°';
+  String alHeat(String c, String t) => ar ? 'حرارة مرتفعة في $c: $t°' : 'High heat in $c: $t°';
+  String alCold(String c, String t) => ar ? 'برودة في $c: تنخفض إلى $t°' : 'Cold in $c: down to $t°';
+  String alStorm(String c) => ar ? 'عواصف رعدية متوقعة في $c' : 'Thunderstorms expected in $c';
+  String alHeavyRain(String c, String mm) => ar ? 'أمطار غزيرة في $c: $mm مم متوقعة — خذ بالك من السيول' : 'Heavy rain in $c: $mm mm expected - flood caution';
+  String alWind(String c, String k) => ar ? 'رياح قوية في $c: $k كم/س' : 'Strong wind in $c: $k km/h';
+  String alDust(String c, String v) => ar ? 'غبار كثيف في $c (تركيز $v ميكروجرام/م³)' : 'Heavy dust in $c ($v ug/m3)';
+  String alUv(String c, String v) => ar ? 'أشعة فوق بنفسجية مرتفعة في $c (مؤشر $v)' : 'High UV in $c (index $v)';
+  String alPoorAir(String c, String v) => ar ? 'جودة هواء سيئة في $c (مؤشر $v)' : 'Poor air quality in $c (AQI $v)';
+  String alFireRisk(String c) => ar ? 'مؤشر خطر حرائق في $c (حرارة + رياح + جفاف)' : 'Fire-weather risk in $c (heat + wind + dry)';
+  String get alFootnote => ar
+      ? 'كل البنود مشتقة من بيانات توقعات Open-Meteo (الطقس + CAMS لجودة الهواء والغبار) وليست تحذيرات رسمية من هيئة الأرصاد — لا تتوفر قناة رسمية مجانية مقروءة آليًا حتى الآن. عتبات الإنذار: حرارة ٣٨/٤٢/٤٥°، غبار ١٥٠/٣٠٠/٦٠٠، جودة هواء ١٠٠/١٥٠/٢٠٠، أشعة ٨/١١.'
+      : 'All items are derived from Open-Meteo forecast data (weather + CAMS air/dust), not official EMA warnings - no machine-readable free official feed exists yet. Thresholds: heat 38/42/45C, dust 150/300/600, AQI 100/150/200, UV 8/11.';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
