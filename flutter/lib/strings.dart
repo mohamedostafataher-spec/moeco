@@ -438,6 +438,21 @@ class S {
 
   // F5: shareable achievement card (real on-device numbers only)
   String get shCardTitle => ar ? 'إنجازي مع MoEco' : 'My MoEco achievement';
+
+  String get apTitle => ar ? 'خطة الأسبوع' : 'Weekly plan';
+  String get apSub => ar
+      ? '٣ خطوات صغيرة تعملها الأسبوع ده وتوفّر على طول'
+      : '3 small steps to do this week and save right away';
+  String apSummary(int done, int total, String egp) => ar
+      ? 'عملت $done من $total خطوات. لو خلّصتهم هتوفر حوالي $egp جنيه في الشهر.'
+      : '$done of $total steps done. Finish them all to save about EGP $egp a month.';
+  String get apNote => ar
+      ? 'الخطة بتتجدد كل سبت. المبالغ تقديرية على أسعار الكهربا الرسمية.'
+      : 'The plan resets every Saturday. Amounts are estimates on the official tariff.';
+  String apSaves(String egp) => ar ? 'يوفّر ~$egp ج/شهر' : 'Saves ~EGP $egp/month';
+  String get apAllDone => ar
+      ? 'برافو! خلصت خطة الأسبوع كلها 🎉'
+      : 'Well done! You finished this week\'s plan 🎉';
   String get shStreak => ar ? 'أيام متتالية' : 'day streak';
   String get shDays => ar ? 'يوم مسجل' : 'days logged';
   String get shGreenKm => ar ? 'كم مواصلات نظيفة' : 'green km';
