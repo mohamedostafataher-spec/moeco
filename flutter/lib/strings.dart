@@ -357,5 +357,25 @@ class S {
       ? 'اتنسخت! الصقها في القناة الرسمية المناسبة'
       : 'Copied! Paste it into the right official channel';
 
+  // Complaints: status tracking + suggested channel
+  String compStatusLabel(String status) {
+    switch (status) {
+      case 'sent':
+        return ar ? 'أرسلتها بنفسي' : 'Submitted by me';
+      case 'replied':
+        return ar ? 'وصلني رد' : 'Got a reply';
+      default:
+        return ar ? 'مسودة على جهازي' : 'Draft on my device';
+    }
+  }
+
+  String get compMarkSent => ar ? 'سجّل إني قدّمتها' : 'Mark as submitted';
+  String get compMarkReplied => ar ? 'سجّل إن رد وصل' : 'Mark reply received';
+  String get compBackToDraft => ar ? 'أرجعها مسودة' : 'Move back to draft';
+  String get compSuggestedChannel => ar ? 'القناة المقترحة' : 'Suggested channel';
+  String get compStatusNote => ar
+      ? 'الحالة دي انت اللي بتحدثها بنفسك على جهازك — التطبيق مش بيتابع مع الجهات.'
+      : 'You update this status yourself on your device — the app does not follow up with authorities.';
+
   String get version => '0.2.0';
 }
