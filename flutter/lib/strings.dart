@@ -377,5 +377,20 @@ class S {
       ? 'الحالة دي انت اللي بتحدثها بنفسك على جهازك — التطبيق مش بيتابع مع الجهات.'
       : 'You update this status yourself on your device — the app does not follow up with authorities.';
 
+  // Weekly transport comparison (estimates, honest labels)
+  String get weeklyCompareTitle => ar ? 'مواصلات الأسبوع بالفلوس' : 'This week\'s transport in money';
+  String weeklyDays(int n) => ar ? '$n أيام مسجلة هذا الأسبوع' : '$n days logged this week';
+  String weeklyCost(String egp) => ar
+      ? 'تكلفة تقديرية لمواصلاتك: $egp جنيه'
+      : 'Estimated transport cost: EGP $egp';
+  String weeklyVsCar(String egp, String kg) => ar
+      ? 'لو كنت ركبت عربية كل يوم: كنت هتدفع ~$egp جنيه أكتر وتطلّع ~$kg كجم CO2 زيادة'
+      : 'Had you driven every day: ~EGP $egp more and ~$kg kg more CO2';
+  String get weeklyShareBtn => ar ? 'انسخ ملخص الأسبوع' : 'Copy weekly summary';
+  String get weeklyCopied => ar ? 'اتنسخ ملخص الأسبوع!' : 'Weekly summary copied!';
+  String get weeklyEstimateNote => ar
+      ? 'تقديرات تقريبية للتوعية (مترو ~12 ج/رحلة، ميكروباص ~10 ج/رحلة، عربية ~45 ج/يوم وقود).'
+      : 'Rough awareness estimates (metro ~EGP 12/ride, microbus ~EGP 10/ride, car ~EGP 45/day fuel).';
+
   String get version => '0.2.0';
 }
