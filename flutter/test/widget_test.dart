@@ -16,6 +16,10 @@ import 'package:moeco/services/notification_service.dart';
 import 'package:moeco/services/action_plan_service.dart';
 import 'package:moeco/services/solar_service.dart';
 import 'package:moeco/services/sorting_guide_data.dart';
+import 'package:moeco/services/complaint_templates.dart';
+import 'package:moeco/services/suggestion_service.dart';
+import 'package:moeco/services/complaint_templates.dart';
+import 'package:moeco/services/suggestion_service.dart';
 import 'package:moeco/services/global_events_service.dart';
 import 'package:moeco/services/savings_tips_service.dart';
 import 'package:moeco/screens/utilities_screen.dart' show estimateElectricityBill;
@@ -592,5 +596,63 @@ void main() {
       expect(c.prepAr.isNotEmpty, isTrue);
       expect(c.examplesAr.isNotEmpty, isTrue);
     }
+  });
+
+  test('F10: every complaint category has at least one usable template', () {
+    for (var cat = 0; cat <= 6; cat++) {
+      final templates = complaintTemplates[cat];
+      expect(templates, isNotNull, reason: 'category $cat');
+      expect(templates!.isNotEmpty, isTrue);
+      for (final t in templates) {
+        expect(t.bodyAr.contains('['), isTrue,
+            reason: 'templates keep [placeholders] for personal details');
+        expect(t.labelAr.isNotEmpty, isTrue);
+      }
+    }
+    // Electricity has the three scenarios the user cares about most
+    expect(complaintTemplates[0]!.length, 3);
+  });
+
+  test('F13: suggestions round-trip and format for sharing', () {
+    final items = [
+      Suggestion('1', 'ضيفوا وضع ليلي', DateTime.utc(2026, 11, 28)),
+      Suggestion('2', 'عايزين تقرير سنوي', DateTime.utc(2026, 11, 27)),
+    ];
+    final back = SuggestionService.decode(SuggestionService.encode(items));
+    expect(back.length, 2);
+    expect(back.first.text, 'ضيفوا وضع ليلي');
+    expect(SuggestionService.decode('garbage'), isEmpty);
+    final share = SuggestionService.formatForShare(back);
+    expect(share.contains('ضيفوا وضع ليلي'), isTrue);
+    expect(share.contains('2026-11-27'), isTrue);
+  });
+
+  test('F10: every complaint category has at least one usable template', () {
+    for (var cat = 0; cat <= 6; cat++) {
+      final templates = complaintTemplates[cat];
+      expect(templates, isNotNull, reason: 'category ' + cat.toString());
+      expect(templates!.isNotEmpty, isTrue);
+      for (final tpl in templates) {
+        expect(tpl.bodyAr.contains('[') && tpl.bodyAr.contains(']'), isTrue,
+            reason: 'templates keep bracketed placeholders');
+        expect(tpl.labelAr.isNotEmpty, isTrue);
+      }
+    }
+    // Electricity has the three scenarios the user cares about most
+    expect(complaintTemplates[0]!.length, 3);
+  });
+
+  test('F13: suggestions round-trip and format for sharing', () {
+    final items = [
+      Suggestion('1', 'ضيفوا وضع ليلي', DateTime.utc(2026, 11, 28)),
+      Suggestion('2', 'عايزين تقرير سنوي', DateTime.utc(2026, 11, 27)),
+    ];
+    final back = SuggestionService.decode(SuggestionService.encode(items));
+    expect(back.length, 2);
+    expect(back.first.text, 'ضيفوا وضع ليلي');
+    expect(SuggestionService.decode('garbage'), isEmpty);
+    final share = SuggestionService.formatForShare(back);
+    expect(share.contains('ضيفوا وضع ليلي'), isTrue);
+    expect(share.contains('2026-11-27'), isTrue);
   });
 }
