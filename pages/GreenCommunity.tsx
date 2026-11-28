@@ -122,7 +122,7 @@ const GreenCommunity: React.FC = () => {
        if (article && (article as any).title) {
           // Transform single AI story object into an array of search-like results for the UI
           setWikiNews([
-            { title: (article as any).title, snippet: (article as any).content || (article as any).lesson || 'Learn more about sustainability.' }
+            { title: (article as any).title, snippet: (article as any).content || (article as any).lesson || (isRtl ? 'تعلّم المزيد عن الاستدامة.' : 'Learn more about sustainability.'), source: 'local' }
           ]);
        } else {
          // Fallback to Wikipedia if AI fails
@@ -130,7 +130,7 @@ const GreenCommunity: React.FC = () => {
          const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(query)}&utf8=1&origin=*`);
          const data = await res.json();
          if (data?.query?.search) {
-            setWikiNews(data.query.search.slice(0, 3));
+            setWikiNews(data.query.search.slice(0, 3).map((n: any) => ({ ...n, source: 'wiki' })));
          }
        }
     } catch (e) {
@@ -382,14 +382,23 @@ const GreenCommunity: React.FC = () => {
         {wikiNews.length > 0 && (
           <div className={`p-4 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/20' : 'bg-indigo-50 border-indigo-100'}`}>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-3 flex items-center gap-1">
-              <BookOpen size={12} /> {isRtl ? 'أخبار بيئية عالمية مصدرها Wikipedia API' : 'Global Eco News sourced via Wikipedia API'}
+              <BookOpen size={12} /> {wikiNews.every((n) => n.source === 'wiki')
+                ? (isRtl ? 'أخبار بيئية عالمية مصدرها Wikipedia API' : 'Global Eco News sourced via Wikipedia API')
+                : (isRtl ? 'قصة بيئية يومية (محتوى مُنشأ محلياً)' : 'Daily eco story (locally generated content)')}
             </h3>
             <div className="space-y-3">
                {wikiNews.map((news, idx) => (
-                 <a href={`https://en.wikipedia.org/wiki/${encodeURIComponent(news.title)}`} target="_blank" rel="noreferrer" key={idx} className="block group">
-                    <h4 className="text-sm font-black group-hover:text-indigo-600 transition-colors mb-1">{news.title}</h4>
-                    <p className="text-xs font-medium text-slate-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: news.snippet }} />
-                 </a>
+                 news.source === 'wiki' ? (
+                   <a href={`https://en.wikipedia.org/wiki/${encodeURIComponent(news.title)}`} target="_blank" rel="noreferrer" key={idx} className="block group">
+                      <h4 className="text-sm font-black group-hover:text-indigo-600 transition-colors mb-1">{news.title}</h4>
+                      <p className="text-xs font-medium text-slate-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: news.snippet }} />
+                   </a>
+                 ) : (
+                   <div key={idx} className="block">
+                      <h4 className="text-sm font-black mb-1">{news.title}</h4>
+                      <p className="text-xs font-medium text-slate-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: news.snippet }} />
+                   </div>
+                 )
                ))}
             </div>
           </div>
