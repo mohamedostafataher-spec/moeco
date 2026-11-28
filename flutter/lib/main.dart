@@ -4,6 +4,7 @@ import 'theme.dart';
 import 'strings.dart';
 import 'services/footprint_store.dart';
 import 'services/error_log_service.dart';
+import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/complaints_screen.dart';
@@ -11,10 +12,14 @@ import 'screens/local_projects_screen.dart';
 import 'screens/more_screen.dart';
 import 'screens/onboarding_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   // F15 (on-device): record crashes and errors locally; nothing is
   // uploaded - the user can share the log manually from More.
   ErrorLogService.install();
+  // Local reminders (on-device, no account): monthly reading day + weekly tip.
+  await NotificationService.init();
+  await NotificationService.scheduleAll(arabic: true);
   runApp(const MoEcoApp());
 }
 
