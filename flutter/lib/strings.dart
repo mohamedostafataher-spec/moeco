@@ -268,6 +268,29 @@ class S {
       ? 'افتراضات تقديرية: ١٥ لتر/يوم للحنفية، ٢٠ لتر/فرد/يوم للمهوي، ٩ لتر/دقيقة للدش. المعادلة: (اللترات اليومية × ٣٠) ÷ ١٠٠٠ × ٠٫٢٩٨ كجم CO2e/م³ (الشركة القابضة لمياه الشرب). أرقام إرشادية وليست قراءة عداد.'
       : 'Assumptions: 15 L/day per dripping tap, 20 L/person/day with aerators, 9 L/min shower. Formula: (daily liters x 30) / 1000 x 0.298 kg CO2e/m3 (HCWW). Indicative estimates, not a meter reading.';
 
+  // Green spots screen (OpenStreetMap parks / gardens / drinking water)
+  String get gsHeroTitle => ar ? 'حدائق ومياه شرب' : 'Parks & Drinking Water';
+  String get gsHeroSub => ar
+      ? 'حدائق ومنتزهات ونقاط مياه شرب قريبة منك.'
+      : 'Parks, gardens, and drinking-water points near you.';
+  String get gsTitle => ar ? 'أماكن خضراء على الخريطة' : 'Mapped green spots';
+  String get gsPickCity => ar ? 'اختار المحافظة' : 'Pick a governorate';
+  String get gsLoading => ar ? 'بنجيب الأماكن...' : 'Fetching places...';
+  String get gsError => ar
+      ? 'الأماكن مش متاحة دلوقتي. هنحاول تاني تلقائيًا.'
+      : 'Places are unavailable right now. We will retry automatically.';
+  String get gsEmpty => ar
+      ? 'مفيش أماكن مسجلة قريبة في بيانات الخريطة المفتوحة لحد دلوقتي.'
+      : 'No nearby places recorded in open map data yet.';
+  String get gsPark => ar ? 'حديقة عامة' : 'Park';
+  String get gsGarden => ar ? 'جَنينة' : 'Garden';
+  String get gsWater => ar ? 'مياه شرب' : 'Drinking water';
+  String get gsKm => ar ? 'كم' : 'km';
+  String get gsDirections => ar ? 'الاتجاهات' : 'Directions';
+  String get gsSource => ar
+      ? 'المصدر: بيانات خريطة OpenStreetMap المفتوحة (مجتمعية)، تُحدَّث كل ٦ ساعات.'
+      : 'Source: OpenStreetMap open community data, refreshed every 6 hours.';
+
   // Fuel prices (official, pricing committee 2026-11-28)
   String get fuelHeroTitle => ar ? 'أسعار الوقود' : 'Fuel Prices';
   String get fuelHeroSub => ar
